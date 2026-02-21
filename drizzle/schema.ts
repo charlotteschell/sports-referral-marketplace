@@ -128,6 +128,7 @@ export const referralOffers = mysqlTable("referralOffers", {
   incentiveValue: varchar("incentiveValue", { length: 100 }),
   incentiveDescription: text("incentiveDescription"),
   termsAndConditions: text("termsAndConditions"),
+  isSample: boolean("isSample").default(false).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Gift, MapPin, ArrowRight, Bike, Mountain, Snowflake, Star,
-  Handshake, Users, Compass, Globe
+  Handshake, Users, Compass, Globe, Info, Heart, Sparkles
 } from "lucide-react";
 
 const sportIcons: Record<string, React.ReactNode> = {
@@ -48,6 +48,23 @@ export default function ReferralOffers() {
           <p className="text-white/70 max-w-2xl text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
             Browse B2B referral incentives for businesses and consumer offers for enthusiasts. Whether you're a business partner or an individual, find the right offer for you.
           </p>
+        </div>
+      </section>
+
+      {/* Community Message Banner */}
+      <section className="bg-[oklch(0.55_0.15_45)]/5 border-b border-[oklch(0.55_0.15_45)]/15">
+        <div className="container py-4">
+          <div className="flex items-start gap-3">
+            <Heart className="w-5 h-5 text-[oklch(0.55_0.15_45)] mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm text-foreground font-medium" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                Community supporting community — all for free.
+              </p>
+              <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                SportConnect is a free platform built to help endurance sports businesses grow together. If you see your business listed here, <Link href="/directory" className="text-[oklch(0.55_0.15_45)] underline hover:text-[oklch(0.45_0.15_45)]">claim your listing</Link> to publish your own real B2B or consumer referral incentives — no cost, ever.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -129,8 +146,18 @@ export default function ReferralOffers() {
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
               {filteredOffers.map((item) => (
-                <Card key={item.offer.id} className="hover:shadow-lg transition-shadow border-border">
+                <Card key={item.offer.id} className={`hover:shadow-lg transition-shadow border-border ${(item.offer as any).isSample ? "relative" : ""}`}>
                   <CardContent className="p-6">
+                    {/* Sample Offer Banner */}
+                    {(item.offer as any).isSample && (
+                      <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2 mb-4 flex items-start gap-2">
+                        <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                        <p className="text-xs text-amber-700 dark:text-amber-300" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                          <strong>Sample offer for demonstrative purposes.</strong> Is this your business? <Link href="/directory" className="underline hover:text-amber-900 dark:hover:text-amber-100">Claim your listing</Link> to replace this with your real incentives — completely free.
+                        </p>
+                      </div>
+                    )}
+
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -149,6 +176,11 @@ export default function ReferralOffers() {
                               <><Users className="w-3 h-3 mr-1" /> Consumer</>
                             )}
                           </Badge>
+                          {(item.offer as any).isSample && (
+                            <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 text-[10px]" style={{ textTransform: "none" }}>
+                              <Sparkles className="w-3 h-3 mr-1" /> Sample
+                            </Badge>
+                          )}
                         </div>
                         {item.business && (
                           <Link href={`/business/${item.business.slug}`}>
@@ -209,6 +241,31 @@ export default function ReferralOffers() {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          )}
+
+          {/* Bottom CTA for business owners */}
+          {filteredOffers.length > 0 && (
+            <div className="mt-12 bg-[oklch(0.22_0.02_50)] rounded-xl p-8 text-center">
+              <Heart className="w-8 h-8 text-[oklch(0.55_0.15_45)] mx-auto mb-3" />
+              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-heading)" }}>
+                Own a Business in the Endurance Sports Community?
+              </h3>
+              <p className="text-white/70 max-w-xl mx-auto mb-5" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                SportConnect is 100% free — community supporting community. Claim your listing to publish your own real B2B and consumer referral incentives, connect with partner businesses, and grow together.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link href="/directory">
+                  <Button className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.45_0.15_45)] text-white" style={{ textTransform: "none" }}>
+                    Find & Claim Your Business
+                  </Button>
+                </Link>
+                <Link href="/submit-business">
+                  <Button variant="outline" className="bg-transparent text-white border-white/30 hover:bg-white/10" style={{ textTransform: "none" }}>
+                    Submit a New Business
+                  </Button>
+                </Link>
+              </div>
             </div>
           )}
         </div>

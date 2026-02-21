@@ -1,0 +1,1 @@
+ALTER TABLE `referralOffers` ADD `isSample` boolean DEFAULT false NOT NULL;

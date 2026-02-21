@@ -131,3 +131,10 @@
 - [x] Add navigation links to the Submit form from header, footer, and landing page CTAs
 - [x] Send owner notification when a new submission arrives
 - [x] Write vitest tests for the submission flow (9 new tests, 40 total pass)
+
+## Sample Offer Labels & Community Messaging
+- [x] Add isSample flag to referralOffers schema
+- [x] Mark existing seeded offers as sample offers in database
+- [x] Display "Sample Offer" badge on sample referral offers in directory and profiles
+- [x] Add community messaging: encourage owners to claim listing and publish real incentives for free
+- [x] Add messaging on referral offers page about free community platform

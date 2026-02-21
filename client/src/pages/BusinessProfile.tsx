@@ -12,7 +12,7 @@ import {
   MapPin, Phone, Mail, Globe, Shield, ArrowLeft,
   Bike, Mountain, Snowflake, Star, Handshake, Compass,
   Instagram, Facebook, Pencil, Gift, Send, ExternalLink,
-  Users
+  Users, Info, Sparkles, Heart
 } from "lucide-react";
 
 const sportIcons: Record<string, React.ReactNode> = {
@@ -265,12 +265,25 @@ export default function BusinessProfile() {
                     <div className="space-y-4">
                       {b2bOffers.map((offer) => (
                         <div key={offer.id} className="border border-[oklch(0.55_0.15_45)]/20 rounded-lg p-4 bg-[oklch(0.55_0.15_45)]/5">
+                          {(offer as any).isSample && (
+                            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2 mb-3 flex items-start gap-2">
+                              <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                              <p className="text-xs text-amber-700 dark:text-amber-300" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                                <strong>Sample offer for demonstrative purposes.</strong> Is this your business? Claim your listing to publish your own real incentives — completely free.
+                              </p>
+                            </div>
+                          )}
                           <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-semibold text-foreground">{offer.title}</h4>
                               <Badge variant="secondary" className="bg-[oklch(0.55_0.15_45)]/10 text-[oklch(0.55_0.15_45)] text-xs" style={{ textTransform: "none" }}>
                                 <Handshake className="w-3 h-3 mr-1" /> B2B
                               </Badge>
+                              {(offer as any).isSample && (
+                                <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 text-[10px]" style={{ textTransform: "none" }}>
+                                  <Sparkles className="w-3 h-3 mr-1" /> Sample
+                                </Badge>
+                              )}
                             </div>
                             <Badge className="bg-[oklch(0.55_0.15_45)] text-white" style={{ textTransform: "none" }}>
                               {offer.incentiveType === "percentage" ? `${offer.incentiveValue}%` :
@@ -317,12 +330,25 @@ export default function BusinessProfile() {
                     <div className="space-y-4">
                       {consumerOffers.map((offer) => (
                         <div key={offer.id} className="border border-primary/20 rounded-lg p-4 bg-primary/5">
+                          {(offer as any).isSample && (
+                            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2 mb-3 flex items-start gap-2">
+                              <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                              <p className="text-xs text-amber-700 dark:text-amber-300" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                                <strong>Sample offer for demonstrative purposes.</strong> Is this your business? Claim your listing to publish your own real incentives — completely free.
+                              </p>
+                            </div>
+                          )}
                           <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-semibold text-foreground">{offer.title}</h4>
                               <Badge variant="secondary" className="bg-primary/10 text-primary text-xs" style={{ textTransform: "none" }}>
                                 <Users className="w-3 h-3 mr-1" /> Consumer
                               </Badge>
+                              {(offer as any).isSample && (
+                                <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 text-[10px]" style={{ textTransform: "none" }}>
+                                  <Sparkles className="w-3 h-3 mr-1" /> Sample
+                                </Badge>
+                              )}
                             </div>
                             <Badge className="bg-primary text-primary-foreground" style={{ textTransform: "none" }}>
                               {offer.incentiveType === "percentage" ? `${offer.incentiveValue}%` :
@@ -354,7 +380,7 @@ export default function BusinessProfile() {
                     <Shield className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                     <h3 className="text-lg font-bold mb-2">This Business Hasn't Been Claimed</h3>
                     <p className="text-muted-foreground mb-4 max-w-md mx-auto" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                      Contact information, referral offers, and full business details are only available for claimed and verified businesses.
+                      Contact information, referral offers, and full business details are only available for claimed and verified businesses. SportConnect is 100% free — community supporting community.
                     </p>
                     {isAuthenticated ? (
                       <Button
