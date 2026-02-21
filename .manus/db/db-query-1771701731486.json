@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, name FROM businesses ORDER BY id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name FROM businesses ORDER BY id LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Summit Cycling Coaching"
+    },
+    {
+      "id": "2",
+      "name": "Trailhead Bike Works"
+    },
+    {
+      "id": "3",
+      "name": "Alpine Run Club"
+    },
+    {
+      "id": "4",
+      "name": "Peak Performance Physio"
+    },
+    {
+      "id": "5",
+      "name": "Powder Line Ski School"
+    },
+    {
+      "id": "6",
+      "name": "Endurance Fuel Nutrition"
+    },
+    {
+      "id": "7",
+      "name": "Iron Legs Sports Massage"
+    },
+    {
+      "id": "8",
+      "name": "Velocity Cycling Studio"
+    },
+    {
+      "id": "9",
+      "name": "Nordic Edge Ski Shop"
+    },
+    {
+      "id": "10",
+      "name": "Trail Blazer Running Store"
+    },
+    {
+      "id": "11",
+      "name": "Mountain Fit Personal Training"
+    },
+    {
+      "id": "12",
+      "name": "Ride Right Bike Fitting"
+    },
+    {
+      "id": "13",
+      "name": "Dolomiti Cycling Tours"
+    },
+    {
+      "id": "14",
+      "name": "Alta Via Running Camp"
+    },
+    {
+      "id": "15",
+      "name": "Dolomites Sport Physio"
+    },
+    {
+      "id": "16",
+      "name": "Val Gardena Bike Shop"
+    },
+    {
+      "id": "17",
+      "name": "Dolomiti Ski & Snow"
+    },
+    {
+      "id": "18",
+      "name": "Pyrenees Cycling Holidays"
+    },
+    {
+      "id": "19",
+      "name": "Trail Pyrenees"
+    },
+    {
+      "id": "20",
+      "name": "Pyrenees Performance Coaching"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n1\tSummit Cycling Coaching\n2\tTrailhead Bike Works\n3\tAlpine Run Club\n4\tPeak Performance Physio\n5\tPowder Line Ski School\n6\tEndurance Fuel Nutrition\n7\tIron Legs Sports Massage\n8\tVelocity Cycling Studio\n9\tNordic Edge Ski Shop\n10\tTrail Blazer Running Store\n11\tMountain Fit Personal Training\n12\tRide Right Bike Fitting\n13\tDolomiti Cycling Tours\n14\tAlta Via Running Camp\n15\tDolomites Sport Physio\n16\tVal Gardena Bike Shop\n17\tDolomiti Ski & Snow\n18\tPyrenees Cycling Holidays\n19\tTrail Pyrenees\n20\tPyrenees Performance Coaching\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

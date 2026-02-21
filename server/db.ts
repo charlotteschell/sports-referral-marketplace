@@ -1,4 +1,4 @@
-import { eq, and, like, or, sql, desc, asc, inArray } from "drizzle-orm";
+import { eq, and, like, or, sql, desc, asc, inArray, isNotNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users,
@@ -96,6 +96,32 @@ export async function getAllBusinessTypes(): Promise<BusinessType[]> {
   return db.select().from(businessTypes).orderBy(asc(businessTypes.name));
 }
 
+// ─── Regions & Hubs ─────────────────────────────────────────────
+
+export async function getDistinctRegions() {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.selectDistinct({ region: businesses.region })
+    .from(businesses)
+    .where(and(eq(businesses.isActive, true), isNotNull(businesses.region)))
+    .orderBy(asc(businesses.region));
+  return result.map(r => r.region).filter(Boolean) as string[];
+}
+
+export async function getHubsByRegion(region?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(businesses.isActive, true), isNotNull(businesses.hub)];
+  if (region) {
+    conditions.push(eq(businesses.region, region));
+  }
+  const result = await db.selectDistinct({ hub: businesses.hub, region: businesses.region })
+    .from(businesses)
+    .where(and(...conditions))
+    .orderBy(asc(businesses.hub));
+  return result.filter(r => r.hub) as { hub: string; region: string | null }[];
+}
+
 // ─── Businesses ─────────────────────────────────────────────────
 
 export interface BusinessSearchParams {
@@ -104,6 +130,8 @@ export interface BusinessSearchParams {
   businessTypeId?: number;
   city?: string;
   country?: string;
+  region?: string;
+  hub?: string;
   isClaimed?: boolean;
   limit?: number;
   offset?: number;
@@ -120,7 +148,9 @@ export async function searchBusinesses(params: BusinessSearchParams) {
       or(
         like(businesses.name, `%${params.search}%`),
         like(businesses.city, `%${params.search}%`),
-        like(businesses.shortDescription, `%${params.search}%`)
+        like(businesses.shortDescription, `%${params.search}%`),
+        like(businesses.hub, `%${params.search}%`),
+        like(businesses.region, `%${params.search}%`)
       )!
     );
   }
@@ -135,6 +165,12 @@ export async function searchBusinesses(params: BusinessSearchParams) {
   }
   if (params.country) {
     conditions.push(like(businesses.country, `%${params.country}%`));
+  }
+  if (params.region) {
+    conditions.push(eq(businesses.region, params.region));
+  }
+  if (params.hub) {
+    conditions.push(eq(businesses.hub, params.hub));
   }
   if (params.isClaimed !== undefined) {
     conditions.push(eq(businesses.isClaimed, params.isClaimed));
@@ -262,11 +298,15 @@ export async function getFeaturedBusinesses(limit = 6) {
 
 // ─── Referral Offers ────────────────────────────────────────────
 
-export async function getReferralOffersByBusiness(businessId: number) {
+export async function getReferralOffersByBusiness(businessId: number, offerType?: string) {
   const db = await getDb();
   if (!db) return [];
+  const conditions = [eq(referralOffers.businessId, businessId), eq(referralOffers.isActive, true)];
+  if (offerType) {
+    conditions.push(eq(referralOffers.offerType, offerType as "b2b" | "consumer"));
+  }
   return db.select().from(referralOffers)
-    .where(and(eq(referralOffers.businessId, businessId), eq(referralOffers.isActive, true)))
+    .where(and(...conditions))
     .orderBy(desc(referralOffers.createdAt));
 }
 
@@ -296,16 +336,22 @@ export async function getReferralOfferById(id: number) {
   return result.length > 0 ? result[0] : null;
 }
 
-export async function getAllActiveReferralOffers(limit = 20, offset = 0) {
+export async function getAllActiveReferralOffers(offerType?: string, limit = 20, offset = 0) {
   const db = await getDb();
   if (!db) return [];
+  const conditions = [eq(referralOffers.isActive, true), eq(businesses.isClaimed, true)];
+  if (offerType) {
+    conditions.push(eq(referralOffers.offerType, offerType as "b2b" | "consumer"));
+  }
   return db.select({
     offer: referralOffers,
     business: businesses,
+    sportCategory: sportCategories,
   })
     .from(referralOffers)
     .leftJoin(businesses, eq(referralOffers.businessId, businesses.id))
-    .where(and(eq(referralOffers.isActive, true), eq(businesses.isClaimed, true)))
+    .leftJoin(sportCategories, eq(businesses.sportCategoryId, sportCategories.id))
+    .where(and(...conditions))
     .orderBy(desc(referralOffers.createdAt))
     .limit(limit)
     .offset(offset);
@@ -418,13 +464,14 @@ export async function getReferralStats(userId: number) {
 
 export async function getDirectoryStats() {
   const db = await getDb();
-  if (!db) return { totalBusinesses: 0, claimedBusinesses: 0, totalReferrals: 0, sportCategories: 0 };
+  if (!db) return { totalBusinesses: 0, claimedBusinesses: 0, totalReferrals: 0, sportCategories: 0, regions: 0 };
 
-  const [totalBiz, claimedBiz, totalRef, totalCats] = await Promise.all([
+  const [totalBiz, claimedBiz, totalRef, totalCats, totalRegions] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(businesses).where(eq(businesses.isActive, true)),
     db.select({ count: sql<number>`count(*)` }).from(businesses).where(and(eq(businesses.isActive, true), eq(businesses.isClaimed, true))),
     db.select({ count: sql<number>`count(*)` }).from(referrals),
     db.select({ count: sql<number>`count(*)` }).from(sportCategories),
+    db.select({ count: sql<number>`count(distinct ${businesses.region})` }).from(businesses).where(and(eq(businesses.isActive, true), isNotNull(businesses.region))),
   ]);
 
   return {
@@ -432,5 +479,6 @@ export async function getDirectoryStats() {
     claimedBusinesses: Number(claimedBiz[0]?.count || 0),
     totalReferrals: Number(totalRef[0]?.count || 0),
     sportCategories: Number(totalCats[0]?.count || 0),
+    regions: Number(totalRegions[0]?.count || 0),
   };
 }

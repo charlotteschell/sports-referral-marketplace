@@ -19,7 +19,7 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /**
- * Sport categories: cycling, trail_running, snowsports
+ * Sport categories: cycling, running, snowsports, sport-vacations
  */
 export const sportCategories = mysqlTable("sportCategories", {
   id: int("id").autoincrement().primaryKey(),
@@ -33,7 +33,7 @@ export const sportCategories = mysqlTable("sportCategories", {
 export type SportCategory = typeof sportCategories.$inferSelect;
 
 /**
- * Business types: coach, bike_shop, physio, nutritionist, etc.
+ * Business types: coach, bike_shop, physio, nutritionist, vacation_provider, etc.
  */
 export const businessTypes = mysqlTable("businessTypes", {
   id: int("id").autoincrement().primaryKey(),
@@ -67,6 +67,10 @@ export const businesses = mysqlTable("businesses", {
   address: text("address"),
   latitude: varchar("latitude", { length: 20 }),
   longitude: varchar("longitude", { length: 20 }),
+  
+  // Region / Hub for geographic filtering
+  region: varchar("region", { length: 100 }),
+  hub: varchar("hub", { length: 100 }),
   
   // Contact (only shown when claimed)
   phone: varchar("phone", { length: 30 }),
@@ -108,12 +112,14 @@ export const businessSportCategories = mysqlTable("businessSportCategories", {
 
 /**
  * Referral offers that businesses post
+ * offerType: 'b2b' for business-to-business, 'consumer' for individual consumers
  */
 export const referralOffers = mysqlTable("referralOffers", {
   id: int("id").autoincrement().primaryKey(),
   businessId: int("businessId").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
+  offerType: mysqlEnum("offerType", ["b2b", "consumer"]).default("b2b").notNull(),
   incentiveType: mysqlEnum("incentiveType", ["percentage", "fixed", "service", "other"]).notNull(),
   incentiveValue: varchar("incentiveValue", { length: 100 }),
   incentiveDescription: text("incentiveDescription"),

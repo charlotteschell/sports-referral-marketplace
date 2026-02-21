@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Gift, Plus, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Gift, Plus, Trash2, Loader2, Handshake, Users } from "lucide-react";
 import { useState } from "react";
 
 export default function ManageOffers() {
@@ -39,6 +39,7 @@ export default function ManageOffers() {
   const [form, setForm] = useState({
     title: "",
     description: "",
+    offerType: "b2b" as "b2b" | "consumer",
     incentiveType: "percentage" as "percentage" | "fixed" | "service" | "other",
     incentiveValue: "",
     incentiveDescription: "",
@@ -50,7 +51,7 @@ export default function ManageOffers() {
       toast.success("Referral offer created!");
       utils.referralOffer.getByBusiness.invalidate({ businessId });
       setDialogOpen(false);
-      setForm({ title: "", description: "", incentiveType: "percentage", incentiveValue: "", incentiveDescription: "", termsAndConditions: "" });
+      setForm({ title: "", description: "", offerType: "b2b", incentiveType: "percentage", incentiveValue: "", incentiveDescription: "", termsAndConditions: "" });
     },
     onError: (err) => toast.error(err.message || "Failed to create offer"),
   });
@@ -82,6 +83,9 @@ export default function ManageOffers() {
     );
   }
 
+  const b2bOffers = offers?.filter(o => o.offerType === "b2b") || [];
+  const consumerOffers = offers?.filter(o => o.offerType === "consumer") || [];
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -101,7 +105,7 @@ export default function ManageOffers() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
-                <Gift className="w-6 h-6 text-[oklch(0.55_0.15_45)]" /> B2B Referral Offers
+                <Gift className="w-6 h-6 text-[oklch(0.55_0.15_45)]" /> Manage Referral Offers
               </h1>
               {bizData && (
                 <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>
@@ -122,8 +126,35 @@ export default function ManageOffers() {
                 </DialogHeader>
                 <form onSubmit={handleCreate} className="space-y-4">
                   <div>
+                    <Label style={{ textTransform: "none" }}>Offer Type *</Label>
+                    <Select value={form.offerType} onValueChange={(v) => updateField("offerType", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="b2b">
+                          B2B — For partner businesses
+                        </SelectItem>
+                        <SelectItem value="consumer">
+                          Consumer — For individual customers
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                      {form.offerType === "b2b"
+                        ? "B2B offers are for businesses that send you customers. Referred customers can still claim consumer offers."
+                        : "Consumer offers are visible to individual enthusiasts browsing the marketplace."
+                      }
+                    </p>
+                  </div>
+                  <div>
                     <Label style={{ textTransform: "none" }}>Offer Title *</Label>
-                    <Input value={form.title} onChange={(e) => updateField("title", e.target.value)} placeholder="e.g., 10% commission for client referrals" />
+                    <Input
+                      value={form.title}
+                      onChange={(e) => updateField("title", e.target.value)}
+                      placeholder={form.offerType === "b2b"
+                        ? "e.g., 10% commission for client referrals"
+                        : "e.g., 15% off first session for new customers"
+                      }
+                    />
                   </div>
                   <div>
                     <Label style={{ textTransform: "none" }}>Description</Label>
@@ -177,47 +208,109 @@ export default function ManageOffers() {
                 <Gift className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                 <h3 className="text-lg font-bold mb-2">No Referral Offers Yet</h3>
                 <p className="text-muted-foreground mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                  Create your first B2B referral offer to start attracting referrals from partner businesses.
+                  Create B2B offers for partner businesses or consumer offers for individual enthusiasts.
                 </p>
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4">
-              {offers.map((offer) => (
-                <Card key={offer.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-bold text-foreground">{offer.title}</h3>
-                          <Badge className="bg-[oklch(0.55_0.15_45)] text-white" style={{ textTransform: "none" }}>
-                            {offer.incentiveType === "percentage" ? `${offer.incentiveValue}%` :
-                             offer.incentiveType === "fixed" ? `$${offer.incentiveValue}` :
-                             offer.incentiveType}
-                          </Badge>
-                        </div>
-                        {offer.description && (
-                          <p className="text-sm text-muted-foreground mb-2" style={{ textTransform: "none", letterSpacing: "normal" }}>{offer.description}</p>
-                        )}
-                        {offer.incentiveDescription && (
-                          <p className="text-sm text-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                            <strong>Incentive:</strong> {offer.incentiveDescription}
-                          </p>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-                        onClick={() => deleteMutation.mutate({ id: offer.id })}
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="space-y-8">
+              {/* B2B Offers */}
+              {b2bOffers.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+                    <Handshake className="w-5 h-5 text-[oklch(0.55_0.15_45)]" /> B2B Offers
+                  </h2>
+                  <div className="space-y-3">
+                    {b2bOffers.map((offer) => (
+                      <Card key={offer.id}>
+                        <CardContent className="p-5">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <h3 className="font-bold text-foreground">{offer.title}</h3>
+                                <Badge variant="secondary" className="bg-[oklch(0.55_0.15_45)]/10 text-[oklch(0.55_0.15_45)] text-xs" style={{ textTransform: "none" }}>
+                                  <Handshake className="w-3 h-3 mr-1" /> B2B
+                                </Badge>
+                                <Badge className="bg-[oklch(0.55_0.15_45)] text-white" style={{ textTransform: "none" }}>
+                                  {offer.incentiveType === "percentage" ? `${offer.incentiveValue}%` :
+                                   offer.incentiveType === "fixed" ? `$${offer.incentiveValue}` :
+                                   offer.incentiveType}
+                                </Badge>
+                              </div>
+                              {offer.description && (
+                                <p className="text-sm text-muted-foreground mb-1" style={{ textTransform: "none", letterSpacing: "normal" }}>{offer.description}</p>
+                              )}
+                              {offer.incentiveDescription && (
+                                <p className="text-sm text-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                                  <strong>Incentive:</strong> {offer.incentiveDescription}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                              onClick={() => deleteMutation.mutate({ id: offer.id })}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Consumer Offers */}
+              {consumerOffers.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+                    <Users className="w-5 h-5 text-primary" /> Consumer Offers
+                  </h2>
+                  <div className="space-y-3">
+                    {consumerOffers.map((offer) => (
+                      <Card key={offer.id}>
+                        <CardContent className="p-5">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <h3 className="font-bold text-foreground">{offer.title}</h3>
+                                <Badge variant="secondary" className="bg-primary/10 text-primary text-xs" style={{ textTransform: "none" }}>
+                                  <Users className="w-3 h-3 mr-1" /> Consumer
+                                </Badge>
+                                <Badge className="bg-primary text-primary-foreground" style={{ textTransform: "none" }}>
+                                  {offer.incentiveType === "percentage" ? `${offer.incentiveValue}%` :
+                                   offer.incentiveType === "fixed" ? `$${offer.incentiveValue}` :
+                                   offer.incentiveType}
+                                </Badge>
+                              </div>
+                              {offer.description && (
+                                <p className="text-sm text-muted-foreground mb-1" style={{ textTransform: "none", letterSpacing: "normal" }}>{offer.description}</p>
+                              )}
+                              {offer.incentiveDescription && (
+                                <p className="text-sm text-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                                  <strong>Offer details:</strong> {offer.incentiveDescription}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                              onClick={() => deleteMutation.mutate({ id: offer.id })}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

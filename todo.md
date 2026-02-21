@@ -68,3 +68,37 @@
 - [x] Write vitest tests for business CRUD operations
 - [x] Write vitest tests for referral tracking
 - [x] Write vitest tests for claiming workflow
+- [x] Write vitest tests for dual offer types (B2B/Consumer)
+- [x] Write vitest tests for regions and hubs
+
+## Sport Vacations & Expanded Categories
+- [x] Add "Sport Vacations" as a new sport category
+- [x] Expand "Trail Running" to "Running" covering road, trail, ultra running
+- [x] Add "Sport Vacation Provider" as a new business type
+- [x] Seed sport vacation businesses in key locations
+
+## Dual Referral Offer Types
+- [x] Add offerType field to referralOffers (B2B vs Individual Consumer)
+- [x] Update referral offer creation form with offer type selection
+- [x] Update referral offers listing to filter/display by offer type
+- [x] Update business profile to show both B2B and individual offers separately
+- [x] B2B offers: for businesses looking to collaborate or send customers
+- [x] Individual offers: for consumers looking for services (claimable by referred customers)
+
+## Geographic Focus - Endurance Sports Hubs
+- [x] Add region/hub fields to location data
+- [x] Seed Canadian hubs (Whistler, Banff, Mont-Tremblant, etc.)
+- [x] Seed US hubs (Boulder, Park City, Bend, Moab, etc.)
+- [x] Seed European hubs - Dolomites (Cortina, Bolzano, Val Gardena)
+- [x] Seed European hubs - Pyrenees (Andorra, Bagnères-de-Luchon, Girona)
+- [x] Seed European hubs - Mallorca (Palma, Sóller, Pollença)
+- [x] Seed European hubs - Alps (Chamonix, Zermatt, Innsbruck)
+- [x] Update directory filters to browse by region/hub
+- [x] Update landing page to showcase geographic hubs
+
+## Frontend Updates
+- [x] Update landing page sport categories to include Sport Vacations and Running
+- [x] Update directory page filters for new categories and regions
+- [x] Update referral offers page with B2B vs Individual tabs
+- [x] Update business profile page for dual offer types
+- [x] Update manage offers page for dual offer types

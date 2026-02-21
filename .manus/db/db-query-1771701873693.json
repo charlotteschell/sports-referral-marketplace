@@ -1,0 +1,14 @@
+{
+  "query": "-- Fix Sedona Trail Adventures - should be Coach (1) not Ski Shop (11)\nUPDATE businesses SET businessTypeId = 1 WHERE slug = 'sedona-trail-adventures';\n\n-- Fix Banff Sport Massage - was set to 10 (Personal Trainer) in seed, should be 8 (Sports Massage)\n-- Already fixed above, verify\nSELECT b.slug, bt.name FROM businesses b LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id WHERE b.slug = 'banff-sport-massage';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute -- Fix Sedona Trail Adventures - should be Coach (1) not Ski Shop (11)\nUPDATE businesses SET businessTypeId = 1 WHERE slug = 'sedona-trail-adventures';\n\n-- Fix Banff Sport Massage - was set to 10 (Personal Trainer) in seed, should be 8 (Sports Massage)\n-- Already fixed above, verify\nSELECT b.slug, bt.name FROM businesses b LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id WHERE b.slug = 'banff-sport-massage';",
+  "rows": [
+    {
+      "slug": "banff-sport-massage",
+      "name": "Sports Massage"
+    }
+  ],
+  "messages": [],
+  "stdout": "slug\tname\nbanff-sport-massage\tSports Massage\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

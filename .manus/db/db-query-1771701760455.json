@@ -1,0 +1,85 @@
+{
+  "query": "SELECT id, name, slug FROM businessTypes ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name, slug FROM businessTypes ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Coach",
+      "slug": "coach"
+    },
+    {
+      "id": "2",
+      "name": "Bike Shop",
+      "slug": "bike-shop"
+    },
+    {
+      "id": "3",
+      "name": "Running Store",
+      "slug": "running-store"
+    },
+    {
+      "id": "4",
+      "name": "Cycling Studio",
+      "slug": "cycling-studio"
+    },
+    {
+      "id": "5",
+      "name": "Running Club",
+      "slug": "running-club"
+    },
+    {
+      "id": "6",
+      "name": "Cycling Club",
+      "slug": "cycling-club"
+    },
+    {
+      "id": "7",
+      "name": "Physiotherapist",
+      "slug": "physiotherapist"
+    },
+    {
+      "id": "8",
+      "name": "Sports Massage",
+      "slug": "sports-massage"
+    },
+    {
+      "id": "9",
+      "name": "Nutritionist",
+      "slug": "nutritionist"
+    },
+    {
+      "id": "10",
+      "name": "Personal Trainer",
+      "slug": "personal-trainer"
+    },
+    {
+      "id": "11",
+      "name": "Ski Shop",
+      "slug": "ski-shop"
+    },
+    {
+      "id": "12",
+      "name": "Ski School",
+      "slug": "ski-school"
+    },
+    {
+      "id": "13",
+      "name": "Bike Fitting",
+      "slug": "bike-fitting"
+    },
+    {
+      "id": "14",
+      "name": "Race Organizer",
+      "slug": "race-organizer"
+    },
+    {
+      "id": "15",
+      "name": "Vacation Provider",
+      "slug": "vacation-provider"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\n1\tCoach\tcoach\n2\tBike Shop\tbike-shop\n3\tRunning Store\trunning-store\n4\tCycling Studio\tcycling-studio\n5\tRunning Club\trunning-club\n6\tCycling Club\tcycling-club\n7\tPhysiotherapist\tphysiotherapist\n8\tSports Massage\tsports-massage\n9\tNutritionist\tnutritionist\n10\tPersonal Trainer\tpersonal-trainer\n11\tSki Shop\tski-shop\n12\tSki School\tski-school\n13\tBike Fitting\tbike-fitting\n14\tRace Organizer\trace-organizer\n15\tVacation Provider\tvacation-provider\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

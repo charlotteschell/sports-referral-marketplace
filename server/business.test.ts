@@ -6,17 +6,30 @@ import type { TrpcContext } from "./_core/context";
 vi.mock("./db", () => ({
   getAllSportCategories: vi.fn().mockResolvedValue([
     { id: 1, name: "Cycling", slug: "cycling", description: "Cycling sports", icon: "bike" },
-    { id: 2, name: "Trail Running", slug: "trail-running", description: "Trail running", icon: "mountain" },
+    { id: 2, name: "Running", slug: "running", description: "All running disciplines", icon: "mountain" },
     { id: 3, name: "Snowsports", slug: "snowsports", description: "Snow sports", icon: "snowflake" },
+    { id: 4, name: "Sport Vacations", slug: "sport-vacations", description: "Endurance sport vacations", icon: "compass" },
   ]),
   getAllBusinessTypes: vi.fn().mockResolvedValue([
     { id: 1, name: "Coach", slug: "coach", description: "Coaching services" },
     { id: 2, name: "Bike Shop", slug: "bike-shop", description: "Bicycle retail" },
+    { id: 15, name: "Vacation Provider", slug: "vacation-provider", description: "Sport vacation packages" },
   ]),
+  getDistinctRegions: vi.fn().mockResolvedValue(["Alps", "Dolomites", "Mallorca", "Pyrenees", "Western Canada", "Western US"]),
+  getHubsByRegion: vi.fn().mockImplementation(async (region?: string) => {
+    const allHubs = [
+      { hub: "Chamonix", region: "Alps" },
+      { hub: "Cortina d'Ampezzo", region: "Dolomites" },
+      { hub: "Whistler", region: "Western Canada" },
+      { hub: "Boulder", region: "Western US" },
+    ];
+    if (region) return allHubs.filter(h => h.region === region);
+    return allHubs;
+  }),
   searchBusinesses: vi.fn().mockResolvedValue({
     businesses: [
       {
-        business: { id: 1, name: "Test Cycling", slug: "test-cycling", isClaimed: true, isActive: true, sportCategoryId: 1, businessTypeId: 1 },
+        business: { id: 1, name: "Test Cycling", slug: "test-cycling", isClaimed: true, isActive: true, sportCategoryId: 1, businessTypeId: 1, region: "Western US", hub: "Boulder" },
         sportCategory: { id: 1, name: "Cycling", slug: "cycling" },
         businessType: { id: 1, name: "Coach", slug: "coach" },
       },
@@ -26,7 +39,7 @@ vi.mock("./db", () => ({
   getBusinessBySlug: vi.fn().mockImplementation(async (slug: string) => {
     if (slug === "test-cycling") {
       return {
-        business: { id: 1, name: "Test Cycling", slug: "test-cycling", isClaimed: true, claimedByUserId: 1, isActive: true, sportCategoryId: 1, businessTypeId: 1 },
+        business: { id: 1, name: "Test Cycling", slug: "test-cycling", isClaimed: true, claimedByUserId: 1, isActive: true, sportCategoryId: 1, businessTypeId: 1, region: "Western US", hub: "Boulder" },
         sportCategory: { id: 1, name: "Cycling", slug: "cycling" },
         businessType: { id: 1, name: "Coach", slug: "coach" },
       };
@@ -36,14 +49,14 @@ vi.mock("./db", () => ({
   getBusinessById: vi.fn().mockImplementation(async (id: number) => {
     if (id === 1) {
       return {
-        business: { id: 1, name: "Test Cycling", slug: "test-cycling", isClaimed: true, claimedByUserId: 1, isActive: true, sportCategoryId: 1, businessTypeId: 1 },
+        business: { id: 1, name: "Test Cycling", slug: "test-cycling", isClaimed: true, claimedByUserId: 1, isActive: true, sportCategoryId: 1, businessTypeId: 1, region: "Western US", hub: "Boulder" },
         sportCategory: { id: 1, name: "Cycling", slug: "cycling" },
         businessType: { id: 1, name: "Coach", slug: "coach" },
       };
     }
     if (id === 2) {
       return {
-        business: { id: 2, name: "Unclaimed Biz", slug: "unclaimed-biz", isClaimed: false, claimedByUserId: null, isActive: true, sportCategoryId: 1, businessTypeId: 1 },
+        business: { id: 2, name: "Unclaimed Biz", slug: "unclaimed-biz", isClaimed: false, claimedByUserId: null, isActive: true, sportCategoryId: 1, businessTypeId: 1, region: "Dolomites", hub: "Cortina d'Ampezzo" },
         sportCategory: { id: 1, name: "Cycling", slug: "cycling" },
         businessType: { id: 1, name: "Coach", slug: "coach" },
       };
@@ -56,19 +69,32 @@ vi.mock("./db", () => ({
   claimBusiness: vi.fn().mockResolvedValue(undefined),
   getFeaturedBusinesses: vi.fn().mockResolvedValue([]),
   getDirectoryStats: vi.fn().mockResolvedValue({
-    totalBusinesses: 10, claimedBusinesses: 5, totalReferrals: 20, sportCategories: 3,
+    totalBusinesses: 51, claimedBusinesses: 12, totalReferrals: 20, sportCategories: 4, regions: 6,
   }),
-  getReferralOffersByBusiness: vi.fn().mockResolvedValue([
-    { id: 1, businessId: 1, title: "10% Commission", incentiveType: "percentage", incentiveValue: "10", isActive: true },
-  ]),
+  getReferralOffersByBusiness: vi.fn().mockImplementation(async (businessId: number, offerType?: string) => {
+    const offers = [
+      { id: 1, businessId: 1, title: "10% Commission", offerType: "b2b", incentiveType: "percentage", incentiveValue: "10", isActive: true },
+      { id: 2, businessId: 1, title: "15% Off First Session", offerType: "consumer", incentiveType: "percentage", incentiveValue: "15", isActive: true },
+    ];
+    if (offerType) return offers.filter(o => o.offerType === offerType);
+    return offers;
+  }),
   createReferralOffer: vi.fn().mockResolvedValue(1),
   updateReferralOffer: vi.fn().mockResolvedValue(undefined),
   deleteReferralOffer: vi.fn().mockResolvedValue(undefined),
   getReferralOfferById: vi.fn().mockImplementation(async (id: number) => {
-    if (id === 1) return { id: 1, businessId: 1, title: "10% Commission", incentiveType: "percentage", incentiveValue: "10", isActive: true };
+    if (id === 1) return { id: 1, businessId: 1, title: "10% Commission", offerType: "b2b", incentiveType: "percentage", incentiveValue: "10", isActive: true };
+    if (id === 2) return { id: 2, businessId: 1, title: "15% Off First Session", offerType: "consumer", incentiveType: "percentage", incentiveValue: "15", isActive: true };
     return null;
   }),
-  getAllActiveReferralOffers: vi.fn().mockResolvedValue([]),
+  getAllActiveReferralOffers: vi.fn().mockImplementation(async (offerType?: string) => {
+    const offers = [
+      { offer: { id: 1, title: "10% Commission", offerType: "b2b", incentiveType: "percentage" }, business: { id: 1, name: "Test Cycling" }, sportCategory: { id: 1, name: "Cycling" } },
+      { offer: { id: 2, title: "15% Off", offerType: "consumer", incentiveType: "percentage" }, business: { id: 1, name: "Test Cycling" }, sportCategory: { id: 1, name: "Cycling" } },
+    ];
+    if (offerType) return offers.filter(o => o.offer.offerType === offerType);
+    return offers;
+  }),
   createReferral: vi.fn().mockResolvedValue(1),
   updateReferralStatus: vi.fn().mockResolvedValue(undefined),
   getReferralsSent: vi.fn().mockResolvedValue([]),
@@ -105,21 +131,48 @@ function createAuthContext(userId = 1, role: "user" | "admin" = "user"): TrpcCon
   };
 }
 
+// ─── Categories & Regions ──────────────────────────────────────
+
 describe("categories", () => {
-  it("returns sport categories as a public procedure", async () => {
+  it("returns sport categories including sport vacations and running", async () => {
     const caller = appRouter.createCaller(createPublicContext());
     const result = await caller.categories.sportCategories();
-    expect(result).toHaveLength(3);
-    expect(result[0].slug).toBe("cycling");
+    expect(result).toHaveLength(4);
+    expect(result.map(c => c.slug)).toContain("running");
+    expect(result.map(c => c.slug)).toContain("sport-vacations");
   });
 
-  it("returns business types as a public procedure", async () => {
+  it("returns business types including vacation provider", async () => {
     const caller = appRouter.createCaller(createPublicContext());
     const result = await caller.categories.businessTypes();
-    expect(result).toHaveLength(2);
-    expect(result[0].slug).toBe("coach");
+    expect(result).toHaveLength(3);
+    expect(result.map(t => t.slug)).toContain("vacation-provider");
+  });
+
+  it("returns distinct regions", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.categories.regions();
+    expect(result).toContain("Dolomites");
+    expect(result).toContain("Western Canada");
+    expect(result).toContain("Alps");
+    expect(result.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it("returns hubs filtered by region", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.categories.hubs({ region: "Alps" });
+    expect(result).toHaveLength(1);
+    expect(result[0].hub).toBe("Chamonix");
+  });
+
+  it("returns all hubs when no region specified", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.categories.hubs();
+    expect(result.length).toBeGreaterThanOrEqual(4);
   });
 });
+
+// ─── Business Directory ──────────────────────────────────────
 
 describe("business.search", () => {
   it("searches businesses publicly", async () => {
@@ -129,12 +182,12 @@ describe("business.search", () => {
     expect(result.total).toBe(1);
   });
 
-  it("accepts filter parameters", async () => {
+  it("accepts region and hub filter parameters", async () => {
     const caller = appRouter.createCaller(createPublicContext());
     const result = await caller.business.search({
-      search: "cycling",
+      region: "Western US",
+      hub: "Boulder",
       sportCategoryId: 1,
-      businessTypeId: 1,
       limit: 10,
       offset: 0,
     });
@@ -143,10 +196,12 @@ describe("business.search", () => {
 });
 
 describe("business.getBySlug", () => {
-  it("returns a business by slug", async () => {
+  it("returns a business by slug with region/hub data", async () => {
     const caller = appRouter.createCaller(createPublicContext());
     const result = await caller.business.getBySlug({ slug: "test-cycling" });
     expect(result.business.name).toBe("Test Cycling");
+    expect(result.business.region).toBe("Western US");
+    expect(result.business.hub).toBe("Boulder");
   });
 
   it("throws NOT_FOUND for unknown slug", async () => {
@@ -154,6 +209,8 @@ describe("business.getBySlug", () => {
     await expect(caller.business.getBySlug({ slug: "nonexistent" })).rejects.toThrow();
   });
 });
+
+// ─── Business Claiming ──────────────────────────────────────
 
 describe("business.claim", () => {
   it("allows authenticated user to claim an unclaimed business", async () => {
@@ -173,8 +230,10 @@ describe("business.claim", () => {
   });
 });
 
+// ─── Business CRUD ──────────────────────────────────────
+
 describe("business.create", () => {
-  it("creates a new business for authenticated user", async () => {
+  it("creates a new business with region and hub", async () => {
     const caller = appRouter.createCaller(createAuthContext());
     const result = await caller.business.create({
       name: "New Business",
@@ -182,6 +241,8 @@ describe("business.create", () => {
       businessTypeId: 1,
       city: "Denver",
       country: "USA",
+      region: "Western US",
+      hub: "Denver",
     });
     expect(result.id).toBe(99);
     expect(result.slug).toContain("new-business");
@@ -196,9 +257,9 @@ describe("business.create", () => {
 });
 
 describe("business.update", () => {
-  it("allows owner to update their business", async () => {
+  it("allows owner to update their business including region/hub", async () => {
     const caller = appRouter.createCaller(createAuthContext(1));
-    const result = await caller.business.update({ id: 1, name: "Updated Name" });
+    const result = await caller.business.update({ id: 1, name: "Updated Name", region: "Alps", hub: "Chamonix" });
     expect(result.success).toBe(true);
   });
 
@@ -208,21 +269,60 @@ describe("business.update", () => {
   });
 });
 
+// ─── Referral Offers with Dual Types ──────────────────────────
+
 describe("referralOffer", () => {
-  it("lists offers for a business publicly", async () => {
+  it("lists all offers for a business publicly", async () => {
     const caller = appRouter.createCaller(createPublicContext());
     const result = await caller.referralOffer.getByBusiness({ businessId: 1 });
-    expect(result).toHaveLength(1);
-    expect(result[0].title).toBe("10% Commission");
+    expect(result).toHaveLength(2);
   });
 
-  it("creates an offer for owned business", async () => {
+  it("filters offers by B2B type", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.referralOffer.getByBusiness({ businessId: 1, offerType: "b2b" });
+    expect(result).toHaveLength(1);
+    expect(result[0].offerType).toBe("b2b");
+  });
+
+  it("filters offers by consumer type", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.referralOffer.getByBusiness({ businessId: 1, offerType: "consumer" });
+    expect(result).toHaveLength(1);
+    expect(result[0].offerType).toBe("consumer");
+  });
+
+  it("creates a B2B offer for owned business", async () => {
     const caller = appRouter.createCaller(createAuthContext(1));
     const result = await caller.referralOffer.create({
       businessId: 1,
-      title: "New Offer",
+      title: "New B2B Offer",
+      offerType: "b2b",
       incentiveType: "percentage",
       incentiveValue: "15",
+    });
+    expect(result.id).toBe(1);
+  });
+
+  it("creates a consumer offer for owned business", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1));
+    const result = await caller.referralOffer.create({
+      businessId: 1,
+      title: "20% Off First Visit",
+      offerType: "consumer",
+      incentiveType: "percentage",
+      incentiveValue: "20",
+    });
+    expect(result.id).toBe(1);
+  });
+
+  it("defaults offerType to b2b when not specified", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1));
+    const result = await caller.referralOffer.create({
+      businessId: 1,
+      title: "Default Type Offer",
+      incentiveType: "fixed",
+      incentiveValue: "25",
     });
     expect(result.id).toBe(1);
   });
@@ -239,7 +339,23 @@ describe("referralOffer", () => {
     const result = await caller.referralOffer.delete({ id: 1 });
     expect(result.success).toBe(true);
   });
+
+  it("lists all active offers with type filter", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const all = await caller.referralOffer.allActive({});
+    expect(all).toHaveLength(2);
+
+    const b2bOnly = await caller.referralOffer.allActive({ offerType: "b2b" });
+    expect(b2bOnly).toHaveLength(1);
+    expect(b2bOnly[0].offer.offerType).toBe("b2b");
+
+    const consumerOnly = await caller.referralOffer.allActive({ offerType: "consumer" });
+    expect(consumerOnly).toHaveLength(1);
+    expect(consumerOnly[0].offer.offerType).toBe("consumer");
+  });
 });
+
+// ─── Referral Tracking ──────────────────────────────────────
 
 describe("referral tracking", () => {
   it("sends a referral from owned business", async () => {
@@ -275,11 +391,15 @@ describe("referral tracking", () => {
   });
 });
 
+// ─── Directory Stats ──────────────────────────────────────
+
 describe("stats.directory", () => {
-  it("returns directory stats publicly", async () => {
+  it("returns directory stats with region count", async () => {
     const caller = appRouter.createCaller(createPublicContext());
     const stats = await caller.stats.directory();
-    expect(stats.totalBusinesses).toBe(10);
-    expect(stats.claimedBusinesses).toBe(5);
+    expect(stats.totalBusinesses).toBe(51);
+    expect(stats.claimedBusinesses).toBe(12);
+    expect(stats.sportCategories).toBe(4);
+    expect(stats.regions).toBe(6);
   });
 });

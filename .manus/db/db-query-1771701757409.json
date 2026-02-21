@@ -1,0 +1,190 @@
+{
+  "query": "-- Check current business type assignments\nSELECT b.id, b.name, bt.name as bizType, bt.slug, sc.name as sport, b.region, b.hub \nFROM businesses b \nLEFT JOIN businessTypes bt ON b.businessTypeId = bt.id \nLEFT JOIN sportCategories sc ON b.sportCategoryId = sc.id\nORDER BY b.id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute -- Check current business type assignments\nSELECT b.id, b.name, bt.name as bizType, bt.slug, sc.name as sport, b.region, b.hub \nFROM businesses b \nLEFT JOIN businessTypes bt ON b.businessTypeId = bt.id \nLEFT JOIN sportCategories sc ON b.sportCategoryId = sc.id\nORDER BY b.id LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Summit Cycling Coaching",
+      "bizType": "Coach",
+      "slug": "coach",
+      "sport": "Cycling",
+      "region": "Western US",
+      "hub": "Boulder"
+    },
+    {
+      "id": "2",
+      "name": "Trailhead Bike Works",
+      "bizType": "Bike Shop",
+      "slug": "bike-shop",
+      "sport": "Cycling",
+      "region": "NULL",
+      "hub": "NULL"
+    },
+    {
+      "id": "3",
+      "name": "Alpine Run Club",
+      "bizType": "Running Club",
+      "slug": "running-club",
+      "sport": "Running",
+      "region": "NULL",
+      "hub": "NULL"
+    },
+    {
+      "id": "4",
+      "name": "Peak Performance Physio",
+      "bizType": "Physiotherapist",
+      "slug": "physiotherapist",
+      "sport": "Cycling",
+      "region": "NULL",
+      "hub": "NULL"
+    },
+    {
+      "id": "5",
+      "name": "Powder Line Ski School",
+      "bizType": "Ski School",
+      "slug": "ski-school",
+      "sport": "Snowsports",
+      "region": "Western Canada",
+      "hub": "Whistler"
+    },
+    {
+      "id": "6",
+      "name": "Endurance Fuel Nutrition",
+      "bizType": "Nutritionist",
+      "slug": "nutritionist",
+      "sport": "Running",
+      "region": "Western US",
+      "hub": "Portland"
+    },
+    {
+      "id": "7",
+      "name": "Iron Legs Sports Massage",
+      "bizType": "Sports Massage",
+      "slug": "sports-massage",
+      "sport": "Cycling",
+      "region": "Western US",
+      "hub": "Park City"
+    },
+    {
+      "id": "8",
+      "name": "Velocity Cycling Studio",
+      "bizType": "Cycling Studio",
+      "slug": "cycling-studio",
+      "sport": "Cycling",
+      "region": "NULL",
+      "hub": "NULL"
+    },
+    {
+      "id": "9",
+      "name": "Nordic Edge Ski Shop",
+      "bizType": "Ski Shop",
+      "slug": "ski-shop",
+      "sport": "Snowsports",
+      "region": "NULL",
+      "hub": "NULL"
+    },
+    {
+      "id": "10",
+      "name": "Trail Blazer Running Store",
+      "bizType": "Running Store",
+      "slug": "running-store",
+      "sport": "Running",
+      "region": "Western US",
+      "hub": "Bend"
+    },
+    {
+      "id": "11",
+      "name": "Mountain Fit Personal Training",
+      "bizType": "Personal Trainer",
+      "slug": "personal-trainer",
+      "sport": "Snowsports",
+      "region": "NULL",
+      "hub": "NULL"
+    },
+    {
+      "id": "12",
+      "name": "Ride Right Bike Fitting",
+      "bizType": "Bike Fitting",
+      "slug": "bike-fitting",
+      "sport": "Cycling",
+      "region": "NULL",
+      "hub": "NULL"
+    },
+    {
+      "id": "13",
+      "name": "Dolomiti Cycling Tours",
+      "bizType": "Ski Shop",
+      "slug": "ski-shop",
+      "sport": "Cycling",
+      "region": "Dolomites",
+      "hub": "Cortina d'Ampezzo"
+    },
+    {
+      "id": "14",
+      "name": "Alta Via Running Camp",
+      "bizType": "Ski Shop",
+      "slug": "ski-shop",
+      "sport": "Running",
+      "region": "Dolomites",
+      "hub": "Bolzano"
+    },
+    {
+      "id": "15",
+      "name": "Dolomites Sport Physio",
+      "bizType": "Nutritionist",
+      "slug": "nutritionist",
+      "sport": "Cycling",
+      "region": "Dolomites",
+      "hub": "Bressanone"
+    },
+    {
+      "id": "16",
+      "name": "Val Gardena Bike Shop",
+      "bizType": "Physiotherapist",
+      "slug": "physiotherapist",
+      "sport": "Cycling",
+      "region": "Dolomites",
+      "hub": "Val Gardena"
+    },
+    {
+      "id": "17",
+      "name": "Dolomiti Ski & Snow",
+      "bizType": "Coach",
+      "slug": "coach",
+      "sport": "Snowsports",
+      "region": "Dolomites",
+      "hub": "Val Gardena"
+    },
+    {
+      "id": "18",
+      "name": "Pyrenees Cycling Holidays",
+      "bizType": "Ski Shop",
+      "slug": "ski-shop",
+      "sport": "Cycling",
+      "region": "Pyrenees",
+      "hub": "Luchon"
+    },
+    {
+      "id": "19",
+      "name": "Trail Pyrenees",
+      "bizType": "Ski Shop",
+      "slug": "ski-shop",
+      "sport": "Running",
+      "region": "Pyrenees",
+      "hub": "Cauterets"
+    },
+    {
+      "id": "20",
+      "name": "Pyrenees Performance Coaching",
+      "bizType": "Coach",
+      "slug": "coach",
+      "sport": "Cycling",
+      "region": "Pyrenees",
+      "hub": "Font-Romeu"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tbizType\tslug\tsport\tregion\thub\n1\tSummit Cycling Coaching\tCoach\tcoach\tCycling\tWestern US\tBoulder\n2\tTrailhead Bike Works\tBike Shop\tbike-shop\tCycling\tNULL\tNULL\n3\tAlpine Run Club\tRunning Club\trunning-club\tRunning\tNULL\tNULL\n4\tPeak Performance Physio\tPhysiotherapist\tphysiotherapist\tCycling\tNULL\tNULL\n5\tPowder Line Ski School\tSki School\tski-school\tSnowsports\tWestern Canada\tWhistler\n6\tEndurance Fuel Nutrition\tNutritionist\tnutritionist\tRunning\tWestern US\tPortland\n7\tIron Legs Sports Massage\tSports Massage\tsports-massage\tCycling\tWestern US\tPark City\n8\tVelocity Cycling Studio\tCycling Studio\tcycling-studio\tCycling\tNULL\tNULL\n9\tNordic Edge Ski Shop\tSki Shop\tski-shop\tSnowsports\tNULL\tNULL\n10\tTrail Blazer Running Store\tRunning Store\trunning-store\tRunning\tWestern US\tBend\n11\tMountain Fit Personal Training\tPersonal Trainer\tpersonal-trainer\tSnowsports\tNULL\tNULL\n12\tRide Right Bike Fitting\tBike Fitting\tbike-fitting\tCycling\tNULL\tNULL\n13\tDolomiti Cycling Tours\tSki Shop\tski-shop\tCycling\tDolomites\tCortina d'Ampezzo\n14\tAlta Via Running Camp\tSki Shop\tski-shop\tRunning\tDolomites\tBolzano\n15\tDolomites Sport Physio\tNutritionist\tnutritionist\tCycling\tDolomites\tBressanone\n16\tVal Gardena Bike Shop\tPhysiotherapist\tphysiotherapist\tCycling\tDolomites\tVal Gardena\n17\tDolomiti Ski & Snow\tCoach\tcoach\tSnowsports\tDolomites\tVal Gardena\n18\tPyrenees Cycling Holidays\tSki Shop\tski-shop\tCycling\tPyrenees\tLuchon\n19\tTrail Pyrenees\tSki Shop\tski-shop\tRunning\tPyrenees\tCauterets\n20\tPyrenees Performance Coaching\tCoach\tcoach\tCycling\tPyrenees\tFont-Romeu\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, slug FROM sportCategories ORDER BY id;\nSELECT id, slug FROM businessTypes ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, slug FROM sportCategories ORDER BY id;\nSELECT id, slug FROM businessTypes ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "slug": "cycling"
+    },
+    {
+      "id": "2",
+      "slug": "running"
+    },
+    {
+      "id": "3",
+      "slug": "snowsports"
+    },
+    {
+      "id": "4",
+      "slug": "sport-vacations"
+    },
+    {
+      "id": "id",
+      "slug": "slug"
+    },
+    {
+      "id": "1",
+      "slug": "coach"
+    },
+    {
+      "id": "2",
+      "slug": "bike-shop"
+    },
+    {
+      "id": "3",
+      "slug": "running-store"
+    },
+    {
+      "id": "4",
+      "slug": "cycling-studio"
+    },
+    {
+      "id": "5",
+      "slug": "running-club"
+    },
+    {
+      "id": "6",
+      "slug": "cycling-club"
+    },
+    {
+      "id": "7",
+      "slug": "physiotherapist"
+    },
+    {
+      "id": "8",
+      "slug": "sports-massage"
+    },
+    {
+      "id": "9",
+      "slug": "nutritionist"
+    },
+    {
+      "id": "10",
+      "slug": "personal-trainer"
+    },
+    {
+      "id": "11",
+      "slug": "ski-shop"
+    },
+    {
+      "id": "12",
+      "slug": "ski-school"
+    },
+    {
+      "id": "13",
+      "slug": "bike-fitting"
+    },
+    {
+      "id": "14",
+      "slug": "race-organizer"
+    },
+    {
+      "id": "15",
+      "slug": "vacation-provider"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tslug\n1\tcycling\n2\trunning\n3\tsnowsports\n4\tsport-vacations\nid\tslug\n1\tcoach\n2\tbike-shop\n3\trunning-store\n4\tcycling-studio\n5\trunning-club\n6\tcycling-club\n7\tphysiotherapist\n8\tsports-massage\n9\tnutritionist\n10\tpersonal-trainer\n11\tski-shop\n12\tski-school\n13\tbike-fitting\n14\trace-organizer\n15\tvacation-provider\n",
+  "stderr": "",
+  "execution_time_ms": 68
+}

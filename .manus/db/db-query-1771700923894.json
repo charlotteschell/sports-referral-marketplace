@@ -1,0 +1,37 @@
+{
+  "query": "-- Get the sport category IDs\n-- Cycling = 1, Running = 2, Snowsports = 3, Sport Vacations = 4 (assumed from insert order)\n\n-- Update existing businesses with region and hub info\nUPDATE businesses SET region = 'Western Canada', hub = 'Whistler' WHERE city = 'Whistler';\nUPDATE businesses SET region = 'Western Canada', hub = 'Vancouver' WHERE city = 'Vancouver';\nUPDATE businesses SET region = 'Western US', hub = 'Boulder' WHERE city = 'Boulder';\nUPDATE businesses SET region = 'Western US', hub = 'Portland' WHERE city = 'Portland';\nUPDATE businesses SET region = 'Western US', hub = 'Bend' WHERE city = 'Bend';\nUPDATE businesses SET region = 'Western US', hub = 'Park City' WHERE city = 'Park City';\nUPDATE businesses SET region = 'Eastern Canada', hub = 'Toronto' WHERE city = 'Toronto';\nUPDATE businesses SET region = 'Eastern US', hub = 'New York' WHERE city = 'New York';\n\n-- Get the vacation provider business type ID\n-- Let's query to find it\nSELECT id FROM businessTypes WHERE slug = 'vacation-provider';\nSELECT id FROM sportCategories WHERE slug = 'sport-vacations';\nSELECT id FROM sportCategories WHERE slug = 'running';\nSELECT id FROM sportCategories WHERE slug = 'cycling';\nSELECT id FROM sportCategories WHERE slug = 'snowsports';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute -- Get the sport category IDs\n-- Cycling = 1, Running = 2, Snowsports = 3, Sport Vacations = 4 (assumed from insert order)\n\n-- Update existing businesses with region and hub info\nUPDATE businesses SET region = 'Western Canada', hub = 'Whistler' WHERE city = 'Whistler';\nUPDATE businesses SET region = 'Western Canada', hub = 'Vancouver' WHERE city = 'Vancouver';\nUPDATE businesses SET region = 'Western US', hub = 'Boulder' WHERE city = 'Boulder';\nUPDATE businesses SET region = 'Western US', hub = 'Portland' WHERE city = 'Portland';\nUPDATE businesses SET region = 'Western US', hub = 'Bend' WHERE city = 'Bend';\nUPDATE businesses SET region = 'Western US', hub = 'Park City' WHERE city = 'Park City';\nUPDATE businesses SET region = 'Eastern Canada', hub = 'Toronto' WHERE city = 'Toronto';\nUPDATE businesses SET region = 'Eastern US', hub = 'New York' WHERE city = 'New York';\n\n-- Get the vacation provider business type ID\n-- Let's query to find it\nSELECT id FROM businessTypes WHERE slug = 'vacation-provider';\nSELECT id FROM sportCategories WHERE slug = 'sport-vacations';\nSELECT id FROM sportCategories WHERE slug = 'running';\nSELECT id FROM sportCategories WHERE slug = 'cycling';\nSELECT id FROM sportCategories WHERE slug = 'snowsports';",
+  "rows": [
+    {
+      "id": "15"
+    },
+    {
+      "id": "id"
+    },
+    {
+      "id": "4"
+    },
+    {
+      "id": "id"
+    },
+    {
+      "id": "2"
+    },
+    {
+      "id": "id"
+    },
+    {
+      "id": "1"
+    },
+    {
+      "id": "id"
+    },
+    {
+      "id": "3"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\n15\nid\n4\nid\n2\nid\n1\nid\n3\n",
+  "stderr": "",
+  "execution_time_ms": 140
+}

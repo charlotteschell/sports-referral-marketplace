@@ -26,6 +26,14 @@ export const appRouter = router({
     businessTypes: publicProcedure.query(async () => {
       return db.getAllBusinessTypes();
     }),
+    regions: publicProcedure.query(async () => {
+      return db.getDistinctRegions();
+    }),
+    hubs: publicProcedure
+      .input(z.object({ region: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        return db.getHubsByRegion(input?.region);
+      }),
   }),
 
   // ─── Directory Stats ────────────────────────────────────────
@@ -44,6 +52,8 @@ export const appRouter = router({
         businessTypeId: z.number().optional(),
         city: z.string().optional(),
         country: z.string().optional(),
+        region: z.string().optional(),
+        hub: z.string().optional(),
         isClaimed: z.boolean().optional(),
         limit: z.number().min(1).max(50).optional(),
         offset: z.number().min(0).optional(),
@@ -89,6 +99,8 @@ export const appRouter = router({
         state: z.string().optional(),
         country: z.string().optional(),
         address: z.string().optional(),
+        region: z.string().optional(),
+        hub: z.string().optional(),
         phone: z.string().optional(),
         email: z.string().optional(),
         website: z.string().optional(),
@@ -130,6 +142,8 @@ export const appRouter = router({
         state: z.string().optional(),
         country: z.string().optional(),
         address: z.string().optional(),
+        region: z.string().optional(),
+        hub: z.string().optional(),
         phone: z.string().optional(),
         email: z.string().optional(),
         website: z.string().optional(),
@@ -153,18 +167,22 @@ export const appRouter = router({
   // ─── Referral Offers ────────────────────────────────────────
   referralOffer: router({
     getByBusiness: publicProcedure
-      .input(z.object({ businessId: z.number() }))
+      .input(z.object({
+        businessId: z.number(),
+        offerType: z.enum(["b2b", "consumer"]).optional(),
+      }))
       .query(async ({ input }) => {
-        return db.getReferralOffersByBusiness(input.businessId);
+        return db.getReferralOffersByBusiness(input.businessId, input.offerType);
       }),
 
     allActive: publicProcedure
       .input(z.object({
-        limit: z.number().min(1).max(50).optional(),
+        offerType: z.enum(["b2b", "consumer"]).optional(),
+        limit: z.number().min(1).max(100).optional(),
         offset: z.number().min(0).optional(),
       }).optional())
       .query(async ({ input }) => {
-        return db.getAllActiveReferralOffers(input?.limit, input?.offset);
+        return db.getAllActiveReferralOffers(input?.offerType, input?.limit, input?.offset);
       }),
 
     create: protectedProcedure
@@ -172,6 +190,7 @@ export const appRouter = router({
         businessId: z.number(),
         title: z.string().min(1).max(255),
         description: z.string().optional(),
+        offerType: z.enum(["b2b", "consumer"]).default("b2b"),
         incentiveType: z.enum(["percentage", "fixed", "service", "other"]),
         incentiveValue: z.string().optional(),
         incentiveDescription: z.string().optional(),
@@ -192,6 +211,7 @@ export const appRouter = router({
         id: z.number(),
         title: z.string().min(1).max(255).optional(),
         description: z.string().optional(),
+        offerType: z.enum(["b2b", "consumer"]).optional(),
         incentiveType: z.enum(["percentage", "fixed", "service", "other"]).optional(),
         incentiveValue: z.string().optional(),
         incentiveDescription: z.string().optional(),
@@ -236,7 +256,6 @@ export const appRouter = router({
         notes: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        // Verify user owns the referring business
         const biz = await db.getBusinessById(input.referringBusinessId);
         if (!biz || (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin')) {
           throw new TRPCError({ code: "FORBIDDEN", message: "You can only send referrals from your own business" });

@@ -1,11 +1,11 @@
 import { Link } from "wouter";
-import { Mountain, Bike, Snowflake } from "lucide-react";
+import { Mountain, Bike, Snowflake, Compass } from "lucide-react";
 
 export default function Footer() {
   return (
     <footer className="bg-[oklch(0.22_0.02_50)] text-white/70 border-t border-white/10">
       <div className="container py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
@@ -23,11 +23,25 @@ export default function Footer() {
 
           {/* Directory */}
           <div>
-            <h4 className="text-sm font-bold text-white mb-4">Directory</h4>
+            <h4 className="text-sm font-bold text-white mb-4">Sports</h4>
             <ul className="space-y-2 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>
               <li><Link href="/directory?sport=cycling"><span className="hover:text-white transition-colors cursor-pointer flex items-center gap-2"><Bike className="w-3 h-3" /> Cycling</span></Link></li>
-              <li><Link href="/directory?sport=trail-running"><span className="hover:text-white transition-colors cursor-pointer flex items-center gap-2"><Mountain className="w-3 h-3" /> Trail Running</span></Link></li>
+              <li><Link href="/directory?sport=running"><span className="hover:text-white transition-colors cursor-pointer flex items-center gap-2"><Mountain className="w-3 h-3" /> Running</span></Link></li>
               <li><Link href="/directory?sport=snowsports"><span className="hover:text-white transition-colors cursor-pointer flex items-center gap-2"><Snowflake className="w-3 h-3" /> Snowsports</span></Link></li>
+              <li><Link href="/directory?sport=sport-vacations"><span className="hover:text-white transition-colors cursor-pointer flex items-center gap-2"><Compass className="w-3 h-3" /> Sport Vacations</span></Link></li>
+            </ul>
+          </div>
+
+          {/* Regions */}
+          <div>
+            <h4 className="text-sm font-bold text-white mb-4">Top Regions</h4>
+            <ul className="space-y-2 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>
+              <li><Link href="/directory?region=Dolomites"><span className="hover:text-white transition-colors cursor-pointer">Dolomites</span></Link></li>
+              <li><Link href="/directory?region=Pyrenees"><span className="hover:text-white transition-colors cursor-pointer">Pyrenees</span></Link></li>
+              <li><Link href="/directory?region=Mallorca"><span className="hover:text-white transition-colors cursor-pointer">Mallorca</span></Link></li>
+              <li><Link href="/directory?region=Alps"><span className="hover:text-white transition-colors cursor-pointer">Alps</span></Link></li>
+              <li><Link href="/directory?region=Western+Canada"><span className="hover:text-white transition-colors cursor-pointer">Western Canada</span></Link></li>
+              <li><Link href="/directory?region=Western+US"><span className="hover:text-white transition-colors cursor-pointer">Western US</span></Link></li>
             </ul>
           </div>
 
@@ -36,7 +50,7 @@ export default function Footer() {
             <h4 className="text-sm font-bold text-white mb-4">For Businesses</h4>
             <ul className="space-y-2 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>
               <li><Link href="/directory"><span className="hover:text-white transition-colors cursor-pointer">Claim Your Business</span></Link></li>
-              <li><Link href="/referral-offers"><span className="hover:text-white transition-colors cursor-pointer">Referral Offers</span></Link></li>
+              <li><Link href="/referral-offers"><span className="hover:text-white transition-colors cursor-pointer">B2B Offers</span></Link></li>
               <li><Link href="/dashboard"><span className="hover:text-white transition-colors cursor-pointer">Business Dashboard</span></Link></li>
             </ul>
           </div>
@@ -46,8 +60,8 @@ export default function Footer() {
             <h4 className="text-sm font-bold text-white mb-4">For Enthusiasts</h4>
             <ul className="space-y-2 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>
               <li><Link href="/directory"><span className="hover:text-white transition-colors cursor-pointer">Find Local Pros</span></Link></li>
-              <li><Link href="/directory"><span className="hover:text-white transition-colors cursor-pointer">Browse by Sport</span></Link></li>
-              <li><Link href="/referral-offers"><span className="hover:text-white transition-colors cursor-pointer">Special Offers</span></Link></li>
+              <li><Link href="/referral-offers"><span className="hover:text-white transition-colors cursor-pointer">Consumer Offers</span></Link></li>
+              <li><Link href="/directory?sport=sport-vacations"><span className="hover:text-white transition-colors cursor-pointer">Sport Vacations</span></Link></li>
             </ul>
           </div>
         </div>
@@ -59,9 +73,11 @@ export default function Footer() {
           <div className="flex items-center gap-4 text-xs text-white/40" style={{ textTransform: "none", letterSpacing: "normal" }}>
             <span>Cycling</span>
             <span className="w-1 h-1 rounded-full bg-white/20" />
-            <span>Trail Running</span>
+            <span>Running</span>
             <span className="w-1 h-1 rounded-full bg-white/20" />
             <span>Snowsports</span>
+            <span className="w-1 h-1 rounded-full bg-white/20" />
+            <span>Sport Vacations</span>
           </div>
         </div>
       </div>

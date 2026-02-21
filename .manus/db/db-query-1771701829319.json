@@ -1,0 +1,322 @@
+{
+  "query": "SELECT b.id, b.name, bt.name as bizType, sc.name as sport, b.region, b.hub \nFROM businesses b \nLEFT JOIN businessTypes bt ON b.businessTypeId = bt.id \nLEFT JOIN sportCategories sc ON b.sportCategoryId = sc.id\nWHERE b.id > 12 ORDER BY b.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT b.id, b.name, bt.name as bizType, sc.name as sport, b.region, b.hub \nFROM businesses b \nLEFT JOIN businessTypes bt ON b.businessTypeId = bt.id \nLEFT JOIN sportCategories sc ON b.sportCategoryId = sc.id\nWHERE b.id > 12 ORDER BY b.id;",
+  "rows": [
+    {
+      "id": "13",
+      "name": "Dolomiti Cycling Tours",
+      "bizType": "Ski Shop",
+      "sport": "Cycling",
+      "region": "Dolomites",
+      "hub": "Cortina d'Ampezzo"
+    },
+    {
+      "id": "14",
+      "name": "Alta Via Running Camp",
+      "bizType": "Ski Shop",
+      "sport": "Running",
+      "region": "Dolomites",
+      "hub": "Bolzano"
+    },
+    {
+      "id": "15",
+      "name": "Dolomites Sport Physio",
+      "bizType": "Nutritionist",
+      "sport": "Cycling",
+      "region": "Dolomites",
+      "hub": "Bressanone"
+    },
+    {
+      "id": "16",
+      "name": "Val Gardena Bike Shop",
+      "bizType": "Physiotherapist",
+      "sport": "Cycling",
+      "region": "Dolomites",
+      "hub": "Val Gardena"
+    },
+    {
+      "id": "17",
+      "name": "Dolomiti Ski & Snow",
+      "bizType": "Coach",
+      "sport": "Snowsports",
+      "region": "Dolomites",
+      "hub": "Val Gardena"
+    },
+    {
+      "id": "18",
+      "name": "Pyrenees Cycling Holidays",
+      "bizType": "Ski Shop",
+      "sport": "Cycling",
+      "region": "Pyrenees",
+      "hub": "Luchon"
+    },
+    {
+      "id": "19",
+      "name": "Trail Pyrenees",
+      "bizType": "Ski Shop",
+      "sport": "Running",
+      "region": "Pyrenees",
+      "hub": "Cauterets"
+    },
+    {
+      "id": "20",
+      "name": "Pyrenees Performance Coaching",
+      "bizType": "Coach",
+      "sport": "Cycling",
+      "region": "Pyrenees",
+      "hub": "Font-Romeu"
+    },
+    {
+      "id": "21",
+      "name": "Andorra Sport Nutrition",
+      "bizType": "Bike Shop",
+      "sport": "Running",
+      "region": "Pyrenees",
+      "hub": "Andorra"
+    },
+    {
+      "id": "22",
+      "name": "Mallorca Cycling Camp",
+      "bizType": "Ski Shop",
+      "sport": "Cycling",
+      "region": "Mallorca",
+      "hub": "Palma"
+    },
+    {
+      "id": "23",
+      "name": "Sa Calobra Bike Rentals",
+      "bizType": "Physiotherapist",
+      "sport": "Cycling",
+      "region": "Mallorca",
+      "hub": "Port de Pollenca"
+    },
+    {
+      "id": "24",
+      "name": "Mallorca Running Retreats",
+      "bizType": "Ski Shop",
+      "sport": "Running",
+      "region": "Mallorca",
+      "hub": "Soller"
+    },
+    {
+      "id": "25",
+      "name": "Tramuntana Trail Coach",
+      "bizType": "Coach",
+      "sport": "Running",
+      "region": "Mallorca",
+      "hub": "Deia"
+    },
+    {
+      "id": "26",
+      "name": "Chamonix Endurance",
+      "bizType": "Ski Shop",
+      "sport": "Running",
+      "region": "Alps",
+      "hub": "Chamonix"
+    },
+    {
+      "id": "27",
+      "name": "Zermatt Ski Academy",
+      "bizType": "Coach",
+      "sport": "Snowsports",
+      "region": "Alps",
+      "hub": "Zermatt"
+    },
+    {
+      "id": "28",
+      "name": "Girona Cycling Hub",
+      "bizType": "Coach",
+      "sport": "Cycling",
+      "region": "Costa Brava",
+      "hub": "Girona"
+    },
+    {
+      "id": "29",
+      "name": "Nice Cote d'Azur Cycling",
+      "bizType": "Ski Shop",
+      "sport": "Cycling",
+      "region": "French Riviera",
+      "hub": "Nice"
+    },
+    {
+      "id": "30",
+      "name": "Nordic Ski Norway",
+      "bizType": "Coach",
+      "sport": "Snowsports",
+      "region": "Scandinavia",
+      "hub": "Lillehammer"
+    },
+    {
+      "id": "31",
+      "name": "Squamish Trail Running Co",
+      "bizType": "Coach",
+      "sport": "Running",
+      "region": "Western Canada",
+      "hub": "Squamish"
+    },
+    {
+      "id": "32",
+      "name": "Whistler Endurance Sports",
+      "bizType": "Ski Shop",
+      "sport": "Sport Vacations",
+      "region": "Western Canada",
+      "hub": "Whistler"
+    },
+    {
+      "id": "33",
+      "name": "Victoria Cycling Club",
+      "bizType": "Cycling Club",
+      "sport": "Cycling",
+      "region": "Western Canada",
+      "hub": "Victoria"
+    },
+    {
+      "id": "34",
+      "name": "Canmore Trail Culture",
+      "bizType": "Running Club",
+      "sport": "Running",
+      "region": "Western Canada",
+      "hub": "Canmore"
+    },
+    {
+      "id": "35",
+      "name": "Banff Sport Massage",
+      "bizType": "Personal Trainer",
+      "sport": "Running",
+      "region": "Western Canada",
+      "hub": "Banff"
+    },
+    {
+      "id": "36",
+      "name": "Lake Louise Ski School",
+      "bizType": "Coach",
+      "sport": "Snowsports",
+      "region": "Western Canada",
+      "hub": "Lake Louise"
+    },
+    {
+      "id": "37",
+      "name": "Mont-Tremblant Sport",
+      "bizType": "Ski Shop",
+      "sport": "Sport Vacations",
+      "region": "Eastern Canada",
+      "hub": "Mont-Tremblant"
+    },
+    {
+      "id": "38",
+      "name": "Ottawa Running Room",
+      "bizType": "Running Club",
+      "sport": "Running",
+      "region": "Eastern Canada",
+      "hub": "Ottawa"
+    },
+    {
+      "id": "39",
+      "name": "Leadville Ultra Coaching",
+      "bizType": "Coach",
+      "sport": "Running",
+      "region": "Western US",
+      "hub": "Leadville"
+    },
+    {
+      "id": "40",
+      "name": "Vail Sport Vacations",
+      "bizType": "Ski Shop",
+      "sport": "Sport Vacations",
+      "region": "Western US",
+      "hub": "Vail"
+    },
+    {
+      "id": "41",
+      "name": "Denver Running Collective",
+      "bizType": "Running Club",
+      "sport": "Running",
+      "region": "Western US",
+      "hub": "Denver"
+    },
+    {
+      "id": "42",
+      "name": "Durango Cycling Performance",
+      "bizType": "Coach",
+      "sport": "Cycling",
+      "region": "Western US",
+      "hub": "Durango"
+    },
+    {
+      "id": "43",
+      "name": "Marin Trail Running",
+      "bizType": "Coach",
+      "sport": "Running",
+      "region": "Western US",
+      "hub": "Marin County"
+    },
+    {
+      "id": "44",
+      "name": "Tahoe Endurance Sports",
+      "bizType": "Ski Shop",
+      "sport": "Sport Vacations",
+      "region": "Western US",
+      "hub": "Lake Tahoe"
+    },
+    {
+      "id": "45",
+      "name": "Santa Cruz Bike Works",
+      "bizType": "Physiotherapist",
+      "sport": "Cycling",
+      "region": "Western US",
+      "hub": "Santa Cruz"
+    },
+    {
+      "id": "46",
+      "name": "Seattle Running Company",
+      "bizType": "Sports Massage",
+      "sport": "Running",
+      "region": "Western US",
+      "hub": "Seattle"
+    },
+    {
+      "id": "47",
+      "name": "Hood River Cycling",
+      "bizType": "Coach",
+      "sport": "Cycling",
+      "region": "Western US",
+      "hub": "Hood River"
+    },
+    {
+      "id": "48",
+      "name": "Vermont Ski & Run",
+      "bizType": "Ski Shop",
+      "sport": "Sport Vacations",
+      "region": "Eastern US",
+      "hub": "Stowe"
+    },
+    {
+      "id": "49",
+      "name": "Boston Marathon Coaching",
+      "bizType": "Coach",
+      "sport": "Running",
+      "region": "Eastern US",
+      "hub": "Boston"
+    },
+    {
+      "id": "50",
+      "name": "Sedona Trail Adventures",
+      "bizType": "Ski Shop",
+      "sport": "Running",
+      "region": "Western US",
+      "hub": "Sedona"
+    },
+    {
+      "id": "51",
+      "name": "Tucson Cycling Camp",
+      "bizType": "Ski Shop",
+      "sport": "Cycling",
+      "region": "Western US",
+      "hub": "Tucson"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tbizType\tsport\tregion\thub\n13\tDolomiti Cycling Tours\tSki Shop\tCycling\tDolomites\tCortina d'Ampezzo\n14\tAlta Via Running Camp\tSki Shop\tRunning\tDolomites\tBolzano\n15\tDolomites Sport Physio\tNutritionist\tCycling\tDolomites\tBressanone\n16\tVal Gardena Bike Shop\tPhysiotherapist\tCycling\tDolomites\tVal Gardena\n17\tDolomiti Ski & Snow\tCoach\tSnowsports\tDolomites\tVal Gardena\n18\tPyrenees Cycling Holidays\tSki Shop\tCycling\tPyrenees\tLuchon\n19\tTrail Pyrenees\tSki Shop\tRunning\tPyrenees\tCauterets\n20\tPyrenees Performance Coaching\tCoach\tCycling\tPyrenees\tFont-Romeu\n21\tAndorra Sport Nutrition\tBike Shop\tRunning\tPyrenees\tAndorra\n22\tMallorca Cycling Camp\tSki Shop\tCycling\tMallorca\tPalma\n23\tSa Calobra Bike Rentals\tPhysiotherapist\tCycling\tMallorca\tPort de Pollenca\n24\tMallorca Running Retreats\tSki Shop\tRunning\tMallorca\tSoller\n25\tTramuntana Trail Coach\tCoach\tRunning\tMallorca\tDeia\n26\tChamonix Endurance\tSki Shop\tRunning\tAlps\tChamonix\n27\tZermatt Ski Academy\tCoach\tSnowsports\tAlps\tZermatt\n28\tGirona Cycling Hub\tCoach\tCycling\tCosta Brava\tGirona\n29\tNice Cote d'Azur Cycling\tSki Shop\tCycling\tFrench Riviera\tNice\n30\tNordic Ski Norway\tCoach\tSnowsports\tScandinavia\tLillehammer\n31\tSquamish Trail Running Co\tCoach\tRunning\tWestern Canada\tSquamish\n32\tWhistler Endurance Sports\tSki Shop\tSport Vacations\tWestern Canada\tWhistler\n33\tVictoria Cycling Club\tCycling Club\tCycling\tWestern Canada\tVictoria\n34\tCanmore Trail Culture\tRunning Club\tRunning\tWestern Canada\tCanmore\n35\tBanff Sport Massage\tPersonal Trainer\tRunning\tWestern Canada\tBanff\n36\tLake Louise Ski School\tCoach\tSnowsports\tWestern Canada\tLake Louise\n37\tMont-Tremblant Sport\tSki Shop\tSport Vacations\tEastern Canada\tMont-Tremblant\n38\tOttawa Running Room\tRunning Club\tRunning\tEastern Canada\tOttawa\n39\tLeadville Ultra Coaching\tCoach\tRunning\tWestern US\tLeadville\n40\tVail Sport Vacations\tSki Shop\tSport Vacations\tWestern US\tVail\n41\tDenver Running Collective\tRunning Club\tRunning\tWestern US\tDenver\n42\tDurango Cycling Performance\tCoach\tCycling\tWestern US\tDurango\n43\tMarin Trail Running\tCoach\tRunning\tWestern US\tMarin County\n44\tTahoe Endurance Sports\tSki Shop\tSport Vacations\tWestern US\tLake Tahoe\n45\tSanta Cruz Bike Works\tPhysiotherapist\tCycling\tWestern US\tSanta Cruz\n46\tSeattle Running Company\tSports Massage\tRunning\tWestern US\tSeattle\n47\tHood River Cycling\tCoach\tCycling\tWestern US\tHood River\n48\tVermont Ski & Run\tSki Shop\tSport Vacations\tEastern US\tStowe\n49\tBoston Marathon Coaching\tCoach\tRunning\tEastern US\tBoston\n50\tSedona Trail Adventures\tSki Shop\tRunning\tWestern US\tSedona\n51\tTucson Cycling Camp\tSki Shop\tCycling\tWestern US\tTucson\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

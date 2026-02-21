@@ -1,0 +1,99 @@
+{
+  "query": "SELECT bt.id, bt.name, bt.slug FROM businessTypes bt ORDER BY bt.id;\nSELECT b.id, b.name, b.businessTypeId, bt.name as currentType FROM businesses b LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id WHERE b.id <= 12 ORDER BY b.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT bt.id, bt.name, bt.slug FROM businessTypes bt ORDER BY bt.id;\nSELECT b.id, b.name, b.businessTypeId, bt.name as currentType FROM businesses b LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id WHERE b.id <= 12 ORDER BY b.id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Coach",
+      "slug": "coach"
+    },
+    {
+      "id": "2",
+      "name": "Bike Shop",
+      "slug": "bike-shop"
+    },
+    {
+      "id": "3",
+      "name": "Running Store",
+      "slug": "running-store"
+    },
+    {
+      "id": "4",
+      "name": "Cycling Studio",
+      "slug": "cycling-studio"
+    },
+    {
+      "id": "5",
+      "name": "Running Club",
+      "slug": "running-club"
+    },
+    {
+      "id": "6",
+      "name": "Cycling Club",
+      "slug": "cycling-club"
+    },
+    {
+      "id": "7",
+      "name": "Physiotherapist",
+      "slug": "physiotherapist"
+    },
+    {
+      "id": "8",
+      "name": "Sports Massage",
+      "slug": "sports-massage"
+    },
+    {
+      "id": "9",
+      "name": "Nutritionist",
+      "slug": "nutritionist"
+    },
+    {
+      "id": "10",
+      "name": "Personal Trainer",
+      "slug": "personal-trainer"
+    },
+    {
+      "id": "11",
+      "name": "Ski Shop",
+      "slug": "ski-shop"
+    },
+    {
+      "id": "12",
+      "name": "Ski School",
+      "slug": "ski-school"
+    },
+    {
+      "id": "13",
+      "name": "Bike Fitting",
+      "slug": "bike-fitting"
+    },
+    {
+      "id": "14",
+      "name": "Race Organizer",
+      "slug": "race-organizer"
+    },
+    {
+      "id": "15",
+      "name": "Vacation Provider",
+      "slug": "vacation-provider"
+    }
+  ],
+  "messages": [
+    "id\tname\tbusinessTypeId\tcurrentType",
+    "1\tSummit Cycling Coaching\t1\tCoach",
+    "2\tTrailhead Bike Works\t2\tBike Shop",
+    "3\tAlpine Run Club\t5\tRunning Club",
+    "4\tPeak Performance Physio\t7\tPhysiotherapist",
+    "5\tPowder Line Ski School\t12\tSki School",
+    "6\tEndurance Fuel Nutrition\t9\tNutritionist",
+    "7\tIron Legs Sports Massage\t8\tSports Massage",
+    "8\tVelocity Cycling Studio\t4\tCycling Studio",
+    "9\tNordic Edge Ski Shop\t11\tSki Shop",
+    "10\tTrail Blazer Running Store\t3\tRunning Store",
+    "11\tMountain Fit Personal Training\t10\tPersonal Trainer",
+    "12\tRide Right Bike Fitting\t13\tBike Fitting"
+  ],
+  "stdout": "id\tname\tslug\n1\tCoach\tcoach\n2\tBike Shop\tbike-shop\n3\tRunning Store\trunning-store\n4\tCycling Studio\tcycling-studio\n5\tRunning Club\trunning-club\n6\tCycling Club\tcycling-club\n7\tPhysiotherapist\tphysiotherapist\n8\tSports Massage\tsports-massage\n9\tNutritionist\tnutritionist\n10\tPersonal Trainer\tpersonal-trainer\n11\tSki Shop\tski-shop\n12\tSki School\tski-school\n13\tBike Fitting\tbike-fitting\n14\tRace Organizer\trace-organizer\n15\tVacation Provider\tvacation-provider\nid\tname\tbusinessTypeId\tcurrentType\n1\tSummit Cycling Coaching\t1\tCoach\n2\tTrailhead Bike Works\t2\tBike Shop\n3\tAlpine Run Club\t5\tRunning Club\n4\tPeak Performance Physio\t7\tPhysiotherapist\n5\tPowder Line Ski School\t12\tSki School\n6\tEndurance Fuel Nutrition\t9\tNutritionist\n7\tIron Legs Sports Massage\t8\tSports Massage\n8\tVelocity Cycling Studio\t4\tCycling Studio\n9\tNordic Edge Ski Shop\t11\tSki Shop\n10\tTrail Blazer Running Store\t3\tRunning Store\n11\tMountain Fit Personal Training\t10\tPersonal Trainer\n12\tRide Right Bike Fitting\t13\tBike Fitting\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

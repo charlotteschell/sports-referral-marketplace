@@ -39,6 +39,8 @@ export default function EditBusiness() {
     state: "",
     country: "",
     address: "",
+    region: "",
+    hub: "",
     phone: "",
     email: "",
     website: "",
@@ -59,6 +61,8 @@ export default function EditBusiness() {
         state: b.state || "",
         country: b.country || "",
         address: b.address || "",
+        region: b.region || "",
+        hub: b.hub || "",
         phone: b.phone || "",
         email: b.email || "",
         website: b.website || "",
@@ -189,6 +193,10 @@ export default function EditBusiness() {
                     <div><Label style={{ textTransform: "none" }}>Country</Label><Input value={form.country} onChange={(e) => updateField("country", e.target.value)} /></div>
                   </div>
                   <div><Label style={{ textTransform: "none" }}>Address</Label><Input value={form.address} onChange={(e) => updateField("address", e.target.value)} /></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><Label style={{ textTransform: "none" }}>Region</Label><Input value={form.region} onChange={(e) => updateField("region", e.target.value)} placeholder="e.g., Dolomites, Western Canada" /></div>
+                    <div><Label style={{ textTransform: "none" }}>Hub / Area</Label><Input value={form.hub} onChange={(e) => updateField("hub", e.target.value)} placeholder="e.g., Cortina d'Ampezzo, Whistler" /></div>
+                  </div>
                 </div>
 
                 <div className="space-y-4">

@@ -1,0 +1,34 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_msZys4esiwaxadBmUrrxVF": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_msZys4esiwaxadBmUrrxVF": "businessSportCategories"
+    },
+    {
+      "Tables_in_msZys4esiwaxadBmUrrxVF": "businessTypes"
+    },
+    {
+      "Tables_in_msZys4esiwaxadBmUrrxVF": "businesses"
+    },
+    {
+      "Tables_in_msZys4esiwaxadBmUrrxVF": "referralOffers"
+    },
+    {
+      "Tables_in_msZys4esiwaxadBmUrrxVF": "referrals"
+    },
+    {
+      "Tables_in_msZys4esiwaxadBmUrrxVF": "sportCategories"
+    },
+    {
+      "Tables_in_msZys4esiwaxadBmUrrxVF": "users"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_msZys4esiwaxadBmUrrxVF\n__drizzle_migrations\nbusinessSportCategories\nbusinessTypes\nbusinesses\nreferralOffers\nreferrals\nsportCategories\nusers\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

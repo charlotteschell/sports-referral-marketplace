@@ -32,6 +32,8 @@ export default function AddBusiness() {
     state: "",
     country: "",
     address: "",
+    region: "",
+    hub: "",
     phone: "",
     email: "",
     website: "",
@@ -166,6 +168,16 @@ export default function AddBusiness() {
                   <div>
                     <Label htmlFor="address" style={{ textTransform: "none" }}>Address</Label>
                     <Input id="address" value={form.address} onChange={(e) => updateField("address", e.target.value)} placeholder="Street address" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="region" style={{ textTransform: "none" }}>Region</Label>
+                      <Input id="region" value={form.region} onChange={(e) => updateField("region", e.target.value)} placeholder="e.g., Dolomites, Western Canada" />
+                    </div>
+                    <div>
+                      <Label htmlFor="hub" style={{ textTransform: "none" }}>Hub / Area</Label>
+                      <Input id="hub" value={form.hub} onChange={(e) => updateField("hub", e.target.value)} placeholder="e.g., Cortina d'Ampezzo, Whistler" />
+                    </div>
                   </div>
                 </div>
 

@@ -6,22 +6,44 @@ import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import {
   Bike, Mountain, Snowflake, Users, ArrowRight, Handshake,
-  TrendingUp, Search, Shield, MapPin, ChevronRight, Star
+  TrendingUp, Search, Shield, MapPin, ChevronRight, Star,
+  Compass, Globe, Palmtree
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 const sportIcons: Record<string, React.ReactNode> = {
   cycling: <Bike className="w-8 h-8" />,
+  running: <Mountain className="w-8 h-8" />,
   "trail-running": <Mountain className="w-8 h-8" />,
   snowsports: <Snowflake className="w-8 h-8" />,
+  "sport-vacations": <Compass className="w-8 h-8" />,
+};
+
+const sportSmallIcons: Record<string, React.ReactNode> = {
+  cycling: <Bike className="w-4 h-4" />,
+  running: <Mountain className="w-4 h-4" />,
+  "trail-running": <Mountain className="w-4 h-4" />,
+  snowsports: <Snowflake className="w-4 h-4" />,
+  "sport-vacations": <Compass className="w-4 h-4" />,
 };
 
 const sportImages: Record<string, string> = {
   cycling: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=600&h=400&fit=crop",
+  running: "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=600&h=400&fit=crop",
   "trail-running": "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=600&h=400&fit=crop",
   snowsports: "https://images.unsplash.com/photo-1565992441121-4367c2967103?w=600&h=400&fit=crop",
+  "sport-vacations": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&h=400&fit=crop",
 };
+
+const regionHighlights = [
+  { name: "Dolomites", country: "Italy", emoji: "🇮🇹", description: "Legendary passes and alpine trails" },
+  { name: "Pyrenees", country: "France/Spain", emoji: "🇫🇷", description: "Tour de France cols and GR routes" },
+  { name: "Mallorca", country: "Spain", emoji: "🇪🇸", description: "World-class cycling roads" },
+  { name: "Alps", country: "France/Switzerland", emoji: "🇨🇭", description: "UTMB and ski touring paradise" },
+  { name: "Western Canada", country: "Canada", emoji: "🇨🇦", description: "Whistler, Squamish, Banff" },
+  { name: "Western US", country: "USA", emoji: "🇺🇸", description: "Colorado, Tahoe, Sedona" },
+];
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
@@ -54,8 +76,11 @@ export default function Home() {
             <p className="text-lg md:text-xl text-white/80 mb-4 max-w-2xl leading-relaxed" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
               Whether you're a <strong className="text-white">professional coach, bike shop owner, or physio therapist</strong> — or an <strong className="text-white">enthusiast looking for trusted local services</strong> — SportConnect is the marketplace that brings the endurance sports community together.
             </p>
-            <p className="text-base md:text-lg text-white/60 mb-8 max-w-2xl" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
+            <p className="text-base md:text-lg text-white/60 mb-4 max-w-2xl" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
               Businesses send each other referral customers for incentives. Enthusiasts discover the best local pros. Everyone wins.
+            </p>
+            <p className="text-sm text-white/50 mb-8 max-w-2xl" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
+              Cycling &bull; Road Running &bull; Trail Running &bull; Ultra Running &bull; Skiing &bull; Snowboarding &bull; Nordic Skiing &bull; Sport Vacations
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/directory">
@@ -83,20 +108,19 @@ export default function Home() {
             </div>
           </div>
         </div>
-        {/* Diagonal cut bottom */}
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-background" style={{ clipPath: "polygon(0 100%, 100% 0, 100% 100%)" }} />
       </section>
 
       {/* Stats Bar */}
       <section className="py-8 border-b border-border">
         <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
             <div>
               <p className="text-3xl font-bold text-primary" style={{ fontFamily: "var(--font-heading)" }}>{stats?.totalBusinesses || 0}+</p>
               <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Businesses Listed</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>{stats?.sportCategories || 3}</p>
+              <p className="text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>{stats?.sportCategories || 4}</p>
               <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Sport Categories</p>
             </div>
             <div>
@@ -104,7 +128,11 @@ export default function Home() {
               <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Verified Businesses</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-primary" style={{ fontFamily: "var(--font-heading)" }}>{stats?.totalReferrals || 0}</p>
+              <p className="text-3xl font-bold text-primary" style={{ fontFamily: "var(--font-heading)" }}>{stats?.regions || 0}</p>
+              <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Regions Covered</p>
+            </div>
+            <div className="col-span-2 md:col-span-1">
+              <p className="text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>{stats?.totalReferrals || 0}</p>
               <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Referrals Sent</p>
             </div>
           </div>
@@ -122,9 +150,9 @@ export default function Home() {
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: <Search className="w-8 h-8" />, title: "Discover", desc: "Browse the directory to find coaches, shops, therapists, and clubs in cycling, trail running, and snowsports — whether you're a business or an enthusiast." },
-              { icon: <Handshake className="w-8 h-8" />, title: "Connect & Refer", desc: "Businesses claim their profiles and post referral offers. Send customers to partner businesses and earn incentives for every successful referral." },
-              { icon: <TrendingUp className="w-8 h-8" />, title: "Grow Together", desc: "Track referrals, build partnerships, and watch your network expand. Collaboration beats competition in the endurance sports community." },
+              { icon: <Search className="w-8 h-8" />, title: "Discover", desc: "Browse the directory to find coaches, shops, therapists, vacation providers, and clubs across cycling, running, snowsports, and sport vacations — whether you're a business or an enthusiast." },
+              { icon: <Handshake className="w-8 h-8" />, title: "Connect & Refer", desc: "Businesses claim profiles and post B2B or consumer referral offers. Send customers to partners and earn incentives. Enthusiasts can browse consumer offers directly." },
+              { icon: <TrendingUp className="w-8 h-8" />, title: "Grow Together", desc: "Track referrals, build partnerships locally and across borders, and watch your network expand from the Dolomites to Colorado." },
             ].map((step, i) => (
               <div key={i} className="relative">
                 <div className="bg-card border border-border rounded-lg p-8 h-full hover:shadow-lg transition-shadow">
@@ -150,28 +178,28 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Endurance Sports</h2>
             <p className="text-white/70 max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              From mountain peaks to open roads, we serve every discipline in the endurance sports world — for professionals and enthusiasts alike.
+              From mountain peaks to open roads, we serve every discipline — for professionals and enthusiasts alike. Including sport vacations to the world's best endurance destinations.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {categories?.map((cat) => (
               <Link key={cat.id} href={`/directory?sport=${cat.slug}`}>
-                <div className="group relative overflow-hidden rounded-lg cursor-pointer h-64">
+                <div className="group relative overflow-hidden rounded-lg cursor-pointer h-56">
                   <img
-                    src={sportImages[cat.slug] || ""}
+                    src={sportImages[cat.slug] || sportImages["sport-vacations"]}
                     alt={cat.name}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="text-[oklch(0.55_0.15_45)]">
-                        {sportIcons[cat.slug]}
+                        {sportIcons[cat.slug] || <Compass className="w-8 h-8" />}
                       </div>
-                      <h3 className="text-2xl font-bold text-white">{cat.name}</h3>
+                      <h3 className="text-xl font-bold text-white">{cat.name}</h3>
                     </div>
-                    <p className="text-white/70 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>{cat.description}</p>
-                    <div className="flex items-center gap-1 mt-3 text-[oklch(0.55_0.15_45)] text-sm font-medium" style={{ textTransform: "none" }}>
+                    <p className="text-white/70 text-sm line-clamp-2" style={{ textTransform: "none", letterSpacing: "normal" }}>{cat.description}</p>
+                    <div className="flex items-center gap-1 mt-2 text-[oklch(0.55_0.15_45)] text-sm font-medium" style={{ textTransform: "none" }}>
                       Browse businesses <ChevronRight className="w-4 h-4" />
                     </div>
                   </div>
@@ -183,16 +211,42 @@ export default function Home() {
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-background" style={{ clipPath: "polygon(0 100%, 100% 0, 100% 100%)" }} />
       </section>
 
-      {/* Business Types */}
+      {/* Regions & Hubs */}
       <section className="py-20 bg-background">
+        <div className="container">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              <Globe className="w-8 h-8 inline-block mr-2 text-[oklch(0.55_0.15_45)]" />
+              Endurance Sports Hubs
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
+              Discover businesses in the world's top endurance sports destinations — from the Dolomites to the Canadian Rockies. Focused on hubs where North Americans love to train, race, and vacation.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {regionHighlights.map((region) => (
+              <Link key={region.name} href={`/directory?region=${encodeURIComponent(region.name)}`}>
+                <div className="bg-card border border-border rounded-lg p-5 text-center hover:shadow-md hover:border-primary/30 transition-all cursor-pointer h-full">
+                  <div className="text-3xl mb-2">{region.emoji}</div>
+                  <h3 className="text-sm font-bold text-foreground mb-1">{region.name}</h3>
+                  <p className="text-xs text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>{region.description}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Business Types */}
+      <section className="py-20 bg-secondary/30">
         <div className="container">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Every Type of Sports Business</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Coaches, shops, therapists, clubs, and more — all the professionals that keep athletes performing at their best.
+              Coaches, shops, therapists, clubs, vacation providers, and more — all the professionals that keep athletes performing at their best.
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
             {[
               { name: "Coaches", icon: "🏋️" },
               { name: "Bike Shops", icon: "🚲" },
@@ -201,6 +255,7 @@ export default function Home() {
               { name: "Nutrition", icon: "🥗" },
               { name: "Massage", icon: "🤲" },
               { name: "Clubs", icon: "🏔️" },
+              { name: "Vacations", icon: "✈️" },
             ].map((type) => (
               <Link key={type.name} href="/directory">
                 <div className="bg-card border border-border rounded-lg p-4 text-center hover:shadow-md hover:border-primary/30 transition-all cursor-pointer">
@@ -215,12 +270,12 @@ export default function Home() {
 
       {/* Featured Businesses */}
       {featured && featured.length > 0 && (
-        <section className="py-20 bg-secondary/30">
+        <section className="py-20 bg-background">
           <div className="container">
             <div className="flex items-center justify-between mb-10">
               <div>
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Featured Businesses</h2>
-                <p className="text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>Discover top-rated businesses in the endurance sports community</p>
+                <p className="text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>Discover top businesses across endurance sports hubs worldwide</p>
               </div>
               <Link href="/directory">
                 <Button variant="outline" className="hidden md:flex bg-transparent">
@@ -249,17 +304,21 @@ export default function Home() {
                         )}
                       </div>
                       <h3 className="text-lg font-bold text-foreground mb-1">{item.business.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-3" style={{ textTransform: "none", letterSpacing: "normal" }}>{item.business.shortDescription}</p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
-                        {item.business.city && (
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2" style={{ textTransform: "none", letterSpacing: "normal" }}>{item.business.shortDescription}</p>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                        {item.business.hub && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" /> {item.business.hub}{item.business.country ? `, ${item.business.country}` : ""}
+                          </span>
+                        )}
+                        {!item.business.hub && item.business.city && (
                           <span className="flex items-center gap-1">
                             <MapPin className="w-3 h-3" /> {item.business.city}{item.business.country ? `, ${item.business.country}` : ""}
                           </span>
                         )}
-                        {item.sportCategory && (
-                          <span className="flex items-center gap-1">
-                            {sportIcons[item.sportCategory.slug] ? <span className="w-3 h-3">{sportIcons[item.sportCategory.slug]}</span> : null}
-                            {item.sportCategory.name}
+                        {item.business.region && (
+                          <span className="flex items-center gap-1 text-[oklch(0.55_0.15_45)]">
+                            <Globe className="w-3 h-3" /> {item.business.region}
                           </span>
                         )}
                       </div>
@@ -277,6 +336,61 @@ export default function Home() {
         </section>
       )}
 
+      {/* Dual Offer Types Explainer */}
+      <section className="py-20 bg-secondary/30">
+        <div className="container">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Two Types of Referral Offers</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
+              Businesses can post offers for other businesses and for individual consumers — maximizing reach and revenue.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="bg-card border border-border rounded-xl p-8">
+              <div className="w-12 h-12 rounded-lg bg-[oklch(0.55_0.15_45)]/10 flex items-center justify-center mb-5">
+                <Handshake className="w-6 h-6 text-[oklch(0.55_0.15_45)]" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-3">B2B Offers</h3>
+              <p className="text-muted-foreground leading-relaxed mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                For businesses looking to collaborate or send customers to each other. Earn commissions, trade services, or build strategic partnerships. The referred customers can still claim any eligible consumer offers.
+              </p>
+              <ul className="space-y-2" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                {["Commission per referral", "Service trade agreements", "Cross-promotion partnerships", "Volume-based incentives"].map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[oklch(0.55_0.15_45)]" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-8">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-5">
+                <Users className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-3">Consumer Offers</h3>
+              <p className="text-muted-foreground leading-relaxed mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                For individual consumers looking for services. Enthusiasts can browse and claim these offers directly — discounts, free sessions, package deals, and more.
+              </p>
+              <ul className="space-y-2" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                {["Percentage discounts", "Free trial sessions", "Package deal pricing", "First-time customer specials"].map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="text-center mt-8">
+            <Link href="/referral-offers">
+              <Button size="lg" className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white font-semibold">
+                Browse All Offers <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* CTA for Both Audiences */}
       <section className="py-20 bg-background">
         <div className="container">
@@ -288,10 +402,10 @@ export default function Home() {
               </div>
               <h3 className="text-2xl md:text-3xl font-bold mb-4">For Sports Professionals</h3>
               <p className="text-primary-foreground/80 mb-6 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Claim your business, post referral offers, and start receiving qualified customers from trusted partners. Build a referral network that grows your revenue.
+                Claim your business, post B2B and consumer referral offers, and start receiving qualified customers from trusted partners across borders — from Mallorca to Colorado.
               </p>
               <ul className="space-y-2 mb-8" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                {["Claim and manage your business profile", "Post B2B referral incentives", "Track referrals sent and received", "Connect with complementary businesses"].map((item) => (
+                {["Claim and manage your business profile", "Post B2B and consumer referral offers", "Track referrals sent and received", "Connect with businesses across regions"].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-sm text-primary-foreground/90">
                     <div className="w-1.5 h-1.5 rounded-full bg-[oklch(0.55_0.15_45)]" />
                     {item}
@@ -319,10 +433,10 @@ export default function Home() {
               </div>
               <h3 className="text-2xl md:text-3xl font-bold mb-4">For Sports Enthusiasts</h3>
               <p className="text-white/80 mb-6 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Find the best local coaches, shops, therapists, and clubs for cycling, trail running, and snowsports. Discover trusted professionals in your area.
+                Find the best local coaches, shops, therapists, vacation providers, and clubs for cycling, running, snowsports, and sport vacations. Discover trusted professionals and claim consumer offers.
               </p>
               <ul className="space-y-2 mb-8" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                {["Search by sport, location, and business type", "Find verified, claimed businesses", "Access special referral offers", "Connect with your local sports community"].map((item) => (
+                {["Search by sport, region, hub, and business type", "Find verified businesses worldwide", "Browse and claim consumer offers", "Plan your next sport vacation"].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-sm text-white/90">
                     <div className="w-1.5 h-1.5 rounded-full bg-white" />
                     {item}

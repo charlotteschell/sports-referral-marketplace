@@ -10,14 +10,17 @@ import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import {
   MapPin, Phone, Mail, Globe, Shield, ArrowLeft,
-  Bike, Mountain, Snowflake, Star, Handshake,
-  Instagram, Facebook, Pencil, Gift, Send, ExternalLink
+  Bike, Mountain, Snowflake, Star, Handshake, Compass,
+  Instagram, Facebook, Pencil, Gift, Send, ExternalLink,
+  Users
 } from "lucide-react";
 
 const sportIcons: Record<string, React.ReactNode> = {
   cycling: <Bike className="w-5 h-5" />,
+  running: <Mountain className="w-5 h-5" />,
   "trail-running": <Mountain className="w-5 h-5" />,
   snowsports: <Snowflake className="w-5 h-5" />,
+  "sport-vacations": <Compass className="w-5 h-5" />,
 };
 
 export default function BusinessProfile() {
@@ -90,6 +93,9 @@ export default function BusinessProfile() {
   const isOwner = isAuthenticated && user?.id === business.claimedByUserId;
   const isClaimed = business.isClaimed;
 
+  const b2bOffers = offers?.filter(o => o.offerType === "b2b") || [];
+  const consumerOffers = offers?.filter(o => o.offerType === "consumer") || [];
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -132,10 +138,21 @@ export default function BusinessProfile() {
                     {sportIcons[sportCategory.slug]} {sportCategory.name}
                   </span>
                 )}
-                {business.city && (
+                {business.hub && (
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {business.hub}, {business.country}
+                  </span>
+                )}
+                {!business.hub && business.city && (
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3 h-3" />
                     {business.city}{business.state ? `, ${business.state}` : ""}{business.country ? `, ${business.country}` : ""}
+                  </span>
+                )}
+                {business.region && (
+                  <span className="flex items-center gap-1 text-[oklch(0.55_0.15_45)]">
+                    <Globe className="w-3 h-3" /> {business.region}
                   </span>
                 )}
               </div>
@@ -170,7 +187,7 @@ export default function BusinessProfile() {
                   </Link>
                   <Link href={`/dashboard/offers/${business.id}`}>
                     <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 bg-transparent" style={{ textTransform: "none" }}>
-                      <Gift className="w-4 h-4 mr-2" /> Update B2B Offer
+                      <Gift className="w-4 h-4 mr-2" /> Update Offers
                     </Button>
                   </Link>
                 </>
@@ -198,20 +215,28 @@ export default function BusinessProfile() {
                 </CardContent>
               </Card>
 
-              {/* Referral Offers - Only shown for claimed businesses */}
-              {isClaimed && offers && offers.length > 0 && (
+              {/* B2B Referral Offers - Only shown for claimed businesses */}
+              {isClaimed && b2bOffers.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Gift className="w-5 h-5 text-[oklch(0.55_0.15_45)]" /> Referral Offers
+                      <Handshake className="w-5 h-5 text-[oklch(0.55_0.15_45)]" /> B2B Referral Offers
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                      For businesses looking to collaborate or send customers. Referred customers can still claim eligible consumer offers.
+                    </p>
                     <div className="space-y-4">
-                      {offers.map((offer) => (
-                        <div key={offer.id} className="border border-border rounded-lg p-4 bg-secondary/20">
+                      {b2bOffers.map((offer) => (
+                        <div key={offer.id} className="border border-[oklch(0.55_0.15_45)]/20 rounded-lg p-4 bg-[oklch(0.55_0.15_45)]/5">
                           <div className="flex items-start justify-between mb-2">
-                            <h4 className="font-semibold text-foreground">{offer.title}</h4>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold text-foreground">{offer.title}</h4>
+                              <Badge variant="secondary" className="bg-[oklch(0.55_0.15_45)]/10 text-[oklch(0.55_0.15_45)] text-xs" style={{ textTransform: "none" }}>
+                                <Handshake className="w-3 h-3 mr-1" /> B2B
+                              </Badge>
+                            </div>
                             <Badge className="bg-[oklch(0.55_0.15_45)] text-white" style={{ textTransform: "none" }}>
                               {offer.incentiveType === "percentage" ? `${offer.incentiveValue}%` :
                                offer.incentiveType === "fixed" ? `$${offer.incentiveValue}` :
@@ -234,6 +259,51 @@ export default function BusinessProfile() {
                                 <Send className="w-3 h-3 mr-1" /> Send a Referral
                               </Button>
                             </Link>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Consumer Offers - Only shown for claimed businesses */}
+              {isClaimed && consumerOffers.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-5 h-5 text-primary" /> Consumer Offers
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                      Special offers for individual consumers and enthusiasts — discounts, free sessions, and more.
+                    </p>
+                    <div className="space-y-4">
+                      {consumerOffers.map((offer) => (
+                        <div key={offer.id} className="border border-primary/20 rounded-lg p-4 bg-primary/5">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold text-foreground">{offer.title}</h4>
+                              <Badge variant="secondary" className="bg-primary/10 text-primary text-xs" style={{ textTransform: "none" }}>
+                                <Users className="w-3 h-3 mr-1" /> Consumer
+                              </Badge>
+                            </div>
+                            <Badge className="bg-primary text-primary-foreground" style={{ textTransform: "none" }}>
+                              {offer.incentiveType === "percentage" ? `${offer.incentiveValue}%` :
+                               offer.incentiveType === "fixed" ? `$${offer.incentiveValue}` :
+                               offer.incentiveType}
+                            </Badge>
+                          </div>
+                          {offer.description && (
+                            <p className="text-sm text-muted-foreground mb-2" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                              {offer.description}
+                            </p>
+                          )}
+                          {offer.incentiveDescription && (
+                            <p className="text-sm text-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                              <strong>Offer details:</strong> {offer.incentiveDescription}
+                            </p>
                           )}
                         </div>
                       ))}
@@ -322,7 +392,7 @@ export default function BusinessProfile() {
               )}
 
               {/* Location */}
-              {business.city && (
+              {(business.city || business.hub) && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Location</CardTitle>
@@ -332,10 +402,16 @@ export default function BusinessProfile() {
                       <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                       <div className="text-sm" style={{ textTransform: "none" }}>
                         {business.address && <p>{business.address}</p>}
+                        {business.hub && <p className="font-medium">{business.hub}</p>}
                         <p>
                           {business.city}{business.state ? `, ${business.state}` : ""}
                           {business.country ? `, ${business.country}` : ""}
                         </p>
+                        {business.region && (
+                          <p className="text-[oklch(0.55_0.15_45)] mt-1 flex items-center gap-1">
+                            <Globe className="w-3 h-3" /> {business.region}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </CardContent>

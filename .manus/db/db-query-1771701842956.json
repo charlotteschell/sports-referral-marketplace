@@ -1,0 +1,15 @@
+{
+  "query": "-- Fix businesses that have wrong business types\n-- First check vacation provider type ID\nSELECT id, name, slug FROM businessTypes WHERE slug = 'vacation-provider';\n\n-- Fix Chamonix Endurance - should be Coach (1), not Ski Shop (11)\nUPDATE businesses SET businessTypeId = 1 WHERE slug = 'chamonix-endurance';\n\n-- Fix Zermatt Ski Academy - should be Ski School (12), not Coach (1)\nUPDATE businesses SET businessTypeId = 12 WHERE slug = 'zermatt-ski-academy';\n\n-- Fix Nice Côte d'Azur Cycling - should be Cycling Studio (4) or Coach (1), not Ski Shop (11)\nUPDATE businesses SET businessTypeId = 1 WHERE slug = 'nice-cote-dazur-cycling';\n\n-- Fix Nordic Ski Norway - should be Ski School (12), not Coach (1)\nUPDATE businesses SET businessTypeId = 12 WHERE slug = 'nordic-ski-norway';\n\n-- Fix Whistler Endurance Sports - should be Vacation Provider (15), not Ski Shop (11)\nUPDATE businesses SET businessTypeId = 15 WHERE slug = 'whistler-endurance-sports';\n\n-- Fix Lake Louise Ski School - should be Ski School (12), not Coach (1)\nUPDATE businesses SET businessTypeId = 12 WHERE slug = 'lake-louise-ski-school';\n\n-- Fix Banff Sport Massage - should be Sports Massage (8), not Personal Trainer (10) \nUPDATE businesses SET businessTypeId = 8 WHERE slug = 'banff-sport-massage';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute -- Fix businesses that have wrong business types\n-- First check vacation provider type ID\nSELECT id, name, slug FROM businessTypes WHERE slug = 'vacation-provider';\n\n-- Fix Chamonix Endurance - should be Coach (1), not Ski Shop (11)\nUPDATE businesses SET businessTypeId = 1 WHERE slug = 'chamonix-endurance';\n\n-- Fix Zermatt Ski Academy - should be Ski School (12), not Coach (1)\nUPDATE businesses SET businessTypeId = 12 WHERE slug = 'zermatt-ski-academy';\n\n-- Fix Nice Côte d'Azur Cycling - should be Cycling Studio (4) or Coach (1), not Ski Shop (11)\nUPDATE businesses SET businessTypeId = 1 WHERE slug = 'nice-cote-dazur-cycling';\n\n-- Fix Nordic Ski Norway - should be Ski School (12), not Coach (1)\nUPDATE businesses SET businessTypeId = 12 WHERE slug = 'nordic-ski-norway';\n\n-- Fix Whistler Endurance Sports - should be Vacation Provider (15), not Ski Shop (11)\nUPDATE businesses SET businessTypeId = 15 WHERE slug = 'whistler-endurance-sports';\n\n-- Fix Lake Louise Ski School - should be Ski School (12), not Coach (1)\nUPDATE businesses SET businessTypeId = 12 WHERE slug = 'lake-louise-ski-school';\n\n-- Fix Banff Sport Massage - should be Sports Massage (8), not Personal Trainer (10) \nUPDATE businesses SET businessTypeId = 8 WHERE slug = 'banff-sport-massage';",
+  "rows": [
+    {
+      "id": "15",
+      "name": "Vacation Provider",
+      "slug": "vacation-provider"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\n15\tVacation Provider\tvacation-provider\n",
+  "stderr": "",
+  "execution_time_ms": 110
+}

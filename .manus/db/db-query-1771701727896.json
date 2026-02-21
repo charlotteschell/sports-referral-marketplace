@@ -1,0 +1,37 @@
+{
+  "query": "SELECT COUNT(*) as cnt FROM referralOffers;\nSELECT COUNT(*) as cnt FROM businesses WHERE isClaimed = 1;\nSELECT id, name, isClaimed FROM businesses LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT COUNT(*) as cnt FROM referralOffers;\nSELECT COUNT(*) as cnt FROM businesses WHERE isClaimed = 1;\nSELECT id, name, isClaimed FROM businesses LIMIT 5;",
+  "rows": [
+    {
+      "cnt": "0"
+    },
+    {
+      "cnt": "cnt"
+    },
+    {
+      "cnt": "0"
+    },
+    {
+      "cnt": "id\tname\tisClaimed"
+    },
+    {
+      "cnt": "1\tSummit Cycling Coaching\t0"
+    },
+    {
+      "cnt": "2\tTrailhead Bike Works\t0"
+    },
+    {
+      "cnt": "3\tAlpine Run Club\t0"
+    },
+    {
+      "cnt": "4\tPeak Performance Physio\t0"
+    },
+    {
+      "cnt": "5\tPowder Line Ski School\t0"
+    }
+  ],
+  "messages": [],
+  "stdout": "cnt\n0\ncnt\n0\nid\tname\tisClaimed\n1\tSummit Cycling Coaching\t0\n2\tTrailhead Bike Works\t0\n3\tAlpine Run Club\t0\n4\tPeak Performance Physio\t0\n5\tPowder Line Ski School\t0\n",
+  "stderr": "",
+  "execution_time_ms": 86
+}

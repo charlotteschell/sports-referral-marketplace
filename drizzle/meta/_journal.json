@@ -15,6 +15,13 @@
       "when": 1771698223321,
       "tag": "0001_swift_rage",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1771700899131,
+      "tag": "0002_married_outlaw_kid",
+      "breakpoints": true
     }
   ]
 }

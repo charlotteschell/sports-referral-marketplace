@@ -1,0 +1,42 @@
+{
+  "query": "-- Add sample referral offers with both B2B and consumer types\n-- Using some of the new businesses (IDs will be from the newly inserted ones)\n-- Let's get some business IDs first\nSELECT id, name FROM businesses WHERE slug IN ('mallorca-cycling-camp', 'chamonix-endurance', 'girona-cycling-hub', 'vail-sport-vacations', 'canmore-trail-culture', 'sedona-trail-adventures', 'whistler-endurance-sports', 'dolomiti-cycling-tours') ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute -- Add sample referral offers with both B2B and consumer types\n-- Using some of the new businesses (IDs will be from the newly inserted ones)\n-- Let's get some business IDs first\nSELECT id, name FROM businesses WHERE slug IN ('mallorca-cycling-camp', 'chamonix-endurance', 'girona-cycling-hub', 'vail-sport-vacations', 'canmore-trail-culture', 'sedona-trail-adventures', 'whistler-endurance-sports', 'dolomiti-cycling-tours') ORDER BY id;",
+  "rows": [
+    {
+      "id": "13",
+      "name": "Dolomiti Cycling Tours"
+    },
+    {
+      "id": "22",
+      "name": "Mallorca Cycling Camp"
+    },
+    {
+      "id": "26",
+      "name": "Chamonix Endurance"
+    },
+    {
+      "id": "28",
+      "name": "Girona Cycling Hub"
+    },
+    {
+      "id": "32",
+      "name": "Whistler Endurance Sports"
+    },
+    {
+      "id": "34",
+      "name": "Canmore Trail Culture"
+    },
+    {
+      "id": "40",
+      "name": "Vail Sport Vacations"
+    },
+    {
+      "id": "50",
+      "name": "Sedona Trail Adventures"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n13\tDolomiti Cycling Tours\n22\tMallorca Cycling Camp\n26\tChamonix Endurance\n28\tGirona Cycling Hub\n32\tWhistler Endurance Sports\n34\tCanmore Trail Culture\n40\tVail Sport Vacations\n50\tSedona Trail Adventures\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `businesses` ADD `region` varchar(100);\nALTER TABLE `businesses` ADD `hub` varchar(100);\nALTER TABLE `referralOffers` ADD `offerType` enum('b2b','consumer') DEFAULT 'b2b' NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute ALTER TABLE `businesses` ADD `region` varchar(100);\nALTER TABLE `businesses` ADD `hub` varchar(100);\nALTER TABLE `referralOffers` ADD `offerType` enum('b2b','consumer') DEFAULT 'b2b' NOT NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 515
+}

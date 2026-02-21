@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Link, useSearch } from "wouter";
 import Header from "@/components/Header";
@@ -11,13 +11,15 @@ import {
 } from "@/components/ui/select";
 import {
   Search, MapPin, Shield, Bike, Mountain, Snowflake, Star,
-  ChevronLeft, ChevronRight, Filter, X
+  ChevronLeft, ChevronRight, Filter, X, Compass, Globe
 } from "lucide-react";
 
 const sportIcons: Record<string, React.ReactNode> = {
   cycling: <Bike className="w-4 h-4" />,
+  running: <Mountain className="w-4 h-4" />,
   "trail-running": <Mountain className="w-4 h-4" />,
   snowsports: <Snowflake className="w-4 h-4" />,
+  "sport-vacations": <Compass className="w-4 h-4" />,
 };
 
 const ITEMS_PER_PAGE = 12;
@@ -26,15 +28,33 @@ export default function Directory() {
   const searchString = useSearch();
   const urlParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
   const initialSport = urlParams.get("sport") || "";
+  const initialRegion = urlParams.get("region") || "";
+  const initialHub = urlParams.get("hub") || "";
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sportFilter, setSportFilter] = useState(initialSport);
   const [typeFilter, setTypeFilter] = useState("");
+  const [regionFilter, setRegionFilter] = useState(initialRegion);
+  const [hubFilter, setHubFilter] = useState(initialHub);
   const [page, setPage] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Update filters when URL params change
+  useEffect(() => {
+    const sport = urlParams.get("sport") || "";
+    const region = urlParams.get("region") || "";
+    const hub = urlParams.get("hub") || "";
+    if (sport) setSportFilter(sport);
+    if (region) setRegionFilter(region);
+    if (hub) setHubFilter(hub);
+  }, [urlParams]);
+
   const { data: sportCategories } = trpc.categories.sportCategories.useQuery();
   const { data: businessTypes } = trpc.categories.businessTypes.useQuery();
+  const { data: regions } = trpc.categories.regions.useQuery();
+  const { data: hubs } = trpc.categories.hubs.useQuery(
+    regionFilter ? { region: regionFilter } : undefined
+  );
 
   const sportCategoryId = useMemo(() => {
     if (!sportFilter || !sportCategories) return undefined;
@@ -52,19 +72,23 @@ export default function Directory() {
     search: searchTerm || undefined,
     sportCategoryId,
     businessTypeId,
+    region: regionFilter || undefined,
+    hub: hubFilter || undefined,
     limit: ITEMS_PER_PAGE,
     offset: page * ITEMS_PER_PAGE,
-  }), [searchTerm, sportCategoryId, businessTypeId, page]);
+  }), [searchTerm, sportCategoryId, businessTypeId, regionFilter, hubFilter, page]);
 
   const { data, isLoading } = trpc.business.search.useQuery(queryInput);
 
   const totalPages = Math.ceil((data?.total || 0) / ITEMS_PER_PAGE);
-  const hasActiveFilters = sportFilter || typeFilter || searchTerm;
+  const hasActiveFilters = sportFilter || typeFilter || searchTerm || regionFilter || hubFilter;
 
   const clearFilters = () => {
     setSearchTerm("");
     setSportFilter("");
     setTypeFilter("");
+    setRegionFilter("");
+    setHubFilter("");
     setPage(0);
   };
 
@@ -79,7 +103,7 @@ export default function Directory() {
             Business Directory
           </h1>
           <p className="text-white/70 max-w-2xl text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-            Find coaches, shops, therapists, and clubs serving cyclists, trail runners, and snowsports enthusiasts.
+            Find coaches, shops, therapists, vacation providers, and clubs serving cyclists, runners, and snowsports enthusiasts across the world's top endurance sports hubs.
           </p>
         </div>
       </section>
@@ -92,7 +116,7 @@ export default function Directory() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search businesses, cities..."
+                placeholder="Search businesses, cities, hubs..."
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
                 className="pl-10"
@@ -101,9 +125,9 @@ export default function Directory() {
             </div>
 
             {/* Desktop Filters */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2 flex-wrap">
               <Select value={sportFilter} onValueChange={(v) => { setSportFilter(v === "all" ? "" : v); setPage(0); }}>
-                <SelectTrigger className="w-44">
+                <SelectTrigger className="w-40">
                   <SelectValue placeholder="All Sports" />
                 </SelectTrigger>
                 <SelectContent>
@@ -115,8 +139,8 @@ export default function Directory() {
               </Select>
 
               <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v === "all" ? "" : v); setPage(0); }}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="All Business Types" />
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Business Types</SelectItem>
@@ -125,6 +149,32 @@ export default function Directory() {
                   ))}
                 </SelectContent>
               </Select>
+
+              <Select value={regionFilter} onValueChange={(v) => { setRegionFilter(v === "all" ? "" : v); setHubFilter(""); setPage(0); }}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Regions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Regions</SelectItem>
+                  {regions?.map(r => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {hubs && hubs.length > 0 && (
+                <Select value={hubFilter} onValueChange={(v) => { setHubFilter(v === "all" ? "" : v); setPage(0); }}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="All Hubs" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Hubs</SelectItem>
+                    {hubs.map(h => (
+                      <SelectItem key={h.hub} value={h.hub}>{h.hub}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground" style={{ textTransform: "none" }}>
@@ -172,6 +222,32 @@ export default function Directory() {
                 </SelectContent>
               </Select>
 
+              <Select value={regionFilter} onValueChange={(v) => { setRegionFilter(v === "all" ? "" : v); setHubFilter(""); setPage(0); }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Regions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Regions</SelectItem>
+                  {regions?.map(r => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {hubs && hubs.length > 0 && (
+                <Select value={hubFilter} onValueChange={(v) => { setHubFilter(v === "all" ? "" : v); setPage(0); }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Hubs" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Hubs</SelectItem>
+                    {hubs.map(h => (
+                      <SelectItem key={h.hub} value={h.hub}>{h.hub}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} style={{ textTransform: "none" }}>
                   <X className="w-4 h-4 mr-1" /> Clear Filters
@@ -189,6 +265,8 @@ export default function Directory() {
           <div className="flex items-center justify-between mb-6">
             <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
               {data?.total || 0} business{(data?.total || 0) !== 1 ? "es" : ""} found
+              {regionFilter && <span className="text-primary font-medium"> in {regionFilter}</span>}
+              {hubFilter && <span className="text-primary font-medium"> — {hubFilter}</span>}
             </p>
           </div>
 
@@ -245,22 +323,27 @@ export default function Directory() {
                           {item.business.shortDescription}
                         </p>
 
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
-                          {item.business.city && (
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                          {item.business.hub && (
                             <span className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
-                              {item.business.city}{item.business.state ? `, ${item.business.state}` : ""}{item.business.country ? `, ${item.business.country}` : ""}
+                              {item.business.hub}, {item.business.country}
+                            </span>
+                          )}
+                          {!item.business.hub && item.business.city && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {item.business.city}{item.business.country ? `, ${item.business.country}` : ""}
+                            </span>
+                          )}
+                          {item.business.region && (
+                            <span className="flex items-center gap-1 text-[oklch(0.55_0.15_45)]">
+                              <Globe className="w-3 h-3" /> {item.business.region}
                             </span>
                           )}
                           {item.businessType && (
                             <span className="bg-secondary px-2 py-0.5 rounded text-secondary-foreground">
                               {item.businessType.name}
-                            </span>
-                          )}
-                          {item.sportCategory && (
-                            <span className="flex items-center gap-1">
-                              {sportIcons[item.sportCategory.slug]}
-                              {item.sportCategory.name}
                             </span>
                           )}
                         </div>
