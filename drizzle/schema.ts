@@ -77,6 +77,10 @@ export const businesses = mysqlTable("businesses", {
   email: varchar("email", { length: 320 }),
   website: varchar("website", { length: 500 }),
   
+  // Google ratings
+  googleRating: varchar("googleRating", { length: 10 }),
+  googleReviewCount: int("googleReviewCount"),
+  
   // Social
   instagram: varchar("instagram", { length: 255 }),
   facebook: varchar("facebook", { length: 255 }),

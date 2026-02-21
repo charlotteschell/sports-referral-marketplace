@@ -12,9 +12,12 @@ export default function Footer() {
               <div className="w-8 h-8 rounded-lg bg-[oklch(0.55_0.15_45)] flex items-center justify-center">
                 <Mountain className="w-4 h-4 text-white" />
               </div>
-              <span className="text-base font-bold text-white tracking-wide" style={{ fontFamily: "var(--font-heading)" }}>
-                SPORTCONNECT
-              </span>
+              <div className="flex flex-col">
+                <span className="text-base font-bold text-white tracking-wide leading-tight" style={{ fontFamily: "var(--font-heading)" }}>
+                  SPORTCONNECT
+                </span>
+                <span className="text-[9px] text-white/40 tracking-wider" style={{ textTransform: "none", letterSpacing: "0.05em" }}>Powered by RARE Labs</span>
+              </div>
             </div>
             <p className="text-sm leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
               The referral marketplace connecting endurance sports businesses and enthusiasts. Grow together through collaboration.

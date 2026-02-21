@@ -323,6 +323,28 @@ export default function Directory() {
                           {item.business.shortDescription}
                         </p>
 
+                        {/* Google Rating */}
+                        {item.business.googleRating && (
+                          <div className="flex items-center gap-1 mb-3">
+                            <div className="flex items-center gap-0.5">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-3.5 h-3.5 ${
+                                    i < Math.round(parseFloat(item.business.googleRating || "0"))
+                                      ? "text-yellow-500 fill-yellow-500"
+                                      : "text-muted-foreground/30"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs font-medium text-foreground">{item.business.googleRating}</span>
+                            {item.business.googleReviewCount && item.business.googleReviewCount > 0 && (
+                              <span className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>({item.business.googleReviewCount})</span>
+                            )}
+                          </div>
+                        )}
+
                         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
                           {item.business.hub && (
                             <span className="flex items-center gap-1">

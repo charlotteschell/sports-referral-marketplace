@@ -31,9 +31,12 @@ export default function Header() {
               <div className="w-9 h-9 rounded-lg bg-[oklch(0.55_0.15_45)] flex items-center justify-center">
                 <Mountain className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold text-white tracking-wide" style={{ fontFamily: "var(--font-heading)" }}>
-                SPORTCONNECT
-              </span>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold text-white tracking-wide leading-tight" style={{ fontFamily: "var(--font-heading)" }}>
+                  SPORTCONNECT
+                </span>
+                <span className="text-[9px] text-white/40 tracking-wider" style={{ textTransform: "none", letterSpacing: "0.05em" }}>Powered by RARE Labs</span>
+              </div>
             </div>
           </Link>
 

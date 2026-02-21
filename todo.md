@@ -106,3 +106,18 @@
 ## SEO Fixes
 - [x] Add meta description tag (50-160 characters)
 - [x] Add meta keywords tag
+
+## Login Flow
+- [x] Note: Manus OAuth handles authentication (Google, etc.) - custom email/password not supported by platform
+- [x] Login flow is clear and accessible via header Sign In button
+
+## Branding
+- [x] Add "Powered by RARE Labs" under SportConnect branding in header and footer
+
+## Business Data Enrichment
+- [x] Research real contact info, websites, and ratings for all 51 listed businesses
+- [x] Add website URL field to business schema (already existed)
+- [x] Add Google rating and review count fields to business schema
+- [x] Update database with researched data (names, websites, emails, descriptions, ratings)
+- [x] Display Google ratings on directory cards and business profiles
+- [x] Show website links on business profile headers

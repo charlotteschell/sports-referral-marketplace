@@ -156,6 +156,41 @@ export default function BusinessProfile() {
                   </span>
                 )}
               </div>
+              {/* Google Rating */}
+              {business.googleRating && (
+                <div className="flex items-center gap-2 mt-3">
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-4 h-4 ${
+                          i < Math.round(parseFloat(business.googleRating || "0"))
+                            ? "text-yellow-400 fill-yellow-400"
+                            : "text-white/20"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm font-medium text-white">{business.googleRating}</span>
+                  {business.googleReviewCount && business.googleReviewCount > 0 && (
+                    <span className="text-sm text-white/50">({business.googleReviewCount.toLocaleString()} Google reviews)</span>
+                  )}
+                </div>
+              )}
+              {/* Website link - visible for all businesses */}
+              {business.website && (
+                <div className="mt-2">
+                  <a
+                    href={business.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm text-[oklch(0.55_0.15_45)] hover:text-[oklch(0.65_0.15_45)] transition-colors"
+                    style={{ textTransform: "none" }}
+                  >
+                    <Globe className="w-3.5 h-3.5" /> Visit Website <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons - Only show Edit/Update after claiming */}
