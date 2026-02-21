@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { Link, useSearch } from "wouter";
+import { Link, useSearch, useLocation } from "wouter";
+import { getLoginUrl } from "@/const";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import {
   Search, MapPin, Shield, Bike, Mountain, Snowflake, Star,
-  ChevronLeft, ChevronRight, Filter, X, Compass, Globe
+  ChevronLeft, ChevronRight, Filter, X, Compass, Globe, UserPlus
 } from "lucide-react";
 
 const sportIcons: Record<string, React.ReactNode> = {
@@ -25,6 +27,8 @@ const sportIcons: Record<string, React.ReactNode> = {
 const ITEMS_PER_PAGE = 12;
 
 export default function Directory() {
+  const { user, isAuthenticated } = useAuth();
+  const [, navigate] = useLocation();
   const searchString = useSearch();
   const urlParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
   const initialSport = urlParams.get("sport") || "";
@@ -310,7 +314,7 @@ export default function Directory() {
                               <Shield className="w-3 h-3" /> Verified
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-500/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
                               Unclaimed
                             </span>
                           )}
@@ -369,6 +373,28 @@ export default function Directory() {
                             </span>
                           )}
                         </div>
+
+                        {/* Claim Your Business CTA for unclaimed listings */}
+                        {!item.business.isClaimed && (
+                          <div className="mt-4 pt-3 border-t border-border">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (isAuthenticated) {
+                                  navigate(`/business/${item.business.slug}`);
+                                } else {
+                                  window.location.href = getLoginUrl();
+                                }
+                              }}
+                              className="w-full inline-flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700 transition-all border border-amber-500/20 hover:border-amber-500/40"
+                              style={{ textTransform: "none" }}
+                            >
+                              <UserPlus className="w-4 h-4" />
+                              Is this your business? Claim it
+                            </button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </Link>

@@ -175,3 +175,9 @@
 - [x] Add edit button on each existing offer in ManageOffers page
 - [x] Inline edit form with save/cancel for editing offer details
 - [x] Write tests for autocomplete and offer update endpoints (6 new tests, 57 total pass)
+
+## Claim Your Business CTA on Directory Listings
+- [x] Add prominent "Claim Your Business" button on each unclaimed directory card
+- [x] Button links to the business profile page (or login if not authenticated)
+- [x] Visually distinguish unclaimed listings with amber CTA and border
+- [x] Claimed/verified businesses do not show the claim button
