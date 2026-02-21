@@ -94,6 +94,15 @@ export const businesses = mysqlTable("businesses", {
   logoUrl: varchar("logoUrl", { length: 500 }),
   coverImageUrl: varchar("coverImageUrl", { length: 500 }),
   
+  // Approval workflow
+  approvalStatus: mysqlEnum("approvalStatus", ["pending", "approved", "rejected"]).default("approved").notNull(),
+  approvalNotes: text("approvalNotes"),
+  approvedAt: timestamp("approvedAt"),
+  
+  // Visibility controls
+  isHidden: boolean("isHidden").default(false).notNull(), // owner can hide
+  isAdminHidden: boolean("isAdminHidden").default(false).notNull(), // super admin can hide
+  
   // Status
   isActive: boolean("isActive").default(true).notNull(),
   isFeatured: boolean("isFeatured").default(false).notNull(),
@@ -130,6 +139,8 @@ export const referralOffers = mysqlTable("referralOffers", {
   termsAndConditions: text("termsAndConditions"),
   isSample: boolean("isSample").default(false).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
+  isHidden: boolean("isHidden").default(false).notNull(), // owner can hide
+  isAdminHidden: boolean("isAdminHidden").default(false).notNull(), // super admin can hide
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

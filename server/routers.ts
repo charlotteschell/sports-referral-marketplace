@@ -7,6 +7,12 @@ import { TRPCError } from "@trpc/server";
 import * as db from "./db";
 import { notifyOwner } from "./_core/notification";
 
+// Admin-only procedure helper
+const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+  return next({ ctx });
+});
+
 export const appRouter = router({
   system: systemRouter,
 
@@ -123,7 +129,17 @@ export const appRouter = router({
           isClaimed: true,
           claimedByUserId: ctx.user.id,
           claimedAt: new Date(),
+          approvalStatus: 'pending', // New businesses need admin approval
         });
+        // Notify admin
+        try {
+          await notifyOwner({
+            title: `New Business Added: ${input.name}`,
+            content: `A new business has been added and needs your approval.\n\nBusiness: ${input.name}\nAdded by: ${ctx.user.name || ctx.user.email || 'Unknown'}\nCity: ${input.city || 'N/A'}, ${input.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
+          });
+        } catch (e) {
+          console.warn('[Notification] Failed to notify owner:', e);
+        }
         return { id, slug: uniqueSlug };
       }),
 
@@ -134,6 +150,15 @@ export const appRouter = router({
         if (!biz) throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
         if (biz.business.isClaimed) throw new TRPCError({ code: "CONFLICT", message: "Business already claimed" });
         await db.claimBusiness(input.businessId, ctx.user.id);
+        // Notify admin about claim needing approval
+        try {
+          await notifyOwner({
+            title: `Business Claim Pending: ${biz.business.name}`,
+            content: `A business has been claimed and needs your approval.\n\nBusiness: ${biz.business.name}\nClaimed by: ${ctx.user.name || ctx.user.email || 'Unknown'}\nCity: ${biz.business.city || 'N/A'}, ${biz.business.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
+          });
+        } catch (e) {
+          console.warn('[Notification] Failed to notify owner:', e);
+        }
         return { success: true };
       }),
 
@@ -167,6 +192,19 @@ export const appRouter = router({
         }
         const { id, ...updateData } = input;
         await db.updateBusiness(id, updateData);
+        return { success: true };
+      }),
+
+    // Owner: toggle business visibility (hide/show without deleting)
+    toggleVisibility: protectedProcedure
+      .input(z.object({ businessId: z.number(), isHidden: z.boolean() }))
+      .mutation(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        if (!biz) throw new TRPCError({ code: "NOT_FOUND" });
+        if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        await db.ownerToggleBusinessVisibility(input.businessId, input.isHidden);
         return { success: true };
       }),
   }),
@@ -214,6 +252,18 @@ export const appRouter = router({
       }))
       .query(async ({ input }) => {
         return db.getReferralOffersByBusiness(input.businessId, input.offerType);
+      }),
+
+    // Get all offers for owner/admin (including hidden)
+    getByBusinessAll: protectedProcedure
+      .input(z.object({ businessId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        if (!biz) throw new TRPCError({ code: "NOT_FOUND" });
+        if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        return db.getReferralOffersByBusinessAll(input.businessId);
       }),
 
     allActive: publicProcedure
@@ -282,6 +332,20 @@ export const appRouter = router({
         await db.deleteReferralOffer(input.id);
         return { success: true };
       }),
+
+    // Owner: toggle offer visibility
+    toggleVisibility: protectedProcedure
+      .input(z.object({ offerId: z.number(), isHidden: z.boolean() }))
+      .mutation(async ({ input, ctx }) => {
+        const offer = await db.getReferralOfferById(input.offerId);
+        if (!offer) throw new TRPCError({ code: "NOT_FOUND" });
+        const biz = await db.getBusinessById(offer.businessId);
+        if (!biz || (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin')) {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        await db.ownerToggleOfferVisibility(input.offerId, input.isHidden);
+        return { success: true };
+      }),
   }),
 
   // ─── Business Submissions ──────────────────────────────────
@@ -310,11 +374,10 @@ export const appRouter = router({
           ...input,
           submittedByUserId: ctx.user?.id ?? null,
         });
-        // Notify owner about new submission
         try {
           await notifyOwner({
             title: `New Business Submission: ${input.businessName}`,
-            content: `A new business has been submitted for review.\n\nBusiness: ${input.businessName}\nContact: ${input.contactName} (${input.contactEmail})\nCity: ${input.city || 'N/A'}, ${input.country || 'N/A'}`,
+            content: `A new business has been submitted for review.\n\nBusiness: ${input.businessName}\nContact: ${input.contactName} (${input.contactEmail})\nCity: ${input.city || 'N/A'}, ${input.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify owner:', e);
@@ -322,33 +385,24 @@ export const appRouter = router({
         return { id };
       }),
 
-    // Admin: list all submissions
-    list: protectedProcedure
+    list: adminProcedure
       .input(z.object({ status: z.string().optional() }).optional())
-      .query(async ({ ctx, input }) => {
-        if (ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
-        }
+      .query(async ({ input }) => {
         return db.getBusinessSubmissions(input?.status);
       }),
 
-    // Admin: approve or reject
-    review: protectedProcedure
+    review: adminProcedure
       .input(z.object({
         id: z.number(),
         status: z.enum(['approved', 'rejected']),
         reviewNotes: z.string().optional(),
       }))
-      .mutation(async ({ input, ctx }) => {
-        if (ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
-        }
+      .mutation(async ({ input }) => {
         const submission = await db.getBusinessSubmissionById(input.id);
         if (!submission) throw new TRPCError({ code: 'NOT_FOUND' });
 
         await db.updateBusinessSubmissionStatus(input.id, input.status, input.reviewNotes);
 
-        // If approved, create the business in the directory
         if (input.status === 'approved') {
           const s = submission.submission;
           const slug = s.businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -372,9 +426,66 @@ export const appRouter = router({
             facebook: s.facebook,
             isClaimed: false,
             isActive: true,
+            approvalStatus: 'approved',
           });
         }
         return { success: true };
+      }),
+  }),
+
+  // ─── Admin Controls ────────────────────────────────────────
+  admin: router({
+    // List all businesses (including hidden, pending, etc.)
+    allBusinesses: adminProcedure
+      .input(z.object({
+        approvalStatus: z.string().optional(),
+        isHidden: z.boolean().optional(),
+        isAdminHidden: z.boolean().optional(),
+        limit: z.number().min(1).max(100).optional(),
+        offset: z.number().min(0).optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return db.getAllBusinessesAdmin(input ?? undefined);
+      }),
+
+    // Pending approval (claims + new businesses)
+    pendingApproval: adminProcedure.query(async () => {
+      return db.getBusinessesPendingApproval();
+    }),
+
+    // Approve or reject a business
+    reviewBusiness: adminProcedure
+      .input(z.object({
+        businessId: z.number(),
+        status: z.enum(['approved', 'rejected']),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.approveOrRejectBusiness(input.businessId, input.status, input.notes);
+        return { success: true };
+      }),
+
+    // Admin: toggle business visibility (take down / restore)
+    toggleBusinessVisibility: adminProcedure
+      .input(z.object({ businessId: z.number(), isAdminHidden: z.boolean() }))
+      .mutation(async ({ input }) => {
+        await db.adminToggleBusinessVisibility(input.businessId, input.isAdminHidden);
+        return { success: true };
+      }),
+
+    // Admin: toggle offer visibility (take down / restore)
+    toggleOfferVisibility: adminProcedure
+      .input(z.object({ offerId: z.number(), isAdminHidden: z.boolean() }))
+      .mutation(async ({ input }) => {
+        await db.adminToggleOfferVisibility(input.offerId, input.isAdminHidden);
+        return { success: true };
+      }),
+
+    // Admin: list all offers (including hidden)
+    allOffers: adminProcedure
+      .input(z.object({ businessId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return db.getAllOffersAdmin(input?.businessId);
       }),
   }),
 

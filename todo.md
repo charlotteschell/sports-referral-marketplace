@@ -181,3 +181,26 @@
 - [x] Button links to the business profile page (or login if not authenticated)
 - [x] Visually distinguish unclaimed listings with amber CTA and border
 - [x] Claimed/verified businesses do not show the claim button
+
+## Case-Insensitive Dropdowns
+- [x] Make all search/filter dropdowns case-insensitive (search, autocomplete, filters)
+
+## Admin Approval Workflow
+- [x] Add approvalStatus field to businesses (pending, approved, rejected)
+- [x] Claimed businesses require admin approval before going live
+- [x] Newly added businesses require admin approval
+- [x] Send notification to admin when a business is claimed or added
+- [x] Admin dashboard shows pending claims and new businesses needing approval
+- [x] Admin can approve or reject claimed/new businesses
+
+## Super Admin Controls
+- [x] Admin can hide any business from public view (isAdminHidden)
+- [x] Admin can hide any business's incentive/offer from public view
+- [x] Admin can take down businesses at any time
+- [x] Admin dashboard shows controls for hiding/showing businesses and offers
+
+## Business Owner Visibility Controls
+- [x] Business owners can hide/show their own incentives (ManageOffers toggle)
+- [x] Business owners can hide their business from public view without deleting (Dashboard toggle)
+- [x] Hidden businesses and offers are not shown in public directory/listings
+- [x] Dashboard shows visibility toggle for each business and offer

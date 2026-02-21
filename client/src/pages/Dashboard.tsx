@@ -23,7 +23,7 @@ import {
   Shield, MapPin, Pencil, ArrowRight, Bike, Mountain, Snowflake, Star,
   Loader2, BarChart3, Users, Percent, Clock, CheckCircle2,
   XCircle, AlertTriangle, Trash2, Unlink, ExternalLink,
-  Palmtree, Activity, ArrowUpRight, ArrowDownRight
+  Palmtree, Activity, ArrowUpRight, ArrowDownRight, Eye, EyeOff
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
@@ -83,6 +83,14 @@ export default function Dashboard() {
       toast.success("Business profile deleted successfully.");
       utils.business.myBusinesses.invalidate();
       utils.dashboard.analytics.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const toggleVisibilityMutation = trpc.business.toggleVisibility.useMutation({
+    onSuccess: (_, variables) => {
+      toast.success(variables.isHidden ? "Business hidden from public view." : "Business is now visible in the directory.");
+      utils.business.myBusinesses.invalidate();
     },
     onError: (err) => toast.error(err.message),
   });
@@ -561,9 +569,28 @@ export default function Dashboard() {
                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                           {sportIcons[item.sportCategory?.slug || ""] || <Star className="w-5 h-5" />}
                         </div>
-                        <Badge className="bg-primary/10 text-primary" style={{ textTransform: "none" }}>
-                          <Shield className="w-3 h-3 mr-1" /> Claimed
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          {item.business.approvalStatus === 'pending' && (
+                            <Badge className="bg-amber-100 text-amber-800 border-amber-200" style={{ textTransform: "none" }}>
+                              <Clock className="w-3 h-3 mr-1" /> Pending Approval
+                            </Badge>
+                          )}
+                          {item.business.isHidden && (
+                            <Badge className="bg-gray-100 text-gray-600" style={{ textTransform: "none" }}>
+                              <EyeOff className="w-3 h-3 mr-1" /> Hidden
+                            </Badge>
+                          )}
+                          {item.business.isAdminHidden && (
+                            <Badge className="bg-red-100 text-red-800" style={{ textTransform: "none" }}>
+                              <EyeOff className="w-3 h-3 mr-1" /> Admin Hidden
+                            </Badge>
+                          )}
+                          {!item.business.isHidden && !item.business.isAdminHidden && item.business.approvalStatus !== 'pending' && (
+                            <Badge className="bg-primary/10 text-primary" style={{ textTransform: "none" }}>
+                              <Shield className="w-3 h-3 mr-1" /> Claimed
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <h3 className="font-bold text-foreground mb-1">{item.business.name}</h3>
                       <p className="text-sm text-muted-foreground mb-3 line-clamp-2" style={{ textTransform: "none", letterSpacing: "normal" }}>
@@ -596,8 +623,22 @@ export default function Dashboard() {
                         </Link>
                       </div>
 
-                      {/* Unclaim & Delete Actions */}
-                      <div className="flex gap-2 pt-3 border-t border-border/50">
+                      {/* Visibility, Unclaim & Delete Actions */}
+                      <div className="flex flex-wrap gap-2 pt-3 border-t border-border/50">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className={`text-xs ${item.business.isHidden ? 'text-emerald-600 hover:text-emerald-700' : 'text-muted-foreground hover:text-gray-600'}`}
+                          style={{ textTransform: "none" }}
+                          onClick={() => toggleVisibilityMutation.mutate({ businessId: item.business.id, isHidden: !item.business.isHidden })}
+                          disabled={toggleVisibilityMutation.isPending}
+                        >
+                          {item.business.isHidden ? (
+                            <><Eye className="w-3 h-3 mr-1" /> Show</>  
+                          ) : (
+                            <><EyeOff className="w-3 h-3 mr-1" /> Hide</>  
+                          )}
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-amber-600 text-xs" style={{ textTransform: "none" }}>

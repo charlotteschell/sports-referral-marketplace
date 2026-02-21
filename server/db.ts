@@ -1,4 +1,4 @@
-import { eq, and, like, or, sql, desc, asc, inArray, isNotNull } from "drizzle-orm";
+import { eq, and, like, or, sql, desc, asc, inArray, isNotNull, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users,
@@ -104,7 +104,13 @@ export async function getDistinctRegions() {
   if (!db) return [];
   const result = await db.selectDistinct({ region: businesses.region })
     .from(businesses)
-    .where(and(eq(businesses.isActive, true), isNotNull(businesses.region)))
+    .where(and(
+      eq(businesses.isActive, true),
+      eq(businesses.approvalStatus, 'approved'),
+      eq(businesses.isHidden, false),
+      eq(businesses.isAdminHidden, false),
+      isNotNull(businesses.region)
+    ))
     .orderBy(asc(businesses.region));
   return result.map(r => r.region).filter(Boolean) as string[];
 }
@@ -112,7 +118,13 @@ export async function getDistinctRegions() {
 export async function getHubsByRegion(region?: string) {
   const db = await getDb();
   if (!db) return [];
-  const conditions = [eq(businesses.isActive, true), isNotNull(businesses.hub)];
+  const conditions = [
+    eq(businesses.isActive, true),
+    eq(businesses.approvalStatus, 'approved'),
+    eq(businesses.isHidden, false),
+    eq(businesses.isAdminHidden, false),
+    isNotNull(businesses.hub),
+  ];
   if (region) {
     conditions.push(eq(businesses.region, region));
   }
@@ -124,6 +136,16 @@ export async function getHubsByRegion(region?: string) {
 }
 
 // ─── Businesses ─────────────────────────────────────────────────
+
+/** Conditions for publicly visible businesses */
+function publicBusinessConditions() {
+  return [
+    eq(businesses.isActive, true),
+    eq(businesses.approvalStatus, 'approved'),
+    eq(businesses.isHidden, false),
+    eq(businesses.isAdminHidden, false),
+  ];
+}
 
 export interface BusinessSearchParams {
   search?: string;
@@ -142,16 +164,17 @@ export async function searchBusinesses(params: BusinessSearchParams) {
   const db = await getDb();
   if (!db) return { businesses: [], total: 0 };
 
-  const conditions = [eq(businesses.isActive, true)];
+  const conditions = publicBusinessConditions();
 
   if (params.search) {
+    const q = params.search.toLowerCase();
     conditions.push(
       or(
-        like(businesses.name, `%${params.search}%`),
-        like(businesses.city, `%${params.search}%`),
-        like(businesses.shortDescription, `%${params.search}%`),
-        like(businesses.hub, `%${params.search}%`),
-        like(businesses.region, `%${params.search}%`)
+        sql`LOWER(${businesses.name}) LIKE ${`%${q}%`}`,
+        sql`LOWER(${businesses.city}) LIKE ${`%${q}%`}`,
+        sql`LOWER(${businesses.shortDescription}) LIKE ${`%${q}%`}`,
+        sql`LOWER(${businesses.hub}) LIKE ${`%${q}%`}`,
+        sql`LOWER(${businesses.region}) LIKE ${`%${q}%`}`
       )!
     );
   }
@@ -162,10 +185,12 @@ export async function searchBusinesses(params: BusinessSearchParams) {
     conditions.push(eq(businesses.businessTypeId, params.businessTypeId));
   }
   if (params.city) {
-    conditions.push(like(businesses.city, `%${params.city}%`));
+    const q = params.city.toLowerCase();
+    conditions.push(sql`LOWER(${businesses.city}) LIKE ${`%${q}%`}`);
   }
   if (params.country) {
-    conditions.push(like(businesses.country, `%${params.country}%`));
+    const q = params.country.toLowerCase();
+    conditions.push(sql`LOWER(${businesses.country}) LIKE ${`%${q}%`}`);
   }
   if (params.region) {
     conditions.push(eq(businesses.region, params.region));
@@ -205,11 +230,12 @@ export async function searchBusinesses(params: BusinessSearchParams) {
   };
 }
 
-// ─── Business Autocomplete Search ──────────────────────────────
+// ─── Business Autocomplete Search (case-insensitive) ──────────
 
 export async function searchBusinessesAutocomplete(query: string, limit = 10) {
   const db = await getDb();
   if (!db) return [];
+  const q = query.toLowerCase();
   const results = await db.select({
     id: businesses.id,
     name: businesses.name,
@@ -225,11 +251,14 @@ export async function searchBusinessesAutocomplete(query: string, limit = 10) {
     .where(
       and(
         eq(businesses.isActive, true),
+        eq(businesses.approvalStatus, 'approved'),
+        eq(businesses.isHidden, false),
+        eq(businesses.isAdminHidden, false),
         or(
-          like(businesses.name, `%${query}%`),
-          like(businesses.city, `%${query}%`),
-          like(businesses.hub, `%${query}%`),
-          like(businesses.region, `%${query}%`)
+          sql`LOWER(${businesses.name}) LIKE ${`%${q}%`}`,
+          sql`LOWER(${businesses.city}) LIKE ${`%${q}%`}`,
+          sql`LOWER(${businesses.hub}) LIKE ${`%${q}%`}`,
+          sql`LOWER(${businesses.region}) LIKE ${`%${q}%`}`
         )!
       )
     )
@@ -310,6 +339,7 @@ export async function claimBusiness(businessId: number, userId: number) {
     isClaimed: true,
     claimedByUserId: userId,
     claimedAt: new Date(),
+    approvalStatus: 'pending', // Requires admin approval
   }).where(eq(businesses.id, businessId));
 }
 
@@ -325,9 +355,122 @@ export async function getFeaturedBusinesses(limit = 6) {
     .from(businesses)
     .leftJoin(sportCategories, eq(businesses.sportCategoryId, sportCategories.id))
     .leftJoin(businessTypes, eq(businesses.businessTypeId, businessTypes.id))
-    .where(and(eq(businesses.isActive, true), eq(businesses.isFeatured, true)))
+    .where(and(...publicBusinessConditions(), eq(businesses.isFeatured, true)))
     .orderBy(desc(businesses.createdAt))
     .limit(limit);
+}
+
+// ─── Admin: Approval Workflow ─────────────────────────────────
+
+export async function getBusinessesPendingApproval() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    business: businesses,
+    sportCategory: sportCategories,
+    businessType: businessTypes,
+  })
+    .from(businesses)
+    .leftJoin(sportCategories, eq(businesses.sportCategoryId, sportCategories.id))
+    .leftJoin(businessTypes, eq(businesses.businessTypeId, businessTypes.id))
+    .where(eq(businesses.approvalStatus, 'pending'))
+    .orderBy(desc(businesses.updatedAt));
+}
+
+export async function approveOrRejectBusiness(
+  businessId: number,
+  status: 'approved' | 'rejected',
+  notes?: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updateData: Record<string, unknown> = {
+    approvalStatus: status,
+    approvalNotes: notes || null,
+  };
+  if (status === 'approved') {
+    updateData.approvedAt = new Date();
+  }
+  if (status === 'rejected') {
+    // If rejected, unclaim the business
+    updateData.isClaimed = false;
+    updateData.claimedByUserId = null;
+    updateData.claimedAt = null;
+  }
+  await db.update(businesses).set(updateData).where(eq(businesses.id, businessId));
+}
+
+// ─── Admin: All businesses (including hidden) ─────────────────
+
+export async function getAllBusinessesAdmin(params?: { approvalStatus?: string; isHidden?: boolean; isAdminHidden?: boolean; limit?: number; offset?: number }) {
+  const db = await getDb();
+  if (!db) return { businesses: [], total: 0 };
+
+  const conditions = [eq(businesses.isActive, true)];
+  if (params?.approvalStatus) {
+    conditions.push(eq(businesses.approvalStatus, params.approvalStatus as "pending" | "approved" | "rejected"));
+  }
+  if (params?.isHidden !== undefined) {
+    conditions.push(eq(businesses.isHidden, params.isHidden));
+  }
+  if (params?.isAdminHidden !== undefined) {
+    conditions.push(eq(businesses.isAdminHidden, params.isAdminHidden));
+  }
+
+  const whereClause = and(...conditions);
+  const limit = params?.limit || 50;
+  const offset = params?.offset || 0;
+
+  const [results, countResult] = await Promise.all([
+    db.select({
+      business: businesses,
+      sportCategory: sportCategories,
+      businessType: businessTypes,
+    })
+      .from(businesses)
+      .leftJoin(sportCategories, eq(businesses.sportCategoryId, sportCategories.id))
+      .leftJoin(businessTypes, eq(businesses.businessTypeId, businessTypes.id))
+      .where(whereClause)
+      .orderBy(desc(businesses.updatedAt))
+      .limit(limit)
+      .offset(offset),
+    db.select({ count: sql<number>`count(*)` })
+      .from(businesses)
+      .where(whereClause),
+  ]);
+
+  return {
+    businesses: results,
+    total: Number(countResult[0]?.count || 0),
+  };
+}
+
+// ─── Admin: Toggle visibility ─────────────────────────────────
+
+export async function adminToggleBusinessVisibility(businessId: number, isAdminHidden: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(businesses).set({ isAdminHidden }).where(eq(businesses.id, businessId));
+}
+
+export async function adminToggleOfferVisibility(offerId: number, isAdminHidden: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(referralOffers).set({ isAdminHidden }).where(eq(referralOffers.id, offerId));
+}
+
+// ─── Owner: Toggle visibility ─────────────────────────────────
+
+export async function ownerToggleBusinessVisibility(businessId: number, isHidden: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(businesses).set({ isHidden }).where(eq(businesses.id, businessId));
+}
+
+export async function ownerToggleOfferVisibility(offerId: number, isHidden: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(referralOffers).set({ isHidden }).where(eq(referralOffers.id, offerId));
 }
 
 // ─── Referral Offers ────────────────────────────────────────────
@@ -335,12 +478,26 @@ export async function getFeaturedBusinesses(limit = 6) {
 export async function getReferralOffersByBusiness(businessId: number, offerType?: string) {
   const db = await getDb();
   if (!db) return [];
-  const conditions = [eq(referralOffers.businessId, businessId), eq(referralOffers.isActive, true)];
+  const conditions = [
+    eq(referralOffers.businessId, businessId),
+    eq(referralOffers.isActive, true),
+    eq(referralOffers.isHidden, false),
+    eq(referralOffers.isAdminHidden, false),
+  ];
   if (offerType) {
     conditions.push(eq(referralOffers.offerType, offerType as "b2b" | "consumer"));
   }
   return db.select().from(referralOffers)
     .where(and(...conditions))
+    .orderBy(desc(referralOffers.createdAt));
+}
+
+/** Get all offers for a business (including hidden) - for owner/admin */
+export async function getReferralOffersByBusinessAll(businessId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(referralOffers)
+    .where(and(eq(referralOffers.businessId, businessId), eq(referralOffers.isActive, true)))
     .orderBy(desc(referralOffers.createdAt));
 }
 
@@ -373,7 +530,15 @@ export async function getReferralOfferById(id: number) {
 export async function getAllActiveReferralOffers(offerType?: string, limit = 20, offset = 0) {
   const db = await getDb();
   if (!db) return [];
-  const conditions = [eq(referralOffers.isActive, true), eq(businesses.isClaimed, true)];
+  const conditions = [
+    eq(referralOffers.isActive, true),
+    eq(referralOffers.isHidden, false),
+    eq(referralOffers.isAdminHidden, false),
+    eq(businesses.isClaimed, true),
+    eq(businesses.approvalStatus, 'approved'),
+    eq(businesses.isHidden, false),
+    eq(businesses.isAdminHidden, false),
+  ];
   if (offerType) {
     conditions.push(eq(referralOffers.offerType, offerType as "b2b" | "consumer"));
   }
@@ -389,6 +554,25 @@ export async function getAllActiveReferralOffers(offerType?: string, limit = 20,
     .orderBy(desc(referralOffers.createdAt))
     .limit(limit)
     .offset(offset);
+}
+
+// ─── Admin: All offers (including hidden) ─────────────────────
+
+export async function getAllOffersAdmin(businessId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(referralOffers.isActive, true)];
+  if (businessId) {
+    conditions.push(eq(referralOffers.businessId, businessId));
+  }
+  return db.select({
+    offer: referralOffers,
+    business: businesses,
+  })
+    .from(referralOffers)
+    .leftJoin(businesses, eq(referralOffers.businessId, businesses.id))
+    .where(and(...conditions))
+    .orderBy(desc(referralOffers.createdAt));
 }
 
 // ─── Referrals (Tracking) ───────────────────────────────────────
@@ -563,22 +747,20 @@ export async function unclaimBusiness(businessId: number) {
     isClaimed: false,
     claimedByUserId: null,
     claimedAt: null,
+    approvalStatus: 'approved', // Reset to approved (unclaimed)
   }).where(eq(businesses.id, businessId));
-  // Deactivate all referral offers for this business
   await db.update(referralOffers).set({ isActive: false }).where(eq(referralOffers.businessId, businessId));
 }
 
 export async function deleteBusiness(businessId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  // Soft delete: mark inactive and unclaim
   await db.update(businesses).set({
     isActive: false,
     isClaimed: false,
     claimedByUserId: null,
     claimedAt: null,
   }).where(eq(businesses.id, businessId));
-  // Deactivate all referral offers
   await db.update(referralOffers).set({ isActive: false }).where(eq(referralOffers.businessId, businessId));
 }
 
@@ -596,7 +778,6 @@ export async function getDashboardAnalytics(userId: number) {
 
   const bizIds = userBizIds.map(b => b.id);
 
-  // Basic counts
   const [sentResult, receivedResult, convertedResult, activeOffersResult] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(referrals).where(inArray(referrals.referringBusinessId, bizIds)),
     db.select({ count: sql<number>`count(*)` }).from(referrals).where(inArray(referrals.receivingBusinessId, bizIds)),
@@ -610,7 +791,6 @@ export async function getDashboardAnalytics(userId: number) {
   const totalAll = totalSent + totalReceived;
   const conversionRate = totalAll > 0 ? Math.round((totalConverted / totalAll) * 100) : 0;
 
-  // Status breakdown for received referrals
   const statusCounts = await db.select({
     status: referrals.status,
     count: sql<number>`count(*)`,
@@ -629,7 +809,6 @@ export async function getDashboardAnalytics(userId: number) {
     }
   }
 
-  // Top referral partners (businesses that sent or received most referrals)
   const topPartnersRaw = await db.select({
     businessId: businesses.id,
     businessName: businesses.name,
@@ -650,7 +829,6 @@ export async function getDashboardAnalytics(userId: number) {
     referralCount: Number(p.count),
   }));
 
-  // Recent activity (last 10 referrals involving user's businesses)
   const recentSent = await db.select({
     referral: referrals,
     partnerBusiness: businesses,
@@ -698,11 +876,11 @@ export async function getDirectoryStats() {
   if (!db) return { totalBusinesses: 0, claimedBusinesses: 0, totalReferrals: 0, sportCategories: 0, regions: 0 };
 
   const [totalBiz, claimedBiz, totalRef, totalCats, totalRegions] = await Promise.all([
-    db.select({ count: sql<number>`count(*)` }).from(businesses).where(eq(businesses.isActive, true)),
-    db.select({ count: sql<number>`count(*)` }).from(businesses).where(and(eq(businesses.isActive, true), eq(businesses.isClaimed, true))),
+    db.select({ count: sql<number>`count(*)` }).from(businesses).where(and(...publicBusinessConditions())),
+    db.select({ count: sql<number>`count(*)` }).from(businesses).where(and(...publicBusinessConditions(), eq(businesses.isClaimed, true))),
     db.select({ count: sql<number>`count(*)` }).from(referrals),
     db.select({ count: sql<number>`count(*)` }).from(sportCategories),
-    db.select({ count: sql<number>`count(distinct ${businesses.region})` }).from(businesses).where(and(eq(businesses.isActive, true), isNotNull(businesses.region))),
+    db.select({ count: sql<number>`count(distinct ${businesses.region})` }).from(businesses).where(and(...publicBusinessConditions(), isNotNull(businesses.region))),
   ]);
 
   return {

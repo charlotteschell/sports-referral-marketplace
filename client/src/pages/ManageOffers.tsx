@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Gift, Plus, Trash2, Loader2, Handshake, Users, Pencil, Check, X } from "lucide-react";
+import { ArrowLeft, Gift, Plus, Trash2, Loader2, Handshake, Users, Pencil, Check, X, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 type OfferForm = {
@@ -114,9 +114,9 @@ export default function ManageOffers() {
     { enabled: businessId > 0 }
   );
 
-  const { data: offers, isLoading } = trpc.referralOffer.getByBusiness.useQuery(
+  const { data: offers, isLoading } = trpc.referralOffer.getByBusinessAll.useQuery(
     { businessId },
-    { enabled: businessId > 0 }
+    { enabled: businessId > 0 && !!user }
   );
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -129,7 +129,7 @@ export default function ManageOffers() {
   const createMutation = trpc.referralOffer.create.useMutation({
     onSuccess: () => {
       toast.success("Referral offer created!");
-      utils.referralOffer.getByBusiness.invalidate({ businessId });
+      utils.referralOffer.getByBusinessAll.invalidate({ businessId });
       setDialogOpen(false);
       setForm({ ...emptyForm });
     },
@@ -139,7 +139,7 @@ export default function ManageOffers() {
   const updateMutation = trpc.referralOffer.update.useMutation({
     onSuccess: () => {
       toast.success("Offer updated successfully!");
-      utils.referralOffer.getByBusiness.invalidate({ businessId });
+      utils.referralOffer.getByBusinessAll.invalidate({ businessId });
       setEditingOfferId(null);
     },
     onError: (err) => toast.error(err.message || "Failed to update offer"),
@@ -148,9 +148,17 @@ export default function ManageOffers() {
   const deleteMutation = trpc.referralOffer.delete.useMutation({
     onSuccess: () => {
       toast.success("Offer removed");
-      utils.referralOffer.getByBusiness.invalidate({ businessId });
+      utils.referralOffer.getByBusinessAll.invalidate({ businessId });
     },
     onError: (err) => toast.error(err.message || "Failed to delete offer"),
+  });
+
+  const toggleOfferVisibility = trpc.referralOffer.toggleVisibility.useMutation({
+    onSuccess: (_, variables) => {
+      toast.success(variables.isHidden ? "Offer hidden from public view." : "Offer is now visible.");
+      utils.referralOffer.getByBusinessAll.invalidate({ businessId });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to toggle visibility"),
   });
 
   const handleCreate = (e: React.FormEvent) => {
@@ -257,6 +265,16 @@ export default function ManageOffers() {
                 <Badge variant="secondary" className={`${type === "b2b" ? "bg-[oklch(0.55_0.15_45)]/10 text-[oklch(0.55_0.15_45)]" : "bg-primary/10 text-primary"} text-xs`} style={{ textTransform: "none" }}>
                   <TypeIcon className="w-3 h-3 mr-1" /> {type === "b2b" ? "B2B" : "Consumer"}
                 </Badge>
+                {(offer as any).isHidden && (
+                  <Badge className="bg-gray-100 text-gray-600 text-xs" style={{ textTransform: "none" }}>
+                    <EyeOff className="w-3 h-3 mr-1" /> Hidden
+                  </Badge>
+                )}
+                {(offer as any).isAdminHidden && (
+                  <Badge className="bg-red-100 text-red-800 text-xs" style={{ textTransform: "none" }}>
+                    <EyeOff className="w-3 h-3 mr-1" /> Admin Hidden
+                  </Badge>
+                )}
                 <Badge className={`${type === "b2b" ? "bg-[oklch(0.55_0.15_45)]" : "bg-primary"} text-white`} style={{ textTransform: "none" }}>
                   {offer.incentiveType === "percentage" ? `${offer.incentiveValue}%` :
                    offer.incentiveType === "fixed" ? `$${offer.incentiveValue}` :
@@ -278,6 +296,16 @@ export default function ManageOffers() {
               )}
             </div>
             <div className="flex items-center gap-1 shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`${(offer as any).isHidden ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50' : 'text-muted-foreground hover:text-gray-600 hover:bg-gray-50'}`}
+                onClick={() => toggleOfferVisibility.mutate({ offerId: offer.id, isHidden: !(offer as any).isHidden })}
+                disabled={toggleOfferVisibility.isPending}
+                title={(offer as any).isHidden ? 'Show offer' : 'Hide offer'}
+              >
+                {(offer as any).isHidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
