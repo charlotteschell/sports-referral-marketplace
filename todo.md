@@ -102,3 +102,7 @@
 - [x] Update referral offers page with B2B vs Individual tabs
 - [x] Update business profile page for dual offer types
 - [x] Update manage offers page for dual offer types
+
+## SEO Fixes
+- [x] Add meta description tag (50-160 characters)
+- [x] Add meta keywords tag
