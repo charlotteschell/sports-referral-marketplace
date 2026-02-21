@@ -68,6 +68,13 @@ export default function Header() {
                     Dashboard
                   </Button>
                 </Link>
+                {user?.role === 'admin' && (
+                  <Link href="/admin">
+                    <Button variant="ghost" className="text-amber-400/80 hover:text-amber-300 hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
+                      Admin
+                    </Button>
+                  </Link>
+                )}
                 <Button
                   variant="ghost"
                   className="text-white/60 hover:text-white hover:bg-white/10 text-sm"
@@ -129,6 +136,13 @@ export default function Header() {
                         Dashboard
                       </span>
                     </Link>
+                    {user?.role === 'admin' && (
+                      <Link href="/admin">
+                        <span className="block px-3 py-2 rounded-md text-sm font-medium text-amber-400/80 hover:text-amber-300 cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                          Admin Panel
+                        </span>
+                      </Link>
+                    )}
                     <button
                       className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white/60 hover:text-white"
                       onClick={() => { logout(); setMobileOpen(false); }}

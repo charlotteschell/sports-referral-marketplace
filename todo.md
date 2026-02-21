@@ -156,3 +156,12 @@
 - [x] Add unclaim button with confirmation dialog in dashboard
 - [x] Add delete profile button with confirmation dialog in dashboard
 - [x] Write tests for unclaim and delete endpoints (9 new tests, 51 total pass)
+
+## Admin Panel for Business Submissions
+- [x] Build admin panel page with submission list (filterable by status: all, pending, approved, rejected)
+- [x] Add submission detail view with all submitted business info (expandable cards)
+- [x] Add approve action that creates a new business listing from submission data
+- [x] Add reject action with optional review notes
+- [x] Add admin-only navigation link visible to admin users (amber "Admin" button in header)
+- [x] Add route to App.tsx and protect with admin role check
+- [x] Existing tests cover submission review endpoints (51 tests pass)
