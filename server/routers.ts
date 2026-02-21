@@ -5,6 +5,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as db from "./db";
+import { notifyOwner } from "./_core/notification";
 
 export const appRouter = router({
   system: systemRouter,
@@ -239,6 +240,100 @@ export const appRouter = router({
           throw new TRPCError({ code: "FORBIDDEN" });
         }
         await db.deleteReferralOffer(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ─── Business Submissions ──────────────────────────────────
+  submission: router({
+    submit: publicProcedure
+      .input(z.object({
+        businessName: z.string().min(1).max(255),
+        businessDescription: z.string().optional(),
+        sportCategoryId: z.number(),
+        businessTypeId: z.number(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        country: z.string().optional(),
+        region: z.string().optional(),
+        hub: z.string().optional(),
+        contactName: z.string().min(1).max(255),
+        contactEmail: z.string().min(1).max(320),
+        contactPhone: z.string().optional(),
+        website: z.string().optional(),
+        instagram: z.string().optional(),
+        facebook: z.string().optional(),
+        additionalNotes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.createBusinessSubmission({
+          ...input,
+          submittedByUserId: ctx.user?.id ?? null,
+        });
+        // Notify owner about new submission
+        try {
+          await notifyOwner({
+            title: `New Business Submission: ${input.businessName}`,
+            content: `A new business has been submitted for review.\n\nBusiness: ${input.businessName}\nContact: ${input.contactName} (${input.contactEmail})\nCity: ${input.city || 'N/A'}, ${input.country || 'N/A'}`,
+          });
+        } catch (e) {
+          console.warn('[Notification] Failed to notify owner:', e);
+        }
+        return { id };
+      }),
+
+    // Admin: list all submissions
+    list: protectedProcedure
+      .input(z.object({ status: z.string().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        return db.getBusinessSubmissions(input?.status);
+      }),
+
+    // Admin: approve or reject
+    review: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(['approved', 'rejected']),
+        reviewNotes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        const submission = await db.getBusinessSubmissionById(input.id);
+        if (!submission) throw new TRPCError({ code: 'NOT_FOUND' });
+
+        await db.updateBusinessSubmissionStatus(input.id, input.status, input.reviewNotes);
+
+        // If approved, create the business in the directory
+        if (input.status === 'approved') {
+          const s = submission.submission;
+          const slug = s.businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          const uniqueSlug = `${slug}-${Date.now().toString(36)}`;
+          await db.createBusiness({
+            name: s.businessName,
+            slug: uniqueSlug,
+            description: s.businessDescription,
+            shortDescription: s.businessDescription?.substring(0, 200),
+            sportCategoryId: s.sportCategoryId,
+            businessTypeId: s.businessTypeId,
+            city: s.city,
+            state: s.state,
+            country: s.country,
+            region: s.region,
+            hub: s.hub,
+            phone: s.contactPhone,
+            email: s.contactEmail,
+            website: s.website,
+            instagram: s.instagram,
+            facebook: s.facebook,
+            isClaimed: false,
+            isActive: true,
+          });
+        }
         return { success: true };
       }),
   }),

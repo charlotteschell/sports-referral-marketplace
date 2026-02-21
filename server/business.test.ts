@@ -100,6 +100,32 @@ vi.mock("./db", () => ({
   getReferralsSent: vi.fn().mockResolvedValue([]),
   getReferralsReceived: vi.fn().mockResolvedValue([]),
   getReferralStats: vi.fn().mockResolvedValue({ sent: 5, received: 3, converted: 2, pending: 1 }),
+  createBusinessSubmission: vi.fn().mockResolvedValue(1),
+  getBusinessSubmissions: vi.fn().mockImplementation(async (status?: string) => {
+    const subs = [
+      {
+        submission: { id: 1, businessName: "Test Submission", sportCategoryId: 1, businessTypeId: 1, contactName: "Jane", contactEmail: "jane@test.com", status: "pending", region: "Alps", hub: "Chamonix" },
+        sportCategory: { id: 1, name: "Cycling", slug: "cycling" },
+        businessType: { id: 1, name: "Coach", slug: "coach" },
+      },
+      {
+        submission: { id: 2, businessName: "Approved Biz", sportCategoryId: 2, businessTypeId: 2, contactName: "Bob", contactEmail: "bob@test.com", status: "approved", region: "Western US", hub: "Boulder" },
+        sportCategory: { id: 2, name: "Running", slug: "running" },
+        businessType: { id: 2, name: "Bike Shop", slug: "bike-shop" },
+      },
+    ];
+    if (status) return subs.filter(s => s.submission.status === status);
+    return subs;
+  }),
+  updateBusinessSubmissionStatus: vi.fn().mockResolvedValue(undefined),
+  getBusinessSubmissionById: vi.fn().mockImplementation(async (id: number) => {
+    if (id === 1) return {
+      submission: { id: 1, businessName: "Test Submission", businessDescription: "A test business", sportCategoryId: 1, businessTypeId: 1, contactName: "Jane", contactEmail: "jane@test.com", contactPhone: "555-1234", website: "https://test.com", instagram: null, facebook: null, city: "Chamonix", state: null, country: "France", region: "Alps", hub: "Chamonix", status: "pending" },
+      sportCategory: { id: 1, name: "Cycling", slug: "cycling" },
+      businessType: { id: 1, name: "Coach", slug: "coach" },
+    };
+    return null;
+  }),
 }));
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
@@ -388,6 +414,78 @@ describe("referral tracking", () => {
     const caller = appRouter.createCaller(createAuthContext());
     const result = await caller.referral.updateStatus({ id: 1, status: "converted" });
     expect(result.success).toBe(true);
+  });
+});
+
+// ─── Business Submissions ──────────────────────────────────
+
+describe("submission", () => {
+  it("submits a new business publicly", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.submission.submit({
+      businessName: "My New Shop",
+      sportCategoryId: 1,
+      businessTypeId: 2,
+      contactName: "Alice",
+      contactEmail: "alice@shop.com",
+      city: "Whistler",
+      country: "Canada",
+      region: "Western Canada",
+      hub: "Whistler",
+    });
+    expect(result.id).toBe(1);
+  });
+
+  it("submits a business with authenticated user", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.submission.submit({
+      businessName: "Pro Coaching",
+      sportCategoryId: 2,
+      businessTypeId: 1,
+      contactName: "Bob",
+      contactEmail: "bob@coaching.com",
+    });
+    expect(result.id).toBe(1);
+  });
+
+  it("admin can list all submissions", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1, "admin"));
+    const result = await caller.submission.list();
+    expect(result).toHaveLength(2);
+  });
+
+  it("admin can filter submissions by status", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1, "admin"));
+    const result = await caller.submission.list({ status: "pending" });
+    expect(result).toHaveLength(1);
+    expect(result[0].submission.status).toBe("pending");
+  });
+
+  it("non-admin cannot list submissions", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1, "user"));
+    await expect(caller.submission.list()).rejects.toThrow("Admin access required");
+  });
+
+  it("admin can approve a submission", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1, "admin"));
+    const result = await caller.submission.review({ id: 1, status: "approved" });
+    expect(result.success).toBe(true);
+  });
+
+  it("admin can reject a submission with notes", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1, "admin"));
+    const result = await caller.submission.review({ id: 1, status: "rejected", reviewNotes: "Duplicate listing" });
+    expect(result.success).toBe(true);
+  });
+
+  it("non-admin cannot review submissions", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1, "user"));
+    await expect(caller.submission.review({ id: 1, status: "approved" })).rejects.toThrow("Admin access required");
+  });
+
+  it("throws NOT_FOUND for non-existent submission", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1, "admin"));
+    await expect(caller.submission.review({ id: 999, status: "approved" })).rejects.toThrow();
   });
 });
 

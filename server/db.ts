@@ -8,6 +8,7 @@ import {
   referralOffers, InsertReferralOffer, ReferralOffer,
   referrals, InsertReferral, Referral,
   businessSportCategories,
+  businessSubmissions, InsertBusinessSubmission, BusinessSubmission,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -461,6 +462,66 @@ export async function getReferralStats(userId: number) {
     pending: Number(pendingResult[0]?.count || 0),
   };
 }
+
+// ─── Business Submissions ──────────────────────────────────────
+
+export async function createBusinessSubmission(data: InsertBusinessSubmission) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(businessSubmissions).values(data);
+  return result[0].insertId;
+}
+
+export async function getBusinessSubmissions(status?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [];
+  if (status) {
+    conditions.push(eq(businessSubmissions.status, status as "pending" | "approved" | "rejected"));
+  }
+  return db.select({
+    submission: businessSubmissions,
+    sportCategory: sportCategories,
+    businessType: businessTypes,
+  })
+    .from(businessSubmissions)
+    .leftJoin(sportCategories, eq(businessSubmissions.sportCategoryId, sportCategories.id))
+    .leftJoin(businessTypes, eq(businessSubmissions.businessTypeId, businessTypes.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(desc(businessSubmissions.createdAt));
+}
+
+export async function updateBusinessSubmissionStatus(
+  id: number,
+  status: "pending" | "approved" | "rejected",
+  reviewNotes?: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(businessSubmissions).set({
+    status,
+    reviewNotes: reviewNotes || null,
+    reviewedAt: new Date(),
+  }).where(eq(businessSubmissions.id, id));
+}
+
+export async function getBusinessSubmissionById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select({
+    submission: businessSubmissions,
+    sportCategory: sportCategories,
+    businessType: businessTypes,
+  })
+    .from(businessSubmissions)
+    .leftJoin(sportCategories, eq(businessSubmissions.sportCategoryId, sportCategories.id))
+    .leftJoin(businessTypes, eq(businessSubmissions.businessTypeId, businessTypes.id))
+    .where(eq(businessSubmissions.id, id))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+// ─── Directory Stats ───────────────────────────────────────────
 
 export async function getDirectoryStats() {
   const db = await getDb();

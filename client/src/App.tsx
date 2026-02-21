@@ -14,6 +14,7 @@ import EditBusiness from "./pages/EditBusiness";
 import ManageOffers from "./pages/ManageOffers";
 import SendReferral from "./pages/SendReferral";
 import Referrals from "./pages/Referrals";
+import SubmitBusiness from "./pages/SubmitBusiness";
 
 function Router() {
   return (
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/dashboard/offers/:id" component={ManageOffers} />
       <Route path="/dashboard/send-referral" component={SendReferral} />
       <Route path="/dashboard/referrals" component={Referrals} />
+      <Route path="/submit-business" component={SubmitBusiness} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

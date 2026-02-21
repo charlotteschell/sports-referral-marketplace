@@ -169,3 +169,50 @@ export const referrals = mysqlTable("referrals", {
 
 export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = typeof referrals.$inferInsert;
+
+/**
+ * Business submissions: pending requests from businesses not yet in the directory
+ */
+export const businessSubmissions = mysqlTable("businessSubmissions", {
+  id: int("id").autoincrement().primaryKey(),
+
+  // Business info
+  businessName: varchar("businessName", { length: 255 }).notNull(),
+  businessDescription: text("businessDescription"),
+  sportCategoryId: int("sportCategoryId").notNull(),
+  businessTypeId: int("businessTypeId").notNull(),
+
+  // Location
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 100 }),
+  country: varchar("country", { length: 100 }),
+  region: varchar("region", { length: 100 }),
+  hub: varchar("hub", { length: 100 }),
+
+  // Contact
+  contactName: varchar("contactName", { length: 255 }).notNull(),
+  contactEmail: varchar("contactEmail", { length: 320 }).notNull(),
+  contactPhone: varchar("contactPhone", { length: 30 }),
+  website: varchar("website", { length: 500 }),
+
+  // Social
+  instagram: varchar("instagram", { length: 255 }),
+  facebook: varchar("facebook", { length: 255 }),
+
+  // Additional info
+  additionalNotes: text("additionalNotes"),
+
+  // Submitter (optional - if logged in)
+  submittedByUserId: int("submittedByUserId"),
+
+  // Review status
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  reviewNotes: text("reviewNotes"),
+  reviewedAt: timestamp("reviewedAt"),
+
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BusinessSubmission = typeof businessSubmissions.$inferSelect;
+export type InsertBusinessSubmission = typeof businessSubmissions.$inferInsert;

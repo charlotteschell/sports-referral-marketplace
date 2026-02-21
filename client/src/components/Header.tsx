@@ -14,6 +14,7 @@ export default function Header() {
     { href: "/", label: "Home" },
     { href: "/directory", label: "Directory" },
     { href: "/referral-offers", label: "Referral Offers" },
+    { href: "/submit-business", label: "Submit Business" },
   ];
 
   const isActive = (href: string) => {
@@ -83,11 +84,11 @@ export default function Header() {
                     Sign In
                   </Button>
                 </a>
-                <a href={getLoginUrl()}>
+                <Link href="/submit-business">
                   <Button className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white text-sm" style={{ textTransform: "none" }}>
                     List Your Business
                   </Button>
-                </a>
+                </Link>
               </>
             )}
           </div>

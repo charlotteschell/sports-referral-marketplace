@@ -121,3 +121,13 @@
 - [x] Update database with researched data (names, websites, emails, descriptions, ratings)
 - [x] Display Google ratings on directory cards and business profiles
 - [x] Show website links on business profile headers
+
+## Submit Your Business Form
+- [x] Create businessSubmissions database table for pending submissions
+- [x] Add db helpers for creating and listing submissions
+- [x] Add tRPC router for submitting a business and admin review
+- [x] Build Submit Your Business form page with all required fields
+- [x] Add form validation (name, email, sport category, business type, location)
+- [x] Add navigation links to the Submit form from header, footer, and landing page CTAs
+- [x] Send owner notification when a new submission arrives
+- [x] Write vitest tests for the submission flow (9 new tests, 40 total pass)
