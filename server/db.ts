@@ -521,6 +521,143 @@ export async function getBusinessSubmissionById(id: number) {
   return result.length > 0 ? result[0] : null;
 }
 
+// ─── Unclaim & Delete Business ─────────────────────────────────
+
+export async function unclaimBusiness(businessId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(businesses).set({
+    isClaimed: false,
+    claimedByUserId: null,
+    claimedAt: null,
+  }).where(eq(businesses.id, businessId));
+  // Deactivate all referral offers for this business
+  await db.update(referralOffers).set({ isActive: false }).where(eq(referralOffers.businessId, businessId));
+}
+
+export async function deleteBusiness(businessId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Soft delete: mark inactive and unclaim
+  await db.update(businesses).set({
+    isActive: false,
+    isClaimed: false,
+    claimedByUserId: null,
+    claimedAt: null,
+  }).where(eq(businesses.id, businessId));
+  // Deactivate all referral offers
+  await db.update(referralOffers).set({ isActive: false }).where(eq(referralOffers.businessId, businessId));
+}
+
+// ─── Dashboard Analytics ──────────────────────────────────────
+
+export async function getDashboardAnalytics(userId: number) {
+  const db = await getDb();
+  if (!db) return { totalReferralsSent: 0, totalReferralsReceived: 0, conversionRate: 0, activeOffers: 0, statusBreakdown: { pending: 0, contacted: 0, converted: 0, declined: 0, expired: 0 }, topPartners: [], recentActivity: [] };
+
+  const userBizIds = await db.select({ id: businesses.id, name: businesses.name })
+    .from(businesses)
+    .where(eq(businesses.claimedByUserId, userId));
+
+  if (userBizIds.length === 0) return { totalReferralsSent: 0, totalReferralsReceived: 0, conversionRate: 0, activeOffers: 0, statusBreakdown: { pending: 0, contacted: 0, converted: 0, declined: 0, expired: 0 }, topPartners: [], recentActivity: [] };
+
+  const bizIds = userBizIds.map(b => b.id);
+
+  // Basic counts
+  const [sentResult, receivedResult, convertedResult, activeOffersResult] = await Promise.all([
+    db.select({ count: sql<number>`count(*)` }).from(referrals).where(inArray(referrals.referringBusinessId, bizIds)),
+    db.select({ count: sql<number>`count(*)` }).from(referrals).where(inArray(referrals.receivingBusinessId, bizIds)),
+    db.select({ count: sql<number>`count(*)` }).from(referrals).where(and(inArray(referrals.receivingBusinessId, bizIds), eq(referrals.status, 'converted'))),
+    db.select({ count: sql<number>`count(*)` }).from(referralOffers).where(and(inArray(referralOffers.businessId, bizIds), eq(referralOffers.isActive, true))),
+  ]);
+
+  const totalSent = Number(sentResult[0]?.count || 0);
+  const totalReceived = Number(receivedResult[0]?.count || 0);
+  const totalConverted = Number(convertedResult[0]?.count || 0);
+  const totalAll = totalSent + totalReceived;
+  const conversionRate = totalAll > 0 ? Math.round((totalConverted / totalAll) * 100) : 0;
+
+  // Status breakdown for received referrals
+  const statusCounts = await db.select({
+    status: referrals.status,
+    count: sql<number>`count(*)`,
+  })
+    .from(referrals)
+    .where(or(
+      inArray(referrals.referringBusinessId, bizIds),
+      inArray(referrals.receivingBusinessId, bizIds)
+    )!)
+    .groupBy(referrals.status);
+
+  const statusBreakdown = { pending: 0, contacted: 0, converted: 0, declined: 0, expired: 0 };
+  for (const row of statusCounts) {
+    if (row.status in statusBreakdown) {
+      statusBreakdown[row.status as keyof typeof statusBreakdown] = Number(row.count);
+    }
+  }
+
+  // Top referral partners (businesses that sent or received most referrals)
+  const topPartnersRaw = await db.select({
+    businessId: businesses.id,
+    businessName: businesses.name,
+    businessSlug: businesses.slug,
+    count: sql<number>`count(*)`,
+  })
+    .from(referrals)
+    .leftJoin(businesses, eq(referrals.referringBusinessId, businesses.id))
+    .where(inArray(referrals.receivingBusinessId, bizIds))
+    .groupBy(businesses.id, businesses.name, businesses.slug)
+    .orderBy(desc(sql`count(*)`))
+    .limit(5);
+
+  const topPartners = topPartnersRaw.map(p => ({
+    businessId: p.businessId,
+    businessName: p.businessName,
+    businessSlug: p.businessSlug,
+    referralCount: Number(p.count),
+  }));
+
+  // Recent activity (last 10 referrals involving user's businesses)
+  const recentSent = await db.select({
+    referral: referrals,
+    partnerBusiness: businesses,
+  })
+    .from(referrals)
+    .leftJoin(businesses, eq(referrals.receivingBusinessId, businesses.id))
+    .where(inArray(referrals.referringBusinessId, bizIds))
+    .orderBy(desc(referrals.createdAt))
+    .limit(5);
+
+  const recentReceived = await db.select({
+    referral: referrals,
+    partnerBusiness: businesses,
+  })
+    .from(referrals)
+    .leftJoin(businesses, eq(referrals.referringBusinessId, businesses.id))
+    .where(inArray(referrals.receivingBusinessId, bizIds))
+    .orderBy(desc(referrals.createdAt))
+    .limit(5);
+
+  const recentActivity = [
+    ...recentSent.map(r => ({ ...r, direction: 'sent' as const })),
+    ...recentReceived.map(r => ({ ...r, direction: 'received' as const })),
+  ].sort((a, b) => {
+    const dateA = a.referral.createdAt ? new Date(a.referral.createdAt).getTime() : 0;
+    const dateB = b.referral.createdAt ? new Date(b.referral.createdAt).getTime() : 0;
+    return dateB - dateA;
+  }).slice(0, 10);
+
+  return {
+    totalReferralsSent: totalSent,
+    totalReferralsReceived: totalReceived,
+    conversionRate,
+    activeOffers: Number(activeOffersResult[0]?.count || 0),
+    statusBreakdown,
+    topPartners,
+    recentActivity,
+  };
+}
+
 // ─── Directory Stats ───────────────────────────────────────────
 
 export async function getDirectoryStats() {

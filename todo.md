@@ -138,3 +138,21 @@
 - [x] Display "Sample Offer" badge on sample referral offers in directory and profiles
 - [x] Add community messaging: encourage owners to claim listing and publish real incentives for free
 - [x] Add messaging on referral offers page about free community platform
+
+## Business Dashboard Redesign
+- [x] Add backend analytics endpoint for dashboard metrics (referrals sent/received, conversion rate, top partners)
+- [x] Add backend endpoint for referral status breakdown (pending, contacted, converted, expired)
+- [x] Redesign dashboard with KPI metric cards (total referrals, conversion rate, active offers, pending)
+- [x] Add referral status breakdown with progress bars
+- [x] Add top referral partners section
+- [x] Add referral activity tabs (recent, sent, received) with status badges and quick actions
+- [x] Add quick action buttons (send referral, create offer, edit business, browse directory)
+- [x] Responsive design for mobile
+- [x] Write tests for new dashboard analytics endpoints (2 new tests)
+
+## Unclaim & Delete Business
+- [x] Add backend endpoint to unclaim a business (resets to unclaimed state, deactivates offers)
+- [x] Add backend endpoint to delete a business profile (soft delete, deactivates offers)
+- [x] Add unclaim button with confirmation dialog in dashboard
+- [x] Add delete profile button with confirmation dialog in dashboard
+- [x] Write tests for unclaim and delete endpoints (9 new tests, 51 total pass)

@@ -100,6 +100,17 @@ vi.mock("./db", () => ({
   getReferralsSent: vi.fn().mockResolvedValue([]),
   getReferralsReceived: vi.fn().mockResolvedValue([]),
   getReferralStats: vi.fn().mockResolvedValue({ sent: 5, received: 3, converted: 2, pending: 1 }),
+  unclaimBusiness: vi.fn().mockResolvedValue(undefined),
+  deleteBusiness: vi.fn().mockResolvedValue(undefined),
+  getDashboardAnalytics: vi.fn().mockResolvedValue({
+    totalReferralsSent: 5,
+    totalReferralsReceived: 3,
+    conversionRate: 25,
+    activeOffers: 4,
+    statusBreakdown: { pending: 2, contacted: 3, converted: 2, declined: 1, expired: 0 },
+    topPartners: [{ businessId: 2, businessName: "Partner Biz", businessSlug: "partner-biz", referralCount: 3 }],
+    recentActivity: [],
+  }),
   createBusinessSubmission: vi.fn().mockResolvedValue(1),
   getBusinessSubmissions: vi.fn().mockImplementation(async (status?: string) => {
     const subs = [
@@ -486,6 +497,83 @@ describe("submission", () => {
   it("throws NOT_FOUND for non-existent submission", async () => {
     const caller = appRouter.createCaller(createAuthContext(1, "admin"));
     await expect(caller.submission.review({ id: 999, status: "approved" })).rejects.toThrow();
+  });
+});
+
+// ─── Unclaim & Delete Business ──────────────────────────────
+
+describe("businessActions.unclaim", () => {
+  it("allows owner to unclaim their business", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1));
+    const result = await caller.businessActions.unclaim({ businessId: 1 });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects unclaim by non-owner", async () => {
+    const caller = appRouter.createCaller(createAuthContext(999));
+    await expect(caller.businessActions.unclaim({ businessId: 1 })).rejects.toThrow("Not authorized");
+  });
+
+  it("allows admin to unclaim any business", async () => {
+    const caller = appRouter.createCaller(createAuthContext(999, "admin"));
+    const result = await caller.businessActions.unclaim({ businessId: 1 });
+    expect(result.success).toBe(true);
+  });
+
+  it("throws NOT_FOUND for non-existent business", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1));
+    await expect(caller.businessActions.unclaim({ businessId: 999 })).rejects.toThrow();
+  });
+
+  it("rejects unauthenticated unclaim", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    await expect(caller.businessActions.unclaim({ businessId: 1 })).rejects.toThrow();
+  });
+});
+
+describe("businessActions.delete", () => {
+  it("allows owner to delete their business", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1));
+    const result = await caller.businessActions.delete({ businessId: 1 });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects delete by non-owner", async () => {
+    const caller = appRouter.createCaller(createAuthContext(999));
+    await expect(caller.businessActions.delete({ businessId: 1 })).rejects.toThrow("Not authorized");
+  });
+
+  it("allows admin to delete any business", async () => {
+    const caller = appRouter.createCaller(createAuthContext(999, "admin"));
+    const result = await caller.businessActions.delete({ businessId: 1 });
+    expect(result.success).toBe(true);
+  });
+
+  it("throws NOT_FOUND for non-existent business", async () => {
+    const caller = appRouter.createCaller(createAuthContext(1));
+    await expect(caller.businessActions.delete({ businessId: 999 })).rejects.toThrow();
+  });
+});
+
+// ─── Dashboard Analytics ──────────────────────────────────
+
+describe("dashboard.analytics", () => {
+  it("returns analytics for authenticated user", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.dashboard.analytics();
+    expect(result.totalReferralsSent).toBe(5);
+    expect(result.totalReferralsReceived).toBe(3);
+    expect(result.conversionRate).toBe(25);
+    expect(result.activeOffers).toBe(4);
+    expect(result.statusBreakdown.pending).toBe(2);
+    expect(result.statusBreakdown.converted).toBe(2);
+    expect(result.topPartners).toHaveLength(1);
+    expect(result.topPartners[0].businessName).toBe("Partner Biz");
+  });
+
+  it("rejects unauthenticated analytics request", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    await expect(caller.dashboard.analytics()).rejects.toThrow();
   });
 });
 

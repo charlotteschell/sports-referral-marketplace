@@ -165,6 +165,40 @@ export const appRouter = router({
       }),
   }),
 
+  // ─── Unclaim & Delete Business ──────────────────────────────
+  businessActions: router({
+    unclaim: protectedProcedure
+      .input(z.object({ businessId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        if (!biz) throw new TRPCError({ code: 'NOT_FOUND', message: 'Business not found' });
+        if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized' });
+        }
+        await db.unclaimBusiness(input.businessId);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ businessId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        if (!biz) throw new TRPCError({ code: 'NOT_FOUND', message: 'Business not found' });
+        if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized' });
+        }
+        await db.deleteBusiness(input.businessId);
+        return { success: true };
+      }),
+  }),
+
+  // ─── Dashboard Analytics ───────────────────────────────────────
+  dashboard: router({
+    analytics: protectedProcedure.query(async ({ ctx }) => {
+      return db.getDashboardAnalytics(ctx.user.id);
+    }),
+  }),
+
   // ─── Referral Offers ────────────────────────────────────────
   referralOffer: router({
     getByBusiness: publicProcedure
