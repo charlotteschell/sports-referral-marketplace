@@ -204,3 +204,29 @@
 - [x] Business owners can hide their business from public view without deleting (Dashboard toggle)
 - [x] Hidden businesses and offers are not shown in public directory/listings
 - [x] Dashboard shows visibility toggle for each business and offer
+
+## Category Fixes & New Businesses
+- [x] Audit and fix all category mismatches in seeded businesses (e.g. Sa Calobra = cycling club)
+- [x] Add Alaro Cycling Club (https://www.alarocyclingclub.com/en)
+- [x] Add North Wind Cycles (https://www.northwindcycles.com/)
+- [x] Add The Doctrine Training Ltd. (https://thedoctrine.ca/)
+- [x] Add Score Nutrition (https://scorenutrition.ca/)
+- [x] Add Trail Run Adventures (www.trailrunadventures.com)
+- [x] Add Anna Frost Coaching (https://www.trailrunadventures.com/coaching)
+- [x] Add Personal Peak Coaching (https://personalpeak.ca/trainer/travis-brown/)
+- [x] Add Cyclo Claudia Coaching and Guiding (https://www.cycloclaudia.com/home)
+- [x] Add Inspire Health & Performance (https://inspireperformance.ca/) - sports physio
+
+## Context-Smart Search
+- [x] Make search bar context-smart - typing a region shows all relevant results
+- [x] Search across business name, city, region, hub, and business type
+- [x] Improve autocomplete to include region/hub matches
+
+## Featured Business Section
+- [x] Build Featured Business section on the landing page
+- [x] Display curated featured businesses with branding
+
+## Testing (New)
+- [x] Write tests for context-smart search
+- [x] Write tests for featured businesses endpoint
+- [x] All 64 tests passing

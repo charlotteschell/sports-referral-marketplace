@@ -174,7 +174,10 @@ export async function searchBusinesses(params: BusinessSearchParams) {
         sql`LOWER(${businesses.city}) LIKE ${`%${q}%`}`,
         sql`LOWER(${businesses.shortDescription}) LIKE ${`%${q}%`}`,
         sql`LOWER(${businesses.hub}) LIKE ${`%${q}%`}`,
-        sql`LOWER(${businesses.region}) LIKE ${`%${q}%`}`
+        sql`LOWER(${businesses.region}) LIKE ${`%${q}%`}`,
+        sql`LOWER(${businesses.country}) LIKE ${`%${q}%`}`,
+        sql`LOWER(${businessTypes.name}) LIKE ${`%${q}%`}`,
+        sql`LOWER(${sportCategories.name}) LIKE ${`%${q}%`}`
       )!
     );
   }
@@ -206,21 +209,28 @@ export async function searchBusinesses(params: BusinessSearchParams) {
   const limit = params.limit || 20;
   const offset = params.offset || 0;
 
+  // Need joins before where clause for context-smart search across related tables
+  const baseQuery = db.select({
+    business: businesses,
+    sportCategory: sportCategories,
+    businessType: businessTypes,
+  })
+    .from(businesses)
+    .leftJoin(sportCategories, eq(businesses.sportCategoryId, sportCategories.id))
+    .leftJoin(businessTypes, eq(businesses.businessTypeId, businessTypes.id));
+
+  const countQuery = db.select({ count: sql<number>`count(*)` })
+    .from(businesses)
+    .leftJoin(sportCategories, eq(businesses.sportCategoryId, sportCategories.id))
+    .leftJoin(businessTypes, eq(businesses.businessTypeId, businessTypes.id));
+
   const [results, countResult] = await Promise.all([
-    db.select({
-      business: businesses,
-      sportCategory: sportCategories,
-      businessType: businessTypes,
-    })
-      .from(businesses)
-      .leftJoin(sportCategories, eq(businesses.sportCategoryId, sportCategories.id))
-      .leftJoin(businessTypes, eq(businesses.businessTypeId, businessTypes.id))
+    baseQuery
       .where(whereClause)
       .orderBy(desc(businesses.isFeatured), desc(businesses.isClaimed), asc(businesses.name))
       .limit(limit)
       .offset(offset),
-    db.select({ count: sql<number>`count(*)` })
-      .from(businesses)
+    countQuery
       .where(whereClause),
   ]);
 
@@ -246,8 +256,12 @@ export async function searchBusinessesAutocomplete(query: string, limit = 10) {
     slug: businesses.slug,
     sportCategoryId: businesses.sportCategoryId,
     businessTypeId: businesses.businessTypeId,
+    businessTypeName: businessTypes.name,
+    sportCategoryName: sportCategories.name,
   })
     .from(businesses)
+    .leftJoin(businessTypes, eq(businesses.businessTypeId, businessTypes.id))
+    .leftJoin(sportCategories, eq(businesses.sportCategoryId, sportCategories.id))
     .where(
       and(
         eq(businesses.isActive, true),
@@ -258,7 +272,10 @@ export async function searchBusinessesAutocomplete(query: string, limit = 10) {
           sql`LOWER(${businesses.name}) LIKE ${`%${q}%`}`,
           sql`LOWER(${businesses.city}) LIKE ${`%${q}%`}`,
           sql`LOWER(${businesses.hub}) LIKE ${`%${q}%`}`,
-          sql`LOWER(${businesses.region}) LIKE ${`%${q}%`}`
+          sql`LOWER(${businesses.region}) LIKE ${`%${q}%`}`,
+          sql`LOWER(${businesses.country}) LIKE ${`%${q}%`}`,
+          sql`LOWER(${businessTypes.name}) LIKE ${`%${q}%`}`,
+          sql`LOWER(${sportCategories.name}) LIKE ${`%${q}%`}`
         )!
       )
     )

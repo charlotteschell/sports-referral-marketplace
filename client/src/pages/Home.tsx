@@ -274,8 +274,12 @@ export default function Home() {
           <div className="container">
             <div className="flex items-center justify-between mb-10">
               <div>
+                <div className="inline-flex items-center gap-2 bg-[oklch(0.55_0.15_45)]/10 border border-[oklch(0.55_0.15_45)]/20 rounded-full px-4 py-1.5 mb-4 text-sm font-medium text-[oklch(0.55_0.15_45)]">
+                  <Star className="w-4 h-4" />
+                  <span style={{ textTransform: "none" }}>Featured</span>
+                </div>
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Featured Businesses</h2>
-                <p className="text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>Discover top businesses across endurance sports hubs worldwide</p>
+                <p className="text-muted-foreground max-w-xl" style={{ textTransform: "none", letterSpacing: "normal" }}>Curated selection of top endurance sports businesses from around the world. Claim your listing to get featured.</p>
               </div>
               <Link href="/directory">
                 <Button variant="outline" className="hidden md:flex bg-transparent">
@@ -286,26 +290,33 @@ export default function Home() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featured.map((item) => (
                 <Link key={item.business.id} href={`/business/${item.business.slug}`}>
-                  <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-border">
+                  <Card className="h-full hover:shadow-lg hover:border-[oklch(0.55_0.15_45)]/30 transition-all cursor-pointer border-border group">
                     <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="w-12 h-12 rounded-lg bg-[oklch(0.55_0.15_45)]/10 flex items-center justify-center text-[oklch(0.55_0.15_45)] group-hover:bg-[oklch(0.55_0.15_45)]/20 transition-colors">
                           {sportIcons[item.sportCategory?.slug || ""] || <Star className="w-6 h-6" />}
                         </div>
-                        {item.business.isClaimed && (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
-                            <Shield className="w-3 h-3" /> Verified
-                          </span>
-                        )}
-                        {!item.business.isClaimed && (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
-                            Unclaimed
-                          </span>
-                        )}
+                        <div className="flex flex-col items-end gap-1">
+                          {item.business.isClaimed && (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
+                              <Shield className="w-3 h-3" /> Verified
+                            </span>
+                          )}
+                          {item.business.googleRating && (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
+                              <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> {item.business.googleRating}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <h3 className="text-lg font-bold text-foreground mb-1">{item.business.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2" style={{ textTransform: "none", letterSpacing: "normal" }}>{item.business.shortDescription}</p>
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                      <h3 className="text-lg font-bold text-foreground mb-1 group-hover:text-[oklch(0.55_0.15_45)] transition-colors">{item.business.name}</h3>
+                      {item.businessType && (
+                        <span className="inline-block text-xs font-medium text-muted-foreground bg-secondary px-2 py-0.5 rounded mb-2" style={{ textTransform: "none" }}>
+                          {item.businessType.name}
+                        </span>
+                      )}
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2" style={{ textTransform: "none", letterSpacing: "normal" }}>{item.business.shortDescription}</p>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-3 border-t border-border" style={{ textTransform: "none" }}>
                         {item.business.hub && (
                           <span className="flex items-center gap-1">
                             <MapPin className="w-3 h-3" /> {item.business.hub}{item.business.country ? `, ${item.business.country}` : ""}
@@ -319,6 +330,12 @@ export default function Home() {
                         {item.business.region && (
                           <span className="flex items-center gap-1 text-[oklch(0.55_0.15_45)]">
                             <Globe className="w-3 h-3" /> {item.business.region}
+                          </span>
+                        )}
+                        {item.sportCategory && (
+                          <span className="flex items-center gap-1 ml-auto">
+                            {sportSmallIcons[item.sportCategory.slug] || <Compass className="w-3 h-3" />}
+                            {item.sportCategory.name}
                           </span>
                         )}
                       </div>

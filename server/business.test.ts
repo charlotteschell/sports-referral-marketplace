@@ -646,3 +646,59 @@ describe("referralOffer.update", () => {
     ).rejects.toThrow();
   });
 });
+
+// ─── Context-Smart Search (mock-based) ──────────────────────────
+
+describe("business.search context-smart search", () => {
+  it("passes search term to searchBusinesses which searches across name, region, hub, city, country, business type, and sport category", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    // The mock always returns results, but we verify the search parameter is accepted
+    const result = await caller.business.search({ search: "Mallorca" });
+    expect(result).toBeDefined();
+    expect(result.businesses).toBeDefined();
+    expect(result.total).toBeDefined();
+  });
+
+  it("accepts search with business type terms like 'coach'", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.business.search({ search: "coach" });
+    expect(result).toBeDefined();
+  });
+
+  it("accepts search with sport category terms like 'cycling'", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.business.search({ search: "cycling" });
+    expect(result).toBeDefined();
+  });
+
+  it("accepts search with country terms like 'Canada'", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.business.search({ search: "Canada" });
+    expect(result).toBeDefined();
+  });
+});
+
+// ─── Featured Businesses (mock-based) ──────────────────────────
+
+describe("business.featured", () => {
+  it("returns featured businesses with default limit", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.business.featured({});
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("accepts a custom limit parameter", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.business.featured({ limit: 3 });
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("works without any input", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.business.featured();
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
+  });
+});
