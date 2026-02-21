@@ -205,6 +205,39 @@ export async function searchBusinesses(params: BusinessSearchParams) {
   };
 }
 
+// ─── Business Autocomplete Search ──────────────────────────────
+
+export async function searchBusinessesAutocomplete(query: string, limit = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  const results = await db.select({
+    id: businesses.id,
+    name: businesses.name,
+    city: businesses.city,
+    region: businesses.region,
+    hub: businesses.hub,
+    country: businesses.country,
+    slug: businesses.slug,
+    sportCategoryId: businesses.sportCategoryId,
+    businessTypeId: businesses.businessTypeId,
+  })
+    .from(businesses)
+    .where(
+      and(
+        eq(businesses.isActive, true),
+        or(
+          like(businesses.name, `%${query}%`),
+          like(businesses.city, `%${query}%`),
+          like(businesses.hub, `%${query}%`),
+          like(businesses.region, `%${query}%`)
+        )!
+      )
+    )
+    .orderBy(asc(businesses.name))
+    .limit(limit);
+  return results;
+}
+
 export async function getBusinessBySlug(slug: string) {
   const db = await getDb();
   if (!db) return null;

@@ -165,3 +165,13 @@
 - [x] Add admin-only navigation link visible to admin users (amber "Admin" button in header)
 - [x] Add route to App.tsx and protect with admin role check
 - [x] Existing tests cover submission review endpoints (51 tests pass)
+
+## Searchable Business Dropdown & Edit Offers
+- [x] Add backend business autocomplete search endpoint (search by name, city, region)
+- [x] Add backend endpoint to update/edit an existing referral offer
+- [x] Replace manual business ID input with searchable dropdown in SendReferral page
+- [x] Dropdown shows matching businesses as user types with name, location, icon
+- [x] Debounced search with loading state and clear selection
+- [x] Add edit button on each existing offer in ManageOffers page
+- [x] Inline edit form with save/cancel for editing offer details
+- [x] Write tests for autocomplete and offer update endpoints (6 new tests, 57 total pass)

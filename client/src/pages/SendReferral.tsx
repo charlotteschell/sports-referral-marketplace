@@ -11,9 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Loader2 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { ArrowLeft, Send, Loader2, Search, MapPin, X, Building2 } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
 
 export default function SendReferral() {
   const { user, loading: authLoading } = useAuth({ redirectOnUnauthenticated: true });
@@ -36,15 +39,50 @@ export default function SendReferral() {
     notes: "",
   });
 
+  // Searchable dropdown state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [selectedBusiness, setSelectedBusiness] = useState<{
+    id: number; name: string; city: string | null; region: string | null; hub: string | null; country: string | null;
+  } | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Debounced search query
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const { data: autocompleteResults, isLoading: isSearching } = trpc.business.autocomplete.useQuery(
+    { query: debouncedQuery },
+    { enabled: debouncedQuery.length >= 1 }
+  );
+
+  // If preselected, load that business
   const receivingBizId = parseInt(form.receivingBusinessId || "0");
   const { data: receivingBiz } = trpc.business.getById.useQuery(
     { id: receivingBizId },
-    { enabled: receivingBizId > 0 }
+    { enabled: receivingBizId > 0 && !selectedBusiness }
   );
 
+  // Set selected business from preselected data
+  useEffect(() => {
+    if (receivingBiz && !selectedBusiness && receivingBizId > 0) {
+      setSelectedBusiness({
+        id: receivingBiz.business.id,
+        name: receivingBiz.business.name,
+        city: receivingBiz.business.city,
+        region: receivingBiz.business.region,
+        hub: receivingBiz.business.hub,
+        country: receivingBiz.business.country,
+      });
+    }
+  }, [receivingBiz, selectedBusiness, receivingBizId]);
+
   const { data: offers } = trpc.referralOffer.getByBusiness.useQuery(
-    { businessId: receivingBizId },
-    { enabled: receivingBizId > 0 }
+    { businessId: selectedBusiness?.id || receivingBizId },
+    { enabled: (selectedBusiness?.id || receivingBizId) > 0 }
   );
 
   const sendMutation = trpc.referral.send.useMutation({
@@ -55,15 +93,29 @@ export default function SendReferral() {
     onError: (err) => toast.error(err.message || "Failed to send referral"),
   });
 
+  const handleSelectBusiness = (biz: { id: number; name: string; city: string | null; region: string | null; hub: string | null; country: string | null; slug: string; sportCategoryId: number; businessTypeId: number }) => {
+    setSelectedBusiness(biz);
+    setForm(prev => ({ ...prev, receivingBusinessId: String(biz.id), referralOfferId: "" }));
+    setSearchQuery("");
+    setDropdownOpen(false);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedBusiness(null);
+    setForm(prev => ({ ...prev, receivingBusinessId: "", referralOfferId: "" }));
+    setSearchQuery("");
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.referringBusinessId || !form.receivingBusinessId) {
+    const bizId = selectedBusiness?.id || receivingBizId;
+    if (!form.referringBusinessId || !bizId) {
       toast.error("Please select both referring and receiving businesses");
       return;
     }
     sendMutation.mutate({
       referringBusinessId: parseInt(form.referringBusinessId),
-      receivingBusinessId: parseInt(form.receivingBusinessId),
+      receivingBusinessId: bizId,
       referralOfferId: form.referralOfferId ? parseInt(form.referralOfferId) : undefined,
       customerName: form.customerName || undefined,
       customerEmail: form.customerEmail || undefined,
@@ -129,21 +181,96 @@ export default function SendReferral() {
                   )}
                 </div>
 
-                {/* To */}
+                {/* To - Searchable Dropdown */}
                 <div>
                   <Label style={{ textTransform: "none" }}>To (Receiving Business) *</Label>
-                  {receivingBiz ? (
-                    <div className="bg-secondary/50 rounded-lg p-3 text-sm">
-                      <p className="font-semibold">{receivingBiz.business.name}</p>
-                      <p className="text-muted-foreground" style={{ textTransform: "none" }}>{receivingBiz.business.shortDescription}</p>
+                  {selectedBusiness ? (
+                    <div className="bg-secondary/50 rounded-lg p-3 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-[oklch(0.55_0.15_45)]/10 flex items-center justify-center shrink-0">
+                          <Building2 className="w-5 h-5 text-[oklch(0.55_0.15_45)]" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">{selectedBusiness.name}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1" style={{ textTransform: "none" }}>
+                            <MapPin className="w-3 h-3" />
+                            {[selectedBusiness.hub || selectedBusiness.city, selectedBusiness.region || selectedBusiness.country].filter(Boolean).join(", ")}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearSelection}
+                        className="text-muted-foreground hover:text-foreground shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                     </div>
                   ) : (
-                    <Input
-                      value={form.receivingBusinessId}
-                      onChange={(e) => updateField("receivingBusinessId", e.target.value)}
-                      placeholder="Enter business ID or browse directory"
-                    />
+                    <Popover open={dropdownOpen} onOpenChange={setDropdownOpen}>
+                      <PopoverTrigger asChild>
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            ref={searchInputRef}
+                            value={searchQuery}
+                            onChange={(e) => {
+                              setSearchQuery(e.target.value);
+                              if (!dropdownOpen && e.target.value.length >= 1) setDropdownOpen(true);
+                            }}
+                            onFocus={() => {
+                              if (searchQuery.length >= 1) setDropdownOpen(true);
+                            }}
+                            placeholder="Search by business name, city, or region..."
+                            className="pl-9"
+                          />
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-[var(--radix-popover-trigger-width)] p-0 max-h-[300px] overflow-y-auto"
+                        align="start"
+                        onOpenAutoFocus={(e) => e.preventDefault()}
+                      >
+                        {isSearching ? (
+                          <div className="flex items-center justify-center py-6">
+                            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : autocompleteResults && autocompleteResults.length > 0 ? (
+                          <div className="py-1">
+                            {autocompleteResults.map((biz) => (
+                              <button
+                                key={biz.id}
+                                type="button"
+                                className="w-full text-left px-3 py-2.5 hover:bg-accent transition-colors flex items-center gap-3 border-b border-border/50 last:border-0"
+                                onClick={() => handleSelectBusiness(biz)}
+                              >
+                                <div className="w-8 h-8 rounded-md bg-[oklch(0.55_0.15_45)]/10 flex items-center justify-center shrink-0">
+                                  <Building2 className="w-4 h-4 text-[oklch(0.55_0.15_45)]" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-medium text-sm truncate">{biz.name}</p>
+                                  <p className="text-xs text-muted-foreground flex items-center gap-1" style={{ textTransform: "none" }}>
+                                    <MapPin className="w-3 h-3 shrink-0" />
+                                    {[biz.hub || biz.city, biz.region || biz.country].filter(Boolean).join(", ") || "No location"}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        ) : debouncedQuery.length >= 1 ? (
+                          <div className="py-6 text-center text-sm text-muted-foreground" style={{ textTransform: "none" }}>
+                            <Search className="w-5 h-5 mx-auto mb-2 opacity-50" />
+                            No businesses found for "{debouncedQuery}"
+                          </div>
+                        ) : null}
+                      </PopoverContent>
+                    </Popover>
                   )}
+                  <p className="text-xs text-muted-foreground mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                    Start typing a business name, city, or region to search the directory.
+                  </p>
                 </div>
 
                 {/* Offer */}

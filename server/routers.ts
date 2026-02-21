@@ -63,6 +63,12 @@ export const appRouter = router({
         return db.searchBusinesses(input);
       }),
 
+    autocomplete: publicProcedure
+      .input(z.object({ query: z.string().min(1).max(100) }))
+      .query(async ({ input }) => {
+        return db.searchBusinessesAutocomplete(input.query);
+      }),
+
     featured: publicProcedure
       .input(z.object({ limit: z.number().min(1).max(12).optional() }).optional())
       .query(async ({ input }) => {

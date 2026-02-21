@@ -68,6 +68,13 @@ vi.mock("./db", () => ({
   updateBusiness: vi.fn().mockResolvedValue(undefined),
   claimBusiness: vi.fn().mockResolvedValue(undefined),
   getFeaturedBusinesses: vi.fn().mockResolvedValue([]),
+  searchBusinessesAutocomplete: vi.fn().mockImplementation(async (query: string) => {
+    const all = [
+      { id: 1, name: "Test Cycling", city: "Boulder", region: "Western US", hub: "Boulder", country: "USA", slug: "test-cycling", sportCategoryId: 1, businessTypeId: 1 },
+      { id: 3, name: "Alpine Bike Shop", city: "Whistler", region: "Western Canada", hub: "Whistler", country: "Canada", slug: "alpine-bike-shop", sportCategoryId: 1, businessTypeId: 2 },
+    ];
+    return all.filter(b => b.name.toLowerCase().includes(query.toLowerCase()) || b.city?.toLowerCase().includes(query.toLowerCase()));
+  }),
   getDirectoryStats: vi.fn().mockResolvedValue({
     totalBusinesses: 51, claimedBusinesses: 12, totalReferrals: 20, sportCategories: 4, regions: 6,
   }),
@@ -587,5 +594,55 @@ describe("stats.directory", () => {
     expect(stats.claimedBusinesses).toBe(12);
     expect(stats.sportCategories).toBe(4);
     expect(stats.regions).toBe(6);
+  });
+});
+
+describe("business.autocomplete", () => {
+  it("returns matching businesses by name", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const results = await caller.business.autocomplete({ query: "Cycling" });
+    expect(results.length).toBe(1);
+    expect(results[0].name).toBe("Test Cycling");
+  });
+
+  it("returns matching businesses by city", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const results = await caller.business.autocomplete({ query: "Whistler" });
+    expect(results.length).toBe(1);
+    expect(results[0].name).toBe("Alpine Bike Shop");
+  });
+
+  it("returns empty for no matches", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const results = await caller.business.autocomplete({ query: "nonexistent" });
+    expect(results.length).toBe(0);
+  });
+});
+
+describe("referralOffer.update", () => {
+  it("updates an existing offer when authorized", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.referralOffer.update({
+      id: 1,
+      title: "Updated Commission Offer",
+      description: "New description",
+      offerType: "consumer",
+      incentiveValue: "20",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("throws FORBIDDEN when user does not own the business", async () => {
+    const caller = appRouter.createCaller(createAuthContext(999));
+    await expect(
+      caller.referralOffer.update({ id: 1, title: "Hack attempt" })
+    ).rejects.toThrow();
+  });
+
+  it("throws NOT_FOUND for non-existent offer", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    await expect(
+      caller.referralOffer.update({ id: 999, title: "Ghost" })
+    ).rejects.toThrow();
   });
 });
