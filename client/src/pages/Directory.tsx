@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/select";
 import {
   Search, MapPin, Shield, Bike, Mountain, Snowflake, Star,
-  ChevronLeft, ChevronRight, Filter, X, Compass, Globe, UserPlus
+  ChevronLeft, ChevronRight, Filter, X, Compass, Globe, UserPlus,
+  Gift, Tag, Phone
 } from "lucide-react";
 
 const sportIcons: Record<string, React.ReactNode> = {
@@ -84,6 +85,33 @@ export default function Directory() {
 
   const { data, isLoading } = trpc.business.search.useQuery(queryInput);
 
+  // Fetch offers for displayed businesses
+  const businessIds = useMemo(() => data?.businesses.map(b => b.business.id) || [], [data]);
+  const { data: offersData } = trpc.business.offersForBusinesses.useQuery(
+    { businessIds },
+    { enabled: businessIds.length > 0 }
+  );
+  // Group offers by business ID
+  const offersByBusiness = useMemo(() => {
+    const map: Record<number, typeof offersData> = {};
+    if (!offersData) return map;
+    for (const offer of offersData) {
+      const bid = (offer as any).businessId;
+      if (!map[bid]) map[bid] = [];
+      (map[bid] as any[]).push(offer);
+    }
+    return map;
+  }, [offersData]);
+
+  // Format phone number for display
+  const formatPhone = (phone: string | null | undefined) => {
+    if (!phone) return null;
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+    if (digits.length === 11 && digits[0] === '1') return `+1 (${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
+    return phone;
+  };
+
   const totalPages = Math.ceil((data?.total || 0) / ITEMS_PER_PAGE);
   const hasActiveFilters = sportFilter || typeFilter || searchTerm || regionFilter || hubFilter;
 
@@ -107,7 +135,7 @@ export default function Directory() {
             Business Directory
           </h1>
           <p className="text-white/70 max-w-2xl text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-            Find coaches, shops, therapists, vacation providers, and clubs serving cyclists, runners, and snowsports enthusiasts across the world's top endurance sports hubs.
+            Find coaches, shops, sport psychologists, vacation providers, and clubs serving cyclists, runners, and snowsports enthusiasts across the world's top endurance sports hubs.
           </p>
         </div>
       </section>
@@ -373,6 +401,29 @@ export default function Directory() {
                             </span>
                           )}
                         </div>
+
+                        {/* Incentives/Offers */}
+                        {offersByBusiness[item.business.id] && (offersByBusiness[item.business.id] as any[]).length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-border">
+                            <div className="flex items-center gap-1 text-xs font-medium text-green-600 mb-1.5" style={{ textTransform: "none" }}>
+                              <Gift className="w-3 h-3" /> Available Incentives
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              {(offersByBusiness[item.business.id] as any[]).slice(0, 2).map((offer: any) => (
+                                <div key={offer.id} className="flex items-center gap-1.5 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                                  <Tag className="w-3 h-3 text-green-500 shrink-0" />
+                                  <span className="truncate">{offer.title}</span>
+                                  {offer.isSample && (
+                                    <span className="text-[10px] bg-amber-500/10 text-amber-600 px-1 rounded shrink-0">Sample</span>
+                                  )}
+                                </div>
+                              ))}
+                              {(offersByBusiness[item.business.id] as any[]).length > 2 && (
+                                <span className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>+{(offersByBusiness[item.business.id] as any[]).length - 2} more</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Claim Your Business CTA for unclaimed listings */}
                         {!item.business.isClaimed && (

@@ -1,3 +1,4 @@
+import { useState, useMemo, useRef } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,8 +7,8 @@ import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import {
   Bike, Mountain, Snowflake, Users, ArrowRight, Handshake,
-  TrendingUp, Search, Shield, MapPin, ChevronRight, Star,
-  Compass, Globe, Palmtree
+  TrendingUp, Search, Shield, MapPin, ChevronRight, ChevronLeft, Star,
+  Compass, Globe, Palmtree, Gift, Tag
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -49,7 +50,36 @@ export default function Home() {
   const { isAuthenticated } = useAuth();
   const { data: categories } = trpc.categories.sportCategories.useQuery();
   const { data: stats } = trpc.stats.directory.useQuery();
-  const { data: featured } = trpc.business.featured.useQuery({ limit: 6 });
+  const { data: featured } = trpc.business.featured.useQuery({ limit: 30 });
+  const { data: platformStats } = trpc.platformStats.get.useQuery();
+
+  // Fetch offers for featured businesses
+  const featuredIds = useMemo(() => featured?.map(b => b.business.id) || [], [featured]);
+  const { data: featuredOffers } = trpc.business.offersForBusinesses.useQuery(
+    { businessIds: featuredIds },
+    { enabled: featuredIds.length > 0 }
+  );
+  const offersByBusiness = useMemo(() => {
+    const map: Record<number, any[]> = {};
+    if (!featuredOffers) return map;
+    for (const offer of featuredOffers) {
+      const bid = (offer as any).businessId;
+      if (!map[bid]) map[bid] = [];
+      map[bid].push(offer);
+    }
+    return map;
+  }, [featuredOffers]);
+
+  // Carousel state
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (!carouselRef.current) return;
+    const scrollAmount = 400;
+    carouselRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth'
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -74,7 +104,7 @@ export default function Home() {
               Grow Together
             </h1>
             <p className="text-lg md:text-xl text-white/80 mb-4 max-w-2xl leading-relaxed" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
-              Whether you're a <strong className="text-white">professional coach, bike shop owner, or physio therapist</strong> — or an <strong className="text-white">enthusiast looking for trusted local services</strong> — SportConnect is the marketplace that brings the endurance sports community together.
+              Whether you're a <strong className="text-white">professional coach, bike shop owner, or sport psychologist</strong> — or an <strong className="text-white">enthusiast looking for trusted local services</strong> — SportConnect is the marketplace that brings the endurance sports community together.
             </p>
             <p className="text-base md:text-lg text-white/60 mb-4 max-w-2xl" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
               Businesses send each other referral customers for incentives. Enthusiasts discover the best local pros. Everyone wins.
@@ -139,6 +169,44 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Platform Activity Tracker */}
+      {platformStats && (
+        <section className="py-12 bg-gradient-to-r from-[oklch(0.22_0.02_50)] to-[oklch(0.28_0.03_50)] text-white">
+          <div className="container">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: "var(--font-heading)" }}>Community Activity</h2>
+              <p className="text-white/60 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>Real-time snapshot of our growing endurance sports network</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                <p className="text-2xl md:text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>{platformStats.totalReferrals}</p>
+                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Total Referrals</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                <p className="text-2xl md:text-3xl font-bold text-green-400" style={{ fontFamily: "var(--font-heading)" }}>{platformStats.honoredReferrals}</p>
+                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Referrals Honored</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                <p className="text-2xl md:text-3xl font-bold text-emerald-400" style={{ fontFamily: "var(--font-heading)" }}>${platformStats.totalIncentivesExchanged}</p>
+                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Incentives Exchanged</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                <p className="text-2xl md:text-3xl font-bold text-blue-400" style={{ fontFamily: "var(--font-heading)" }}>{platformStats.consumerOffersClaimed}</p>
+                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Consumer Offers Claimed</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                <p className="text-2xl md:text-3xl font-bold text-amber-400" style={{ fontFamily: "var(--font-heading)" }}>${platformStats.consumerSavings}</p>
+                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Consumer Savings</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                <p className="text-2xl md:text-3xl font-bold text-purple-400" style={{ fontFamily: "var(--font-heading)" }}>{platformStats.activeBusinesses}</p>
+                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Active Businesses</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* How It Works */}
       <section className="py-20 bg-background">
         <div className="container">
@@ -150,7 +218,7 @@ export default function Home() {
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: <Search className="w-8 h-8" />, title: "Discover", desc: "Browse the directory to find coaches, shops, therapists, vacation providers, and clubs across cycling, running, snowsports, and sport vacations — whether you're a business or an enthusiast." },
+              { icon: <Search className="w-8 h-8" />, title: "Discover", desc: "Browse the directory to find coaches, shops, sport psychologists, vacation providers, and clubs across cycling, running, snowsports, and sport vacations — whether you're a business or an enthusiast." },
               { icon: <Handshake className="w-8 h-8" />, title: "Connect & Refer", desc: "Businesses claim profiles and post B2B or consumer referral offers. Send customers to partners and earn incentives. Enthusiasts can browse consumer offers directly." },
               { icon: <TrendingUp className="w-8 h-8" />, title: "Grow Together", desc: "Track referrals, build partnerships locally and across borders, and watch your network expand from the Dolomites to Colorado." },
             ].map((step, i) => (
@@ -243,7 +311,7 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Every Type of Sports Business</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Coaches, shops, therapists, clubs, vacation providers, and more — all the professionals that keep athletes performing at their best.
+              Coaches, shops, sport psychologists, clubs, vacation providers, and more — all the professionals that keep athletes performing at their best.
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
@@ -268,7 +336,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Businesses */}
+      {/* Featured Businesses - Horizontal Carousel */}
       {featured && featured.length > 0 && (
         <section className="py-20 bg-background">
           <div className="container">
@@ -281,30 +349,53 @@ export default function Home() {
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Featured Businesses</h2>
                 <p className="text-muted-foreground max-w-xl" style={{ textTransform: "none", letterSpacing: "normal" }}>Curated selection of top endurance sports businesses from around the world. Claim your listing to get featured.</p>
               </div>
-              <Link href="/directory">
-                <Button variant="outline" className="hidden md:flex bg-transparent">
-                  View All <ArrowRight className="w-4 h-4 ml-2" />
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={() => scrollCarousel('left')} className="bg-transparent hidden md:flex">
+                  <ChevronLeft className="w-5 h-5" />
                 </Button>
-              </Link>
+                <Button variant="outline" size="icon" onClick={() => scrollCarousel('right')} className="bg-transparent hidden md:flex">
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+                <Link href="/directory">
+                  <Button variant="outline" className="hidden md:flex bg-transparent ml-2">
+                    View All <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div
+              ref={carouselRef}
+              className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
               {featured.map((item) => (
-                <Link key={item.business.id} href={`/business/${item.business.slug}`}>
+                <Link key={item.business.id} href={`/business/${item.business.slug}`} className="snap-start shrink-0 w-[340px] md:w-[380px]">
                   <Card className="h-full hover:shadow-lg hover:border-[oklch(0.55_0.15_45)]/30 transition-all cursor-pointer border-border group">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-lg bg-[oklch(0.55_0.15_45)]/10 flex items-center justify-center text-[oklch(0.55_0.15_45)] group-hover:bg-[oklch(0.55_0.15_45)]/20 transition-colors">
-                          {sportIcons[item.sportCategory?.slug || ""] || <Star className="w-6 h-6" />}
-                        </div>
+                        {item.business.logoUrl ? (
+                          <img src={item.business.logoUrl} alt={item.business.name} className="w-12 h-12 rounded-lg object-cover" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-[oklch(0.55_0.15_45)]/10 flex items-center justify-center text-[oklch(0.55_0.15_45)] group-hover:bg-[oklch(0.55_0.15_45)]/20 transition-colors">
+                            {sportIcons[item.sportCategory?.slug || ""] || <Star className="w-6 h-6" />}
+                          </div>
+                        )}
                         <div className="flex flex-col items-end gap-1">
-                          {item.business.isClaimed && (
+                          {item.business.isClaimed ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
                               <Shield className="w-3 h-3" /> Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-500/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
+                              Unclaimed
                             </span>
                           )}
                           {item.business.googleRating && (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
                               <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> {item.business.googleRating}
+                              {item.business.googleReviewCount && item.business.googleReviewCount > 0 && (
+                                <span className="text-muted-foreground">({item.business.googleReviewCount})</span>
+                              )}
                             </span>
                           )}
                         </div>
@@ -315,7 +406,29 @@ export default function Home() {
                           {item.businessType.name}
                         </span>
                       )}
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2" style={{ textTransform: "none", letterSpacing: "normal" }}>{item.business.shortDescription}</p>
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2" style={{ textTransform: "none", letterSpacing: "normal" }}>{item.business.shortDescription}</p>
+
+                      {/* Incentives */}
+                      {offersByBusiness[item.business.id] && offersByBusiness[item.business.id].length > 0 && (
+                        <div className="mb-3 p-2.5 bg-green-500/5 border border-green-500/10 rounded-lg">
+                          <div className="flex items-center gap-1 text-xs font-medium text-green-600 mb-1.5" style={{ textTransform: "none" }}>
+                            <Gift className="w-3 h-3" /> Incentives
+                          </div>
+                          {offersByBusiness[item.business.id].slice(0, 2).map((offer: any) => (
+                            <div key={offer.id} className="flex items-center gap-1.5 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                              <Tag className="w-3 h-3 text-green-500 shrink-0" />
+                              <span className="truncate">{offer.title}</span>
+                              {offer.isSample && (
+                                <span className="text-[10px] bg-amber-500/10 text-amber-600 px-1 rounded shrink-0">Sample</span>
+                              )}
+                            </div>
+                          ))}
+                          {offersByBusiness[item.business.id].length > 2 && (
+                            <span className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>+{offersByBusiness[item.business.id].length - 2} more</span>
+                          )}
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-3 border-t border-border" style={{ textTransform: "none" }}>
                         {item.business.hub && (
                           <span className="flex items-center gap-1">
@@ -450,7 +563,7 @@ export default function Home() {
               </div>
               <h3 className="text-2xl md:text-3xl font-bold mb-4">For Sports Enthusiasts</h3>
               <p className="text-white/80 mb-6 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Find the best local coaches, shops, therapists, vacation providers, and clubs for cycling, running, snowsports, and sport vacations. Discover trusted professionals and claim consumer offers.
+                Find the best local coaches, shops, sport psychologists, vacation providers, and clubs for cycling, running, snowsports, and sport vacations. Discover trusted professionals and claim consumer offers.
               </p>
               <ul className="space-y-2 mb-8" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 {["Search by sport, region, hub, and business type", "Find verified businesses worldwide", "Browse and claim consumer offers", "Plan your next sport vacation"].map((item) => (

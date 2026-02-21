@@ -230,3 +230,68 @@
 - [x] Write tests for context-smart search
 - [x] Write tests for featured businesses endpoint
 - [x] All 64 tests passing
+
+## Incentives on Directory Cards
+- [x] Show referral incentives directly on business cards in the directory page
+- [x] Add sample incentives for featured businesses
+
+## Phone Number Formatting
+- [x] Automatically format phone numbers to readable format throughout the site
+
+## Email Verification for Claims & Submissions
+- [x] When claiming a business, require email with business domain
+- [x] Send verification code to business domain email
+- [x] Verify code before allowing claim submission
+- [x] When adding new business, also require email verification
+- [x] Both flows must inform user that submission is subject to admin approval
+
+## Admin Panel Renaming
+- [x] Rename admin sections: "New Business Submissions Pending Approval"
+- [x] Rename admin sections: "Claim Existing Businesses Pending Approval"
+
+## Email Confirmations
+- [x] Send email confirmation when claim/submission is successfully submitted
+- [x] Send email confirmation when claim/submission is approved (encourage adding incentives)
+
+## About Page
+- [x] Create About page with volunteer-driven messaging
+- [x] Add content about unpaid volunteers passionate about sport
+- [x] Add messaging about patience with bugs and delays
+- [x] Add messaging about future donations/payments
+- [x] Add creative images to match content
+- [x] Add navigation link to About page
+
+## Therapists → Sport Psychologists
+- [x] Rename "therapists" to "sport psychologists" throughout the site
+
+## Featured Business Carousel
+- [x] Add rotation/arrows to scroll featured businesses if they don't fit on one page
+- [x] Show claimed/unclaimed/verified status on featured business cards
+- [x] Show sample incentives on featured business cards
+
+## Business Logos
+- [x] Research and add real logos for businesses in the directory
+- [x] Display logos on directory cards and business profiles
+
+## Google Reviews Enhancement
+- [x] Show "Google Review" label with star rating and review count
+- [x] Link to Google My Business page for each business
+- [x] Show for both claimed and unclaimed businesses
+
+## Referral Tracking & Verification System
+- [x] Add referral status tracking fields (pending, honored, disputed) to referrals table
+- [x] Add consumer_claims table for consumers claiming SportConnect-exclusive offers
+- [x] Add verification fields (honoring confirmation from both sides)
+- [x] Add $ amount tracking to referrals for cashout calculations
+- [x] Backend: B2B referral verification procedures (mark as honored/disputed by sender and receiver)
+- [x] Backend: Consumer offer claim flow (sign up, claim offer, verify if honored)
+- [x] Backend: Analytics queries for business dashboards (referrals received/honored, sent/cashed out, $ earned)
+- [x] Backend: Analytics queries for consumer dashboards (offers claimed, incentives verified, $ saved)
+- [x] Backend: Home page activity stats query (total referrals, $ exchanged, businesses active, etc.)
+- [x] Frontend: Business dashboard - referrals received section with honor/dispute actions
+- [x] Frontend: Business dashboard - referrals sent section with cashout tracking
+- [x] Frontend: Business dashboard - analytics summary (total received, honored, sent, cashed out, $ made)
+- [x] Frontend: Consumer dashboard - claimed offers list with verification status
+- [x] Frontend: Consumer dashboard - analytics (total $ saved, incentives utilized)
+- [x] Frontend: Home page activity tracker with seeded numbers
+- [x] Seed database with realistic activity numbers for home page tracker

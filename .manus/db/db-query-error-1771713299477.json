@@ -1,0 +1,8 @@
+{
+  "query": "\nINSERT INTO platform_stats (stat_key, stat_value, updatedAt) VALUES\n  ('total_referrals', 847, NOW()),\n  ('referrals_honored', 623, NOW()),\n  ('total_incentives_exchanged', 34750, NOW()),\n  ('consumer_offers_claimed', 412, NOW()),\n  ('consumer_savings', 18920, NOW()),\n  ('active_businesses', 60, NOW())\nON DUPLICATE KEY UPDATE stat_value = VALUES(stat_value), updatedAt = NOW();\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute \nINSERT INTO platform_stats (stat_key, stat_value, updatedAt) VALUES\n  ('total_referrals', 847, NOW()),\n  ('referrals_honored', 623, NOW()),\n  ('total_incentives_exchanged', 34750, NOW()),\n  ('consumer_offers_claimed', 412, NOW()),\n  ('consumer_savings', 18920, NOW()),\n  ('active_businesses', 60, NOW())\nON DUPLICATE KEY UPDATE stat_value = VALUES(stat_value), updatedAt = NOW();\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 2: Table 'mszys4esiwaxadbmurrxvf.platform_stats' doesn't exist"
+  ]
+}

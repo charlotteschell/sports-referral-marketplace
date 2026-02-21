@@ -76,9 +76,15 @@ export const appRouter = router({
       }),
 
     featured: publicProcedure
-      .input(z.object({ limit: z.number().min(1).max(12).optional() }).optional())
+      .input(z.object({ limit: z.number().min(1).max(30).optional() }).optional())
       .query(async ({ input }) => {
-        return db.getFeaturedBusinesses(input?.limit);
+        return db.getFeaturedBusinesses(input?.limit ?? 30);
+      }),
+
+    offersForBusinesses: publicProcedure
+      .input(z.object({ businessIds: z.array(z.number()).max(50) }))
+      .query(async ({ input }) => {
+        return db.getOffersForBusinessIds(input.businessIds);
       }),
 
     getBySlug: publicProcedure
@@ -144,22 +150,28 @@ export const appRouter = router({
       }),
 
     claim: protectedProcedure
-      .input(z.object({ businessId: z.number() }))
+      .input(z.object({
+        businessId: z.number(),
+        verificationEmail: z.string().email(),
+      }))
       .mutation(async ({ input, ctx }) => {
         const biz = await db.getBusinessById(input.businessId);
         if (!biz) throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
         if (biz.business.isClaimed) throw new TRPCError({ code: "CONFLICT", message: "Business already claimed" });
+        // Verify email was verified
+        const verified = await db.isEmailVerified(input.verificationEmail, 'claim');
+        if (!verified) throw new TRPCError({ code: "BAD_REQUEST", message: "Email not verified. Please verify your business email first." });
         await db.claimBusiness(input.businessId, ctx.user.id);
         // Notify admin about claim needing approval
         try {
           await notifyOwner({
             title: `Business Claim Pending: ${biz.business.name}`,
-            content: `A business has been claimed and needs your approval.\n\nBusiness: ${biz.business.name}\nClaimed by: ${ctx.user.name || ctx.user.email || 'Unknown'}\nCity: ${biz.business.city || 'N/A'}, ${biz.business.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
+            content: `A business has been claimed and needs your approval.\n\nBusiness: ${biz.business.name}\nClaimed by: ${ctx.user.name || ctx.user.email || 'Unknown'}\nVerification email: ${input.verificationEmail}\nCity: ${biz.business.city || 'N/A'}, ${biz.business.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify owner:', e);
         }
-        return { success: true };
+        return { success: true, message: 'Your claim has been submitted for admin approval. You will be notified once approved.' };
       }),
 
     update: protectedProcedure
@@ -534,6 +546,220 @@ export const appRouter = router({
     stats: protectedProcedure.query(async ({ ctx }) => {
       return db.getReferralStats(ctx.user.id);
     }),
+  }),
+
+  // ─── Referral Verification ─────────────────────────────────
+  referralVerification: router({
+    // Receiver marks referral as honored
+    honor: protectedProcedure
+      .input(z.object({
+        referralId: z.number(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const ref = await db.getReferralById(input.referralId);
+        if (!ref) throw new TRPCError({ code: 'NOT_FOUND' });
+        // Check user owns the receiving business
+        const biz = await db.getBusinessById(ref.receivingBusinessId);
+        if (!biz || biz.business.claimedByUserId !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the receiving business can honor referrals' });
+        }
+        await db.markReferralHonored(input.referralId, ctx.user.id, input.notes);
+        // Increment platform stats
+        await db.incrementPlatformStat('total_referrals_honored');
+        return { success: true };
+      }),
+
+    // Sender marks that they received the incentive (cashout)
+    cashout: protectedProcedure
+      .input(z.object({
+        referralId: z.number(),
+        amount: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const ref = await db.getReferralById(input.referralId);
+        if (!ref) throw new TRPCError({ code: 'NOT_FOUND' });
+        // Check user owns the referring business
+        const biz = await db.getBusinessById(ref.referringBusinessId);
+        if (!biz || biz.business.claimedByUserId !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the referring business can mark cashout' });
+        }
+        await db.markReferralCashedOut(input.referralId, ctx.user.id, input.amount, input.notes);
+        // Increment platform stats
+        if (input.amount) {
+          await db.incrementPlatformStat('total_incentive_value', Math.round(parseFloat(input.amount) || 0));
+        }
+        return { success: true };
+      }),
+
+    // Dispute a referral
+    dispute: protectedProcedure
+      .input(z.object({
+        referralId: z.number(),
+        reason: z.string().min(1),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const ref = await db.getReferralById(input.referralId);
+        if (!ref) throw new TRPCError({ code: 'NOT_FOUND' });
+        // Either sender or receiver can dispute
+        const sendBiz = await db.getBusinessById(ref.referringBusinessId);
+        const recvBiz = await db.getBusinessById(ref.receivingBusinessId);
+        const isSender = sendBiz?.business.claimedByUserId === ctx.user.id;
+        const isReceiver = recvBiz?.business.claimedByUserId === ctx.user.id;
+        if (!isSender && !isReceiver) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        await db.disputeReferral(input.referralId, ctx.user.id, input.reason);
+        return { success: true };
+      }),
+
+    // Get referrals for a specific business with partner details
+    forBusiness: protectedProcedure
+      .input(z.object({
+        businessId: z.number(),
+        direction: z.enum(['sent', 'received']),
+        limit: z.number().min(1).max(100).optional(),
+      }))
+      .query(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        if (!biz || (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        return db.getReferralsForBusiness(input.businessId, input.direction, input.limit ?? 50);
+      }),
+
+    // Get business analytics
+    businessAnalytics: protectedProcedure
+      .input(z.object({ businessId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        if (!biz || (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        return db.getBusinessAnalytics(input.businessId);
+      }),
+  }),
+
+  // ─── Consumer Claims ──────────────────────────────────────────
+  consumerClaim: router({
+    // Claim an offer
+    claim: protectedProcedure
+      .input(z.object({
+        referralOfferId: z.number(),
+        businessId: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Check offer exists and is active
+        const offer = await db.getReferralOfferById(input.referralOfferId);
+        if (!offer || !offer.isActive || offer.offerType !== 'consumer') {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Consumer offer not found or not active' });
+        }
+        // Check if already claimed
+        const alreadyClaimed = await db.hasUserClaimedOffer(ctx.user.id, input.referralOfferId);
+        if (alreadyClaimed) {
+          throw new TRPCError({ code: 'CONFLICT', message: 'You have already claimed this offer' });
+        }
+        const result = await db.createConsumerClaim({
+          referralOfferId: input.referralOfferId,
+          businessId: input.businessId,
+          userId: ctx.user.id,
+        });
+        // Increment platform stats
+        await db.incrementPlatformStat('total_consumer_claims');
+        return result;
+      }),
+
+    // Verify if business honored the offer
+    verify: protectedProcedure
+      .input(z.object({
+        claimId: z.number(),
+        honored: z.boolean(),
+        amountSaved: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await db.verifyConsumerClaim(input.claimId, ctx.user.id, input.honored, input.amountSaved, input.notes);
+        // Increment platform stats
+        if (input.honored && input.amountSaved) {
+          await db.incrementPlatformStat('total_consumer_savings', Math.round(parseFloat(input.amountSaved) || 0));
+        }
+        return { success: true };
+      }),
+
+    // Get my claims
+    myClaims: protectedProcedure.query(async ({ ctx }) => {
+      return db.getConsumerClaimsByUser(ctx.user.id);
+    }),
+
+    // Get claims for a business (business owner view)
+    forBusiness: protectedProcedure
+      .input(z.object({ businessId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        if (!biz || (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        return db.getConsumerClaimsByBusiness(input.businessId);
+      }),
+
+    // Get consumer analytics
+    myAnalytics: protectedProcedure.query(async ({ ctx }) => {
+      return db.getConsumerAnalytics(ctx.user.id);
+    }),
+  }),
+
+  // ─── Platform Stats ───────────────────────────────────────────
+  platformStats: router({
+    get: publicProcedure.query(async () => {
+      return db.getPlatformStats();
+    }),
+  }),
+
+  // ─── Email Verification ────────────────────────────────────
+  verification: router({
+    sendCode: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        businessId: z.number().optional(),
+        verificationType: z.enum(['claim', 'submission']),
+      }))
+      .mutation(async ({ input }) => {
+        // Generate 6-digit code
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+        await db.createEmailVerification({
+          email: input.email,
+          code,
+          businessId: input.businessId,
+          verificationType: input.verificationType,
+          expiresAt,
+        });
+        // Notify owner with the verification code (in production, send email directly)
+        try {
+          await notifyOwner({
+            title: `Verification Code for ${input.email}`,
+            content: `A verification code has been requested.\n\nEmail: ${input.email}\nCode: ${code}\nType: ${input.verificationType}\nExpires: ${expiresAt.toISOString()}\n\nPlease forward this code to the user if needed.`,
+          });
+        } catch (e) {
+          console.warn('[Notification] Failed to notify owner:', e);
+        }
+        return { success: true, message: 'Verification code sent. Please check your email.' };
+      }),
+
+    verifyCode: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        code: z.string().min(4).max(10),
+        verificationType: z.enum(['claim', 'submission']),
+      }))
+      .mutation(async ({ input }) => {
+        const verified = await db.verifyEmailCode(input.email, input.code, input.verificationType);
+        if (!verified) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid or expired verification code.' });
+        }
+        return { success: true, message: 'Email verified successfully.' };
+      }),
   }),
 });
 

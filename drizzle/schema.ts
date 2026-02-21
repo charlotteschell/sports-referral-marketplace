@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, bigint } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, bigint, decimal } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -80,6 +80,7 @@ export const businesses = mysqlTable("businesses", {
   // Google ratings
   googleRating: varchar("googleRating", { length: 10 }),
   googleReviewCount: int("googleReviewCount"),
+  googleMapsUrl: varchar("googleMapsUrl", { length: 500 }),
   
   // Social
   instagram: varchar("instagram", { length: 255 }),
@@ -150,6 +151,7 @@ export type InsertReferralOffer = typeof referralOffers.$inferInsert;
 
 /**
  * Referral tracking: when business A sends a customer to business B
+ * Enhanced with verification and $ tracking for honoring/cashout
  */
 export const referrals = mysqlTable("referrals", {
   id: int("id").autoincrement().primaryKey(),
@@ -173,6 +175,26 @@ export const referrals = mysqlTable("referrals", {
   // Status
   status: mysqlEnum("status", ["pending", "contacted", "converted", "declined", "expired"]).default("pending").notNull(),
   
+  // Verification: receiver confirms they honored the referral
+  receiverHonored: boolean("receiverHonored").default(false).notNull(),
+  receiverHonoredAt: timestamp("receiverHonoredAt"),
+  receiverHonoredNotes: text("receiverHonoredNotes"),
+  
+  // Verification: sender confirms they received the incentive (cashout)
+  senderCashedOut: boolean("senderCashedOut").default(false).notNull(),
+  senderCashedOutAt: timestamp("senderCashedOutAt"),
+  senderCashedOutNotes: text("senderCashedOutNotes"),
+  
+  // $ amount tracking
+  incentiveAmount: varchar("incentiveAmount", { length: 20 }),
+  incentiveCurrency: varchar("incentiveCurrency", { length: 10 }).default("USD"),
+  
+  // Dispute
+  isDisputed: boolean("isDisputed").default(false).notNull(),
+  disputeReason: text("disputeReason"),
+  disputedAt: timestamp("disputedAt"),
+  disputedByUserId: int("disputedByUserId"),
+  
   // Timestamps
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -181,6 +203,60 @@ export const referrals = mysqlTable("referrals", {
 
 export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = typeof referrals.$inferInsert;
+
+/**
+ * Consumer offer claims: when a consumer claims a SportConnect-exclusive offer
+ */
+export const consumerClaims = mysqlTable("consumerClaims", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Which offer was claimed
+  referralOfferId: int("referralOfferId").notNull(),
+  businessId: int("businessId").notNull(),
+  
+  // Who claimed it (must be logged in)
+  userId: int("userId").notNull(),
+  
+  // Claim details
+  claimCode: varchar("claimCode", { length: 20 }),
+  
+  // Status
+  status: mysqlEnum("status", ["claimed", "redeemed", "expired", "disputed"]).default("claimed").notNull(),
+  
+  // Consumer verification: did the business honor the offer?
+  isHonored: boolean("isHonored").default(false).notNull(),
+  honoredAt: timestamp("honoredAt"),
+  honoredNotes: text("honoredNotes"),
+  
+  // $ amount saved
+  amountSaved: varchar("amountSaved", { length: 20 }),
+  currency: varchar("currency", { length: 10 }).default("USD"),
+  
+  // Dispute
+  isDisputed: boolean("isDisputed").default(false).notNull(),
+  disputeReason: text("disputeReason"),
+  disputedAt: timestamp("disputedAt"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ConsumerClaim = typeof consumerClaims.$inferSelect;
+export type InsertConsumerClaim = typeof consumerClaims.$inferInsert;
+
+/**
+ * Platform activity stats for the home page tracker
+ * Stores both real computed stats and seeded baseline numbers
+ */
+export const platformStats = mysqlTable("platformStats", {
+  id: int("id").autoincrement().primaryKey(),
+  statKey: varchar("statKey", { length: 100 }).notNull().unique(),
+  statValue: int("statValue").default(0).notNull(),
+  label: varchar("label", { length: 255 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PlatformStat = typeof platformStats.$inferSelect;
 
 /**
  * Business submissions: pending requests from businesses not yet in the directory
@@ -228,3 +304,20 @@ export const businessSubmissions = mysqlTable("businessSubmissions", {
 
 export type BusinessSubmission = typeof businessSubmissions.$inferSelect;
 export type InsertBusinessSubmission = typeof businessSubmissions.$inferInsert;
+
+/**
+ * Email verification codes for business claims and submissions
+ */
+export const emailVerifications = mysqlTable("emailVerifications", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull(),
+  code: varchar("code", { length: 10 }).notNull(),
+  businessId: int("businessId"),
+  verificationType: mysqlEnum("verificationType", ["claim", "submission"]).default("claim").notNull(),
+  isVerified: boolean("isVerified").default(false).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EmailVerification = typeof emailVerifications.$inferSelect;
+export type InsertEmailVerification = typeof emailVerifications.$inferInsert;

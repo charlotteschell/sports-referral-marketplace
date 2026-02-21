@@ -1,0 +1,220 @@
+{
+  "query": "\n-- Add email verification codes table\nCREATE TABLE IF NOT EXISTS emailVerifications (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  email VARCHAR(320) NOT NULL,\n  code VARCHAR(10) NOT NULL,\n  businessId INT,\n  verificationType ENUM('claim', 'submission') NOT NULL DEFAULT 'claim',\n  isVerified BOOLEAN NOT NULL DEFAULT FALSE,\n  expiresAt TIMESTAMP NOT NULL,\n  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP\n);\n\n-- Add googleMapsUrl column to businesses\nALTER TABLE businesses ADD COLUMN googleMapsUrl VARCHAR(500) AFTER googleReviewCount;\n\n-- Rename \"Therapist\" to \"Sport Psychologist\" in businessTypes\nUPDATE businessTypes SET name = 'Sport Psychologist', slug = 'sport-psychologist', description = 'Mental performance coaches and sport psychologists helping athletes with mindset, focus, and performance psychology' WHERE slug = 'therapist' OR name = 'Therapist';\n\n-- Also update any businesses that had \"therapist\" in their type name\n-- (the businessTypeId foreign key handles this automatically since we updated the type name)\n\n-- Add sample incentive offers for featured businesses that don't have any\n-- First check which featured businesses exist\nSELECT b.id, b.name, b.isFeatured, b.isClaimed, \n  (SELECT COUNT(*) FROM referralOffers ro WHERE ro.businessId = b.id) as offerCount\nFROM businesses b WHERE b.isFeatured = 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute \n-- Add email verification codes table\nCREATE TABLE IF NOT EXISTS emailVerifications (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  email VARCHAR(320) NOT NULL,\n  code VARCHAR(10) NOT NULL,\n  businessId INT,\n  verificationType ENUM('claim', 'submission') NOT NULL DEFAULT 'claim',\n  isVerified BOOLEAN NOT NULL DEFAULT FALSE,\n  expiresAt TIMESTAMP NOT NULL,\n  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP\n);\n\n-- Add googleMapsUrl column to businesses\nALTER TABLE businesses ADD COLUMN googleMapsUrl VARCHAR(500) AFTER googleReviewCount;\n\n-- Rename \"Therapist\" to \"Sport Psychologist\" in businessTypes\nUPDATE businessTypes SET name = 'Sport Psychologist', slug = 'sport-psychologist', description = 'Mental performance coaches and sport psychologists helping athletes with mindset, focus, and performance psychology' WHERE slug = 'therapist' OR name = 'Therapist';\n\n-- Also update any businesses that had \"therapist\" in their type name\n-- (the businessTypeId foreign key handles this automatically since we updated the type name)\n\n-- Add sample incentive offers for featured businesses that don't have any\n-- First check which featured businesses exist\nSELECT b.id, b.name, b.isFeatured, b.isClaimed, \n  (SELECT COUNT(*) FROM referralOffers ro WHERE ro.businessId = b.id) as offerCount\nFROM businesses b WHERE b.isFeatured = 1;\n",
+  "rows": [
+    {
+      "id": "8",
+      "name": "Love Cycling Studio",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "1"
+    },
+    {
+      "id": "6",
+      "name": "On Pace Wellness",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "2"
+    },
+    {
+      "id": "7",
+      "name": "Rapha Massage",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "1"
+    },
+    {
+      "id": "52",
+      "name": "RARE Cycling Club",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "2"
+    },
+    {
+      "id": "3",
+      "name": "Run the Alps",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "2"
+    },
+    {
+      "id": "4",
+      "name": "Powder Guides Ski Adventures",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "1"
+    },
+    {
+      "id": "1",
+      "name": "APEX Coaching",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "2"
+    },
+    {
+      "id": "5",
+      "name": "Peak Performance PTS Physical Therapy",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "2"
+    },
+    {
+      "id": "11",
+      "name": "Jackson Hole Fitness Coaching",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "1"
+    },
+    {
+      "id": "10",
+      "name": "FootZone Bend",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "1"
+    },
+    {
+      "id": "2",
+      "name": "Bighorn Mountain Biking",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "2"
+    },
+    {
+      "id": "9",
+      "name": "Gear West",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "1"
+    },
+    {
+      "id": "12",
+      "name": "Paragon Fit Studio",
+      "isFeatured": "1",
+      "isClaimed": "1",
+      "offerCount": "0"
+    },
+    {
+      "id": "13",
+      "name": "Cortina Bike Tours",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "14",
+      "name": "Runcation Travel",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "17",
+      "name": "Ski and Snowboard School Selva Gardena",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "18",
+      "name": "LifeCycle Adventures",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "22",
+      "name": "Sa Calobra Cycling Club",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "26",
+      "name": "Chamonix Mountain Endurance Academy",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "28",
+      "name": "Eat Sleep Cycle",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "32",
+      "name": "Endurance Specific",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "34",
+      "name": "Strides Canmore",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "40",
+      "name": "Vail Sports",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "50",
+      "name": "Trail House at Enchantment Resort",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "53",
+      "name": "Alaró Cycling Club",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "55",
+      "name": "The Doctrine Training Ltd.",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "56",
+      "name": "Score Nutrition",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "58",
+      "name": "Anna Frost Coaching",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "60",
+      "name": "CycloClaudia",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    },
+    {
+      "id": "61",
+      "name": "Inspire Health & Performance",
+      "isFeatured": "1",
+      "isClaimed": "0",
+      "offerCount": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tisFeatured\tisClaimed\tofferCount\n8\tLove Cycling Studio\t1\t1\t1\n6\tOn Pace Wellness\t1\t1\t2\n7\tRapha Massage\t1\t1\t1\n52\tRARE Cycling Club\t1\t1\t2\n3\tRun the Alps\t1\t1\t2\n4\tPowder Guides Ski Adventures\t1\t1\t1\n1\tAPEX Coaching\t1\t1\t2\n5\tPeak Performance PTS Physical Therapy\t1\t1\t2\n11\tJackson Hole Fitness Coaching\t1\t1\t1\n10\tFootZone Bend\t1\t1\t1\n2\tBighorn Mountain Biking\t1\t1\t2\n9\tGear West\t1\t1\t1\n12\tParagon Fit Studio\t1\t1\t0\n13\tCortina Bike Tours\t1\t0\t0\n14\tRuncation Travel\t1\t0\t0\n17\tSki and Snowboard School Selva Gardena\t1\t0\t0\n18\tLifeCycle Adventures\t1\t0\t0\n22\tSa Calobra Cycling Club\t1\t0\t0\n26\tChamonix Mountain Endurance Academy\t1\t0\t0\n28\tEat Sleep Cycle\t1\t0\t0\n32\tEndurance Specific\t1\t0\t0\n34\tStrides Canmore\t1\t0\t0\n40\tVail Sports\t1\t0\t0\n50\tTrail House at Enchantment Resort\t1\t0\t0\n53\tAlaró Cycling Club\t1\t0\t0\n55\tThe Doctrine Training Ltd.\t1\t0\t0\n56\tScore Nutrition\t1\t0\t0\n58\tAnna Frost Coaching\t1\t0\t0\n60\tCycloClaudia\t1\t0\t0\n61\tInspire Health & Performance\t1\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 398
+}

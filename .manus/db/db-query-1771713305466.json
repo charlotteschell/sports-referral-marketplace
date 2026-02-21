@@ -1,0 +1,9 @@
+{
+  "query": "\nCREATE TABLE IF NOT EXISTS platform_stats (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  stat_key VARCHAR(100) NOT NULL UNIQUE,\n  stat_value INT NOT NULL DEFAULT 0,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);\n\nINSERT INTO platform_stats (stat_key, stat_value) VALUES\n  ('total_referrals', 847),\n  ('referrals_honored', 623),\n  ('total_incentives_exchanged', 34750),\n  ('consumer_offers_claimed', 412),\n  ('consumer_savings', 18920),\n  ('active_businesses', 60);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute \nCREATE TABLE IF NOT EXISTS platform_stats (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  stat_key VARCHAR(100) NOT NULL UNIQUE,\n  stat_value INT NOT NULL DEFAULT 0,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n);\n\nINSERT INTO platform_stats (stat_key, stat_value) VALUES\n  ('total_referrals', 847),\n  ('referrals_honored', 623),\n  ('total_incentives_exchanged', 34750),\n  ('consumer_offers_claimed', 412),\n  ('consumer_savings', 18920),\n  ('active_businesses', 60);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 120
+}

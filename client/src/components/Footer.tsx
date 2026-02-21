@@ -56,6 +56,7 @@ export default function Footer() {
               <li><Link href="/referral-offers"><span className="hover:text-white transition-colors cursor-pointer">B2B Offers</span></Link></li>
               <li><Link href="/dashboard"><span className="hover:text-white transition-colors cursor-pointer">Business Dashboard</span></Link></li>
               <li><Link href="/submit-business"><span className="hover:text-white transition-colors cursor-pointer">Submit Your Business</span></Link></li>
+              <li><Link href="/about"><span className="hover:text-white transition-colors cursor-pointer">About Us</span></Link></li>
             </ul>
           </div>
 

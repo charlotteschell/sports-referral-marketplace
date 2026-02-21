@@ -328,10 +328,10 @@ export default function AdminPanel() {
           <Tabs defaultValue="approvals" className="space-y-6">
             <TabsList className="grid w-full grid-cols-4 h-auto">
               <TabsTrigger value="approvals" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>
-                Approvals {(pendingApprovals.data?.length || 0) > 0 && <Badge className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0">{pendingApprovals.data?.length}</Badge>}
+                Claims {(pendingApprovals.data?.length || 0) > 0 && <Badge className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0">{pendingApprovals.data?.length}</Badge>}
               </TabsTrigger>
               <TabsTrigger value="submissions" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>
-                Submissions {submissionCounts.pending > 0 && <Badge className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0">{submissionCounts.pending}</Badge>}
+                New Submissions {submissionCounts.pending > 0 && <Badge className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0">{submissionCounts.pending}</Badge>}
               </TabsTrigger>
               <TabsTrigger value="businesses" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>Businesses</TabsTrigger>
               <TabsTrigger value="offers" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>Offers</TabsTrigger>
@@ -340,11 +340,11 @@ export default function AdminPanel() {
             {/* ─── Approvals Tab ─────────────────────────────── */}
             <TabsContent value="approvals" className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold flex items-center gap-2"><Clock className="w-5 h-5 text-amber-500" /> Pending Business Approvals</h2>
+                <h2 className="text-lg font-bold flex items-center gap-2"><Clock className="w-5 h-5 text-amber-500" /> Claim Existing Businesses Pending Approval</h2>
                 <Button size="sm" variant="ghost" onClick={() => pendingApprovals.refetch()} style={{ textTransform: "none" }}><RefreshCw className="w-4 h-4 mr-1" /> Refresh</Button>
               </div>
               <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                New businesses and claimed listings require your approval before they appear publicly in the directory.
+                Business owners who have verified their email and claimed an existing listing. Review and approve to grant them ownership.
               </p>
 
               {pendingApprovals.isLoading ? (
@@ -450,7 +450,7 @@ export default function AdminPanel() {
                     {statusFilter === "all" ? "No Submissions Yet" : `No ${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)} Submissions`}
                   </h3>
                   <p className="text-sm text-muted-foreground/70" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                    {statusFilter === "pending" ? "All submissions have been reviewed." : "When businesses submit listing requests, they'll appear here."}
+                    {statusFilter === "pending" ? "All new business submissions have been reviewed." : "When someone submits a new business to be added to the directory, it will appear here for approval."}
                   </p>
                 </CardContent></Card>
               )}

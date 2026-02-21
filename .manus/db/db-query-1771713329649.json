@@ -1,0 +1,9 @@
+{
+  "query": "\nCREATE TABLE IF NOT EXISTS email_verifications (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  email VARCHAR(255) NOT NULL,\n  code VARCHAR(10) NOT NULL,\n  businessId INT,\n  userId VARCHAR(255),\n  purpose VARCHAR(50) NOT NULL DEFAULT 'claim',\n  verified BOOLEAN NOT NULL DEFAULT FALSE,\n  expiresAt TIMESTAMP NOT NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute \nCREATE TABLE IF NOT EXISTS email_verifications (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  email VARCHAR(255) NOT NULL,\n  code VARCHAR(10) NOT NULL,\n  businessId INT,\n  userId VARCHAR(255),\n  purpose VARCHAR(50) NOT NULL DEFAULT 'claim',\n  verified BOOLEAN NOT NULL DEFAULT FALSE,\n  expiresAt TIMESTAMP NOT NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 99
+}

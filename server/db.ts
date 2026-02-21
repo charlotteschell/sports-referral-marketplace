@@ -9,6 +9,9 @@ import {
   referrals, InsertReferral, Referral,
   businessSportCategories,
   businessSubmissions, InsertBusinessSubmission, BusinessSubmission,
+  emailVerifications, InsertEmailVerification,
+  consumerClaims, InsertConsumerClaim, ConsumerClaim,
+  platformStats,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -907,4 +910,420 @@ export async function getDirectoryStats() {
     sportCategories: Number(totalCats[0]?.count || 0),
     regions: Number(totalRegions[0]?.count || 0),
   };
+}
+
+// ─── Email Verification ──────────────────────────────────────
+
+export async function createEmailVerification(data: { email: string; code: string; businessId?: number; verificationType: 'claim' | 'submission'; expiresAt: Date }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(emailVerifications).values(data);
+  return result[0].insertId;
+}
+
+export async function verifyEmailCode(email: string, code: string, verificationType: 'claim' | 'submission') {
+  const db = await getDb();
+  if (!db) return false;
+  const result = await db.select().from(emailVerifications)
+    .where(and(
+      eq(emailVerifications.email, email),
+      eq(emailVerifications.code, code),
+      eq(emailVerifications.verificationType, verificationType),
+      eq(emailVerifications.isVerified, false),
+      sql`${emailVerifications.expiresAt} > NOW()`
+    ))
+    .limit(1);
+  if (result.length === 0) return false;
+  await db.update(emailVerifications).set({ isVerified: true }).where(eq(emailVerifications.id, result[0].id));
+  return true;
+}
+
+export async function isEmailVerified(email: string, verificationType: 'claim' | 'submission') {
+  const db = await getDb();
+  if (!db) return false;
+  const result = await db.select().from(emailVerifications)
+    .where(and(
+      eq(emailVerifications.email, email),
+      eq(emailVerifications.verificationType, verificationType),
+      eq(emailVerifications.isVerified, true),
+      sql`${emailVerifications.expiresAt} > NOW()`
+    ))
+    .limit(1);
+  return result.length > 0;
+}
+
+// ─── Featured Business Offers (for directory cards & featured section) ──
+
+export async function getOffersForBusinessIds(businessIds: number[]) {
+  const db = await getDb();
+  if (!db || businessIds.length === 0) return [];
+  return db.select().from(referralOffers)
+    .where(and(
+      inArray(referralOffers.businessId, businessIds),
+      eq(referralOffers.isActive, true),
+      eq(referralOffers.isHidden, false),
+      eq(referralOffers.isAdminHidden, false),
+    ))
+    .orderBy(asc(referralOffers.businessId), desc(referralOffers.createdAt));
+}
+
+// ─── Phone Formatting Utility ─────────────────────────────────
+
+export function formatPhoneNumber(phone: string | null | undefined): string {
+  if (!phone) return '';
+  // Remove all non-digit characters except leading +
+  const hasPlus = phone.startsWith('+');
+  const digits = phone.replace(/\D/g, '');
+  
+  if (digits.length === 10) {
+    // North American: (XXX) XXX-XXXX
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  if (digits.length === 11 && digits.startsWith('1')) {
+    // North American with country code: +1 (XXX) XXX-XXXX
+    return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+  }
+  if (hasPlus || digits.length > 10) {
+    // International: +XX XXX XXX XXXX (general grouping)
+    const prefix = hasPlus ? '+' : '';
+    if (digits.length <= 12) {
+      return `${prefix}${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`.trim();
+    }
+    return `${prefix}${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`.trim();
+  }
+  // Fallback: return as-is
+  return phone;
+}
+
+
+// ─── Referral Verification ──────────────────────────────────────
+
+/**
+ * Receiver marks a referral as honored (they served the customer)
+ */
+export async function markReferralHonored(referralId: number, userId: number, notes?: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(referrals)
+    .set({
+      receiverHonored: true,
+      receiverHonoredAt: new Date(),
+      receiverHonoredNotes: notes || null,
+      status: 'converted',
+    })
+    .where(eq(referrals.id, referralId));
+}
+
+/**
+ * Sender marks that they received the incentive (cashed out)
+ */
+export async function markReferralCashedOut(referralId: number, userId: number, amount?: string, notes?: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(referrals)
+    .set({
+      senderCashedOut: true,
+      senderCashedOutAt: new Date(),
+      senderCashedOutNotes: notes || null,
+      incentiveAmount: amount || null,
+      completedAt: new Date(),
+    })
+    .where(eq(referrals.id, referralId));
+}
+
+/**
+ * Dispute a referral
+ */
+export async function disputeReferral(referralId: number, userId: number, reason: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(referrals)
+    .set({
+      isDisputed: true,
+      disputeReason: reason,
+      disputedAt: new Date(),
+      disputedByUserId: userId,
+    })
+    .where(eq(referrals.id, referralId));
+}
+
+/**
+ * Get referral by ID with full details
+ */
+export async function getReferralById(referralId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(referrals).where(eq(referrals.id, referralId)).limit(1);
+  return rows[0] || null;
+}
+
+// ─── Consumer Claims ────────────────────────────────────────────
+
+/**
+ * Consumer claims an offer - generates a unique claim code
+ */
+export async function createConsumerClaim(data: { referralOfferId: number; businessId: number; userId: number }) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Generate unique claim code: SC-XXXXX
+  const code = 'SC-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+  
+  const result = await db.insert(consumerClaims).values({
+    referralOfferId: data.referralOfferId,
+    businessId: data.businessId,
+    userId: data.userId,
+    claimCode: code,
+    status: 'claimed',
+  });
+  
+  return { id: Number(result[0].insertId), claimCode: code };
+}
+
+/**
+ * Consumer verifies if the business honored their offer
+ */
+export async function verifyConsumerClaim(claimId: number, userId: number, honored: boolean, amountSaved?: string, notes?: string) {
+  const db = await getDb();
+  if (!db) return;
+  
+  if (honored) {
+    await db.update(consumerClaims)
+      .set({
+        isHonored: true,
+        honoredAt: new Date(),
+        honoredNotes: notes || null,
+        amountSaved: amountSaved || null,
+        status: 'redeemed',
+      })
+      .where(and(eq(consumerClaims.id, claimId), eq(consumerClaims.userId, userId)));
+  } else {
+    await db.update(consumerClaims)
+      .set({
+        isDisputed: true,
+        disputeReason: notes || 'Business did not honor the offer',
+        disputedAt: new Date(),
+        status: 'disputed',
+      })
+      .where(and(eq(consumerClaims.id, claimId), eq(consumerClaims.userId, userId)));
+  }
+}
+
+/**
+ * Get consumer claims for a user
+ */
+export async function getConsumerClaimsByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    claim: consumerClaims,
+    offer: referralOffers,
+    business: {
+      id: businesses.id,
+      name: businesses.name,
+      slug: businesses.slug,
+      logoUrl: businesses.logoUrl,
+    },
+  })
+    .from(consumerClaims)
+    .innerJoin(referralOffers, eq(consumerClaims.referralOfferId, referralOffers.id))
+    .innerJoin(businesses, eq(consumerClaims.businessId, businesses.id))
+    .where(eq(consumerClaims.userId, userId))
+    .orderBy(desc(consumerClaims.createdAt));
+}
+
+/**
+ * Get consumer claims for a business (business owner view)
+ */
+export async function getConsumerClaimsByBusiness(businessId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    claim: consumerClaims,
+    offer: referralOffers,
+    user: {
+      id: users.id,
+      name: users.name,
+      email: users.email,
+    },
+  })
+    .from(consumerClaims)
+    .innerJoin(referralOffers, eq(consumerClaims.referralOfferId, referralOffers.id))
+    .innerJoin(users, eq(consumerClaims.userId, users.id))
+    .where(eq(consumerClaims.businessId, businessId))
+    .orderBy(desc(consumerClaims.createdAt));
+}
+
+/**
+ * Check if user already claimed a specific offer
+ */
+export async function hasUserClaimedOffer(userId: number, referralOfferId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  const rows = await db.select({ id: consumerClaims.id })
+    .from(consumerClaims)
+    .where(and(
+      eq(consumerClaims.userId, userId),
+      eq(consumerClaims.referralOfferId, referralOfferId),
+      inArray(consumerClaims.status, ['claimed', 'redeemed']),
+    ))
+    .limit(1);
+  return rows.length > 0;
+}
+
+// ─── Business Dashboard Analytics ───────────────────────────────
+
+/**
+ * Get comprehensive analytics for a business
+ */
+export async function getBusinessAnalytics(businessId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Referrals received
+  const receivedRows = await db.select({
+    total: sql<number>`COUNT(*)`,
+    honored: sql<number>`SUM(CASE WHEN ${referrals.receiverHonored} = true THEN 1 ELSE 0 END)`,
+    disputed: sql<number>`SUM(CASE WHEN ${referrals.isDisputed} = true THEN 1 ELSE 0 END)`,
+    pending: sql<number>`SUM(CASE WHEN ${referrals.receiverHonored} = false AND ${referrals.isDisputed} = false THEN 1 ELSE 0 END)`,
+  }).from(referrals).where(eq(referrals.receivingBusinessId, businessId));
+  
+  // Referrals sent
+  const sentRows = await db.select({
+    total: sql<number>`COUNT(*)`,
+    cashedOut: sql<number>`SUM(CASE WHEN ${referrals.senderCashedOut} = true THEN 1 ELSE 0 END)`,
+    totalEarned: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.senderCashedOut} = true THEN CAST(${referrals.incentiveAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
+    disputed: sql<number>`SUM(CASE WHEN ${referrals.isDisputed} = true THEN 1 ELSE 0 END)`,
+    pending: sql<number>`SUM(CASE WHEN ${referrals.senderCashedOut} = false AND ${referrals.isDisputed} = false THEN 1 ELSE 0 END)`,
+  }).from(referrals).where(eq(referrals.referringBusinessId, businessId));
+  
+  // Consumer claims received
+  const claimRows = await db.select({
+    total: sql<number>`COUNT(*)`,
+    redeemed: sql<number>`SUM(CASE WHEN ${consumerClaims.isHonored} = true THEN 1 ELSE 0 END)`,
+    disputed: sql<number>`SUM(CASE WHEN ${consumerClaims.isDisputed} = true THEN 1 ELSE 0 END)`,
+    pending: sql<number>`SUM(CASE WHEN ${consumerClaims.isHonored} = false AND ${consumerClaims.isDisputed} = false THEN 1 ELSE 0 END)`,
+  }).from(consumerClaims).where(eq(consumerClaims.businessId, businessId));
+  
+  return {
+    referralsReceived: {
+      total: Number(receivedRows[0]?.total || 0),
+      honored: Number(receivedRows[0]?.honored || 0),
+      disputed: Number(receivedRows[0]?.disputed || 0),
+      pending: Number(receivedRows[0]?.pending || 0),
+    },
+    referralsSent: {
+      total: Number(sentRows[0]?.total || 0),
+      cashedOut: Number(sentRows[0]?.cashedOut || 0),
+      totalEarned: sentRows[0]?.totalEarned || '0',
+      disputed: Number(sentRows[0]?.disputed || 0),
+      pending: Number(sentRows[0]?.pending || 0),
+    },
+    consumerClaims: {
+      total: Number(claimRows[0]?.total || 0),
+      redeemed: Number(claimRows[0]?.redeemed || 0),
+      disputed: Number(claimRows[0]?.disputed || 0),
+      pending: Number(claimRows[0]?.pending || 0),
+    },
+  };
+}
+
+// ─── Consumer Dashboard Analytics ───────────────────────────────
+
+/**
+ * Get analytics for a consumer user
+ */
+export async function getConsumerAnalytics(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const rows = await db.select({
+    totalClaims: sql<number>`COUNT(*)`,
+    redeemed: sql<number>`SUM(CASE WHEN ${consumerClaims.isHonored} = true THEN 1 ELSE 0 END)`,
+    totalSaved: sql<string>`COALESCE(SUM(CASE WHEN ${consumerClaims.isHonored} = true THEN CAST(${consumerClaims.amountSaved} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
+    disputed: sql<number>`SUM(CASE WHEN ${consumerClaims.isDisputed} = true THEN 1 ELSE 0 END)`,
+    pending: sql<number>`SUM(CASE WHEN ${consumerClaims.isHonored} = false AND ${consumerClaims.isDisputed} = false THEN 1 ELSE 0 END)`,
+  }).from(consumerClaims).where(eq(consumerClaims.userId, userId));
+  
+  return {
+    totalClaims: Number(rows[0]?.totalClaims || 0),
+    redeemed: Number(rows[0]?.redeemed || 0),
+    totalSaved: rows[0]?.totalSaved || '0',
+    disputed: Number(rows[0]?.disputed || 0),
+    pending: Number(rows[0]?.pending || 0),
+  };
+}
+
+// ─── Platform Stats ─────────────────────────────────────────────
+
+/**
+ * Get all platform stats for the home page tracker
+ */
+export async function getPlatformStats() {
+  const db = await getDb();
+  if (!db) return { totalReferrals: 0, honoredReferrals: 0, totalIncentivesExchanged: 0, consumerOffersClaimed: 0, consumerSavings: 0, activeBusinesses: 0 };
+  const rows = await db.select().from(platformStats);
+  const raw: Record<string, number> = {};
+  for (const row of rows) {
+    raw[row.statKey] = row.statValue;
+  }
+  return {
+    totalReferrals: raw['totalReferrals'] || 0,
+    honoredReferrals: raw['honoredReferrals'] || 0,
+    totalIncentivesExchanged: raw['totalIncentivesExchanged'] || 0,
+    consumerOffersClaimed: raw['consumerOffersClaimed'] || 0,
+    consumerSavings: raw['consumerSavings'] || 0,
+    activeBusinesses: raw['activeBusinesses'] || 0,
+  };
+}
+
+/**
+ * Increment a platform stat by a given amount
+ */
+export async function incrementPlatformStat(key: string, amount: number = 1) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(platformStats)
+    .set({ statValue: sql`${platformStats.statValue} + ${amount}` })
+    .where(eq(platformStats.statKey, key));
+}
+
+/**
+ * Get referrals for a business with full partner details (for dashboard)
+ */
+export async function getReferralsForBusiness(businessId: number, direction: 'sent' | 'received', limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  if (direction === 'received') {
+    return db.select({
+      referral: referrals,
+      partnerBusiness: {
+        id: businesses.id,
+        name: businesses.name,
+        slug: businesses.slug,
+        logoUrl: businesses.logoUrl,
+      },
+    })
+      .from(referrals)
+      .innerJoin(businesses, eq(referrals.referringBusinessId, businesses.id))
+      .where(eq(referrals.receivingBusinessId, businessId))
+      .orderBy(desc(referrals.createdAt))
+      .limit(limit);
+  } else {
+    return db.select({
+      referral: referrals,
+      partnerBusiness: {
+        id: businesses.id,
+        name: businesses.name,
+        slug: businesses.slug,
+        logoUrl: businesses.logoUrl,
+      },
+    })
+      .from(referrals)
+      .innerJoin(businesses, eq(referrals.receivingBusinessId, businesses.id))
+      .where(eq(referrals.referringBusinessId, businessId))
+      .orderBy(desc(referrals.createdAt))
+      .limit(limit);
+  }
 }

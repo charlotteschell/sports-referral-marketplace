@@ -6,13 +6,15 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
+import { useState, useMemo } from "react";
 import {
   MapPin, Phone, Mail, Globe, Shield, ArrowLeft,
   Bike, Mountain, Snowflake, Star, Handshake, Compass,
   Instagram, Facebook, Pencil, Gift, Send, ExternalLink,
-  Users, Info, Sparkles, Heart
+  Users, Info, Sparkles, Heart, Loader2, CheckCircle2, AlertCircle
 } from "lucide-react";
 
 const sportIcons: Record<string, React.ReactNode> = {
@@ -23,11 +25,45 @@ const sportIcons: Record<string, React.ReactNode> = {
   "sport-vacations": <Compass className="w-5 h-5" />,
 };
 
+// Phone number formatting utility
+function formatPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  // North American: +1 (XXX) XXX-XXXX
+  if (digits.length === 11 && digits.startsWith('1')) {
+    return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+  }
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  // International with country code
+  if (digits.length > 10) {
+    // Try common formats
+    if (digits.startsWith('34') && digits.length === 11) {
+      // Spain: +34 XXX XXX XXX
+      return `+34 ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`;
+    }
+    if (digits.startsWith('44') && digits.length >= 12) {
+      // UK: +44 XXXX XXXXXX
+      return `+44 ${digits.slice(2, 6)} ${digits.slice(6)}`;
+    }
+    // Generic international
+    return `+${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`;
+  }
+  // Return original if can't parse
+  return phone;
+}
+
 export default function BusinessProfile() {
   const params = useParams<{ slug: string }>();
   const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
+
+  // Email verification state for claiming
+  const [claimStep, setClaimStep] = useState<'idle' | 'email' | 'code' | 'verified'>('idle');
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [emailError, setEmailError] = useState('');
 
   const { data, isLoading, error } = trpc.business.getBySlug.useQuery(
     { slug: params.slug || "" },
@@ -36,18 +72,82 @@ export default function BusinessProfile() {
 
   const { data: offers } = trpc.referralOffer.getByBusiness.useQuery(
     { businessId: data?.business.id || 0 },
-    { enabled: !!data?.business.id && data.business.isClaimed }
+    { enabled: !!data?.business.id }
   );
 
-  const claimMutation = trpc.business.claim.useMutation({
+  const sendCodeMutation = trpc.verification.sendCode.useMutation({
     onSuccess: () => {
-      toast.success("Business claimed successfully! You can now edit your profile.");
+      toast.success("Verification code sent! Check your email.");
+      setClaimStep('code');
+    },
+    onError: (err) => toast.error(err.message || "Failed to send verification code"),
+  });
+
+  const verifyCodeMutation = trpc.verification.verifyCode.useMutation({
+    onSuccess: () => {
+      toast.success("Email verified! You can now submit your claim.");
+      setClaimStep('verified');
+    },
+    onError: (err) => toast.error(err.message || "Invalid or expired code"),
+  });
+
+  const claimMutation = trpc.business.claim.useMutation({
+    onSuccess: (result) => {
+      toast.success(result.message || "Claim submitted for approval!");
+      setClaimStep('idle');
+      setVerificationEmail('');
+      setVerificationCode('');
       utils.business.getBySlug.invalidate({ slug: params.slug });
     },
     onError: (err) => {
       toast.error(err.message || "Failed to claim business");
     },
   });
+
+  // Extract domain from business website for email validation
+  const businessDomain = useMemo(() => {
+    if (!data?.business.website) return null;
+    try {
+      const url = new URL(data.business.website.startsWith('http') ? data.business.website : `https://${data.business.website}`);
+      return url.hostname.replace('www.', '');
+    } catch {
+      return null;
+    }
+  }, [data?.business.website]);
+
+  const handleSendCode = () => {
+    if (!verificationEmail) {
+      setEmailError('Please enter your email');
+      return;
+    }
+    // Validate email matches business domain if available
+    if (businessDomain) {
+      const emailDomain = verificationEmail.split('@')[1]?.toLowerCase();
+      if (emailDomain !== businessDomain.toLowerCase()) {
+        setEmailError(`Email must be from the business domain (@${businessDomain})`);
+        return;
+      }
+    }
+    setEmailError('');
+    sendCodeMutation.mutate({
+      email: verificationEmail,
+      businessId: data?.business.id,
+      verificationType: 'claim',
+    });
+  };
+
+  const handleVerifyCode = () => {
+    verifyCodeMutation.mutate({
+      email: verificationEmail,
+      code: verificationCode,
+      verificationType: 'claim',
+    });
+  };
+
+  const handleSubmitClaim = () => {
+    if (!data?.business.id) return;
+    claimMutation.mutate({ businessId: data.business.id, verificationEmail });
+  };
 
   if (isLoading) {
     return (
@@ -96,6 +196,9 @@ export default function BusinessProfile() {
   const b2bOffers = offers?.filter(o => o.offerType === "b2b") || [];
   const consumerOffers = offers?.filter(o => o.offerType === "consumer") || [];
 
+  // Google Maps URL for reviews
+  const googleMapsUrl = (business as any).googleMapsUrl || null;
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -115,9 +218,16 @@ export default function BusinessProfile() {
       <section className="bg-[oklch(0.22_0.02_50)] text-white py-10">
         <div className="container">
           <div className="flex flex-col md:flex-row md:items-start gap-6">
-            <div className="w-16 h-16 rounded-xl bg-white/10 flex items-center justify-center text-[oklch(0.55_0.15_45)] shrink-0">
-              {sportIcons[sportCategory?.slug || ""] || <Star className="w-8 h-8" />}
-            </div>
+            {/* Logo or icon */}
+            {(business as any).logoUrl ? (
+              <div className="w-16 h-16 rounded-xl overflow-hidden bg-white shrink-0">
+                <img src={(business as any).logoUrl} alt={business.name} className="w-full h-full object-contain" />
+              </div>
+            ) : (
+              <div className="w-16 h-16 rounded-xl bg-white/10 flex items-center justify-center text-[oklch(0.55_0.15_45)] shrink-0">
+                {sportIcons[sportCategory?.slug || ""] || <Star className="w-8 h-8" />}
+              </div>
+            )}
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-3 mb-2">
                 <h1 className="text-3xl md:text-4xl font-bold">{business.name}</h1>
@@ -156,24 +266,50 @@ export default function BusinessProfile() {
                   </span>
                 )}
               </div>
-              {/* Google Rating */}
+              {/* Google Rating with link */}
               {business.googleRating && (
                 <div className="flex items-center gap-2 mt-3">
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${
-                          i < Math.round(parseFloat(business.googleRating || "0"))
-                            ? "text-yellow-400 fill-yellow-400"
-                            : "text-white/20"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm font-medium text-white">{business.googleRating}</span>
-                  {business.googleReviewCount && business.googleReviewCount > 0 && (
-                    <span className="text-sm text-white/50">({business.googleReviewCount.toLocaleString()} Google reviews)</span>
+                  {googleMapsUrl ? (
+                    <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                      <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${
+                              i < Math.round(parseFloat(business.googleRating || "0"))
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-white/20"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm font-medium text-white">{business.googleRating}</span>
+                      {business.googleReviewCount && business.googleReviewCount > 0 && (
+                        <span className="text-sm text-white/50">({business.googleReviewCount.toLocaleString()} Google reviews)</span>
+                      )}
+                      <ExternalLink className="w-3 h-3 text-white/40" />
+                    </a>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${
+                              i < Math.round(parseFloat(business.googleRating || "0"))
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-white/20"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm font-medium text-white">{business.googleRating}</span>
+                      {business.googleReviewCount && business.googleReviewCount > 0 && (
+                        <span className="text-sm text-white/50">({business.googleReviewCount.toLocaleString()} Google reviews)</span>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -193,17 +329,16 @@ export default function BusinessProfile() {
               )}
             </div>
 
-            {/* Action Buttons - Only show Edit/Update after claiming */}
+            {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 shrink-0">
-              {!isClaimed && isAuthenticated && (
+              {!isClaimed && isAuthenticated && claimStep === 'idle' && (
                 <Button
-                  onClick={() => claimMutation.mutate({ businessId: business.id })}
-                  disabled={claimMutation.isPending}
+                  onClick={() => setClaimStep('email')}
                   className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white"
                   style={{ textTransform: "none" }}
                 >
                   <Handshake className="w-4 h-4 mr-2" />
-                  {claimMutation.isPending ? "Claiming..." : "Claim Business"}
+                  Claim Business
                 </Button>
               )}
               {!isClaimed && !isAuthenticated && (
@@ -232,6 +367,127 @@ export default function BusinessProfile() {
         </div>
       </section>
 
+      {/* Email Verification Flow for Claiming */}
+      {claimStep !== 'idle' && !isClaimed && isAuthenticated && (
+        <section className="bg-amber-50 dark:bg-amber-950/20 border-b border-amber-200 dark:border-amber-800">
+          <div className="container py-6">
+            <div className="max-w-lg mx-auto">
+              {claimStep === 'email' && (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Mail className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Verify Your Business Email</h3>
+                      <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                        To claim this business, please enter an email address with the business domain
+                        {businessDomain && <> (<strong>@{businessDomain}</strong>)</>}.
+                        We'll send a verification code to confirm you own this business.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="email"
+                      placeholder={businessDomain ? `you@${businessDomain}` : "your@business-email.com"}
+                      value={verificationEmail}
+                      onChange={(e) => { setVerificationEmail(e.target.value); setEmailError(''); }}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={handleSendCode}
+                      disabled={sendCodeMutation.isPending}
+                      className="bg-amber-600 hover:bg-amber-700 text-white shrink-0"
+                      style={{ textTransform: "none" }}
+                    >
+                      {sendCodeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Code"}
+                    </Button>
+                  </div>
+                  {emailError && (
+                    <p className="text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> {emailError}
+                    </p>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={() => setClaimStep('idle')} className="text-muted-foreground" style={{ textTransform: "none" }}>
+                    Cancel
+                  </Button>
+                </div>
+              )}
+
+              {claimStep === 'code' && (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Enter Verification Code</h3>
+                      <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                        We sent a 6-digit code to <strong>{verificationEmail}</strong>. Enter it below to verify your ownership.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Enter 6-digit code"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      maxLength={6}
+                      className="flex-1 text-center text-lg tracking-widest font-mono"
+                    />
+                    <Button
+                      onClick={handleVerifyCode}
+                      disabled={verifyCodeMutation.isPending || verificationCode.length < 4}
+                      className="bg-amber-600 hover:bg-amber-700 text-white shrink-0"
+                      style={{ textTransform: "none" }}
+                    >
+                      {verifyCodeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setClaimStep('email')} className="text-muted-foreground" style={{ textTransform: "none" }}>
+                      Use Different Email
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleSendCode} disabled={sendCodeMutation.isPending} className="text-muted-foreground" style={{ textTransform: "none" }}>
+                      Resend Code
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {claimStep === 'verified' && (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Email Verified!</h3>
+                      <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                        Your email has been verified. Click below to submit your claim. Please note that <strong>all claims are subject to admin approval</strong>. You'll receive a confirmation once your claim is reviewed.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleSubmitClaim}
+                      disabled={claimMutation.isPending}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                      style={{ textTransform: "none" }}
+                    >
+                      {claimMutation.isPending ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</>
+                      ) : (
+                        <><Handshake className="w-4 h-4 mr-2" /> Submit Claim for Approval</>
+                      )}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setClaimStep('idle')} className="text-muted-foreground" style={{ textTransform: "none" }}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Content */}
       <section className="py-10">
         <div className="container">
@@ -250,8 +506,8 @@ export default function BusinessProfile() {
                 </CardContent>
               </Card>
 
-              {/* B2B Referral Offers - Only shown for claimed businesses */}
-              {isClaimed && b2bOffers.length > 0 && (
+              {/* B2B Referral Offers */}
+              {b2bOffers.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -315,8 +571,8 @@ export default function BusinessProfile() {
                 </Card>
               )}
 
-              {/* Consumer Offers - Only shown for claimed businesses */}
-              {isClaimed && consumerOffers.length > 0 && (
+              {/* Consumer Offers */}
+              {consumerOffers.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -382,15 +638,18 @@ export default function BusinessProfile() {
                     <p className="text-muted-foreground mb-4 max-w-md mx-auto" style={{ textTransform: "none", letterSpacing: "normal" }}>
                       Contact information, referral offers, and full business details are only available for claimed and verified businesses. SportConnect is 100% free — community supporting community.
                     </p>
+                    <p className="text-xs text-muted-foreground/70 mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                      All claims are subject to admin approval after email verification.
+                    </p>
                     {isAuthenticated ? (
                       <Button
-                        onClick={() => claimMutation.mutate({ businessId: business.id })}
-                        disabled={claimMutation.isPending}
+                        onClick={() => setClaimStep('email')}
+                        disabled={claimStep !== 'idle'}
                         className="bg-primary text-primary-foreground"
                         style={{ textTransform: "none" }}
                       >
                         <Handshake className="w-4 h-4 mr-2" />
-                        {claimMutation.isPending ? "Claiming..." : "Claim This Business"}
+                        Claim This Business
                       </Button>
                     ) : (
                       <a href={getLoginUrl()}>
@@ -416,7 +675,7 @@ export default function BusinessProfile() {
                     {business.phone && (
                       <a href={`tel:${business.phone}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors" style={{ textTransform: "none" }}>
                         <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
-                        {business.phone}
+                        {formatPhone(business.phone)}
                       </a>
                     )}
                     {business.email && (
@@ -447,6 +706,51 @@ export default function BusinessProfile() {
                       <p className="text-sm text-muted-foreground" style={{ textTransform: "none" }}>
                         No contact information added yet.
                       </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Google Reviews Card */}
+              {business.googleRating && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+                      Google Reviews
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-3xl font-bold text-foreground">{business.googleRating}</span>
+                      <div>
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < Math.round(parseFloat(business.googleRating || "0"))
+                                  ? "text-yellow-400 fill-yellow-400"
+                                  : "text-muted-foreground/30"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        {business.googleReviewCount && business.googleReviewCount > 0 && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{business.googleReviewCount.toLocaleString()} reviews</p>
+                        )}
+                      </div>
+                    </div>
+                    {googleMapsUrl && (
+                      <a
+                        href={googleMapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-sm text-[oklch(0.55_0.15_45)] hover:underline"
+                        style={{ textTransform: "none" }}
+                      >
+                        View on Google Maps <ExternalLink className="w-3 h-3" />
+                      </a>
                     )}
                   </CardContent>
                 </Card>

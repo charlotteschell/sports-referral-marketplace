@@ -111,7 +111,7 @@ export default function SubmitBusiness() {
                 </h2>
                 <p className="text-muted-foreground leading-relaxed">
                   Thank you for submitting <strong>{businessName}</strong> to the SportConnect directory.
-                  Our team will review your submission and you'll be notified once it's approved.
+                  Your submission is now <strong>pending admin approval</strong>. We'll review it shortly and send you an email confirmation once it's approved. In the meantime, feel free to browse the directory!
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
@@ -181,9 +181,10 @@ export default function SubmitBusiness() {
               </div>
             </div>
             <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl">
-              Whether you're a coach, bike shop, physio, vacation provider, or any business serving
+              Whether you're a coach, bike shop, sport psychologist, vacation provider, or any business serving
               cyclists, runners, and snowsports enthusiasts — submit your business to be listed in
               the SportConnect directory and start receiving referrals.
+              <span className="block mt-3 text-sm text-amber-500 font-medium">All submissions are subject to admin approval. You'll receive an email confirmation once submitted, and another when approved.</span>
             </p>
           </div>
         </section>
