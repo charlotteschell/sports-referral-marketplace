@@ -598,3 +598,33 @@
 - [x] Add save/bookmark business functionality
 - [x] Wire up all API endpoints for athlete dashboard data
 - [x] Write tests for new endpoints
+
+## Email Notifications - Saved Business New Offers
+- [x] Add getUsersWhoSavedBusiness db helper (query saved_businesses by businessId)
+- [x] Add in-app notification system (user_notifications table)
+- [x] Trigger notification when a business owner creates a new offer
+- [x] Include business name, offer title in notification
+- [x] Add NotificationBell component in header with dropdown
+- [x] Add Notifications tab on athlete dashboard with mark read/mark all read
+- [ ] Write tests for the notification trigger and query
+
+## Recommendation Engine
+- [x] Build backend recommendation query using athlete profile (sports, location, interests)
+- [x] Create tRPC endpoint for personalized business recommendations
+- [x] Add "Recommended For You" section to athlete dashboard
+- [x] Show match reasons ("Near you", "Your sport", "Matches interests")
+- [x] Fallback to popular businesses when no profile exists
+
+## Unify Add Business / Edit Business Forms
+- [x] Add Business form now matches Edit Business form structure (logo, multi-select checkboxes, brands, region/hub)
+- [x] Add Business page uses full form (empty state)
+- [x] Edit Business page uses full form (pre-filled with existing data)
+- [x] Edit Business shows previously selected sport categories, business types, hub
+- [x] Updated business.create mutation to accept multi-select arrays and brands
+
+## Logo Update - Flywheel Arrows
+- [x] Generate updated logo: brown background mountain with flywheel arrows along outline
+- [x] Replace logo in header
+- [x] Replace logo in footer
+- [x] Replace favicon
+- [x] Replace any other logo instances across the site

@@ -11,10 +11,11 @@ import { toast } from "sonner";
 import {
   Loader2, Gift, Heart, Bookmark, MapPin, ExternalLink,
   Ticket, CheckCircle2, Clock, AlertTriangle, Trash2,
-  User, Target, Bike, Settings, ArrowRight
+  User, Target, Bike, Settings, ArrowRight, Bell, Check, CheckCheck,
+  Sparkles, Star, ChevronRight
 } from "lucide-react";
 
-type TabId = "offers" | "saved" | "profile";
+type TabId = "offers" | "saved" | "notifications" | "profile";
 
 export default function AthleteDashboard() {
   const { user, loading } = useAuth({ redirectOnUnauthenticated: true });
@@ -30,6 +31,14 @@ export default function AthleteDashboard() {
     { enabled: !!user }
   );
   const { data: athleteProfile, isLoading: profileLoading } = trpc.athleteProfile.get.useQuery(
+    undefined,
+    { enabled: !!user }
+  );
+  const { data: unreadCount } = trpc.notification.unreadCount.useQuery(
+    undefined,
+    { enabled: !!user, refetchInterval: 30000 }
+  );
+  const { data: recommendations, isLoading: recsLoading } = trpc.recommendation.forYou.useQuery(
     undefined,
     { enabled: !!user }
   );
@@ -67,6 +76,7 @@ export default function AthleteDashboard() {
   const tabs: { id: TabId; label: string; icon: React.ReactNode; count?: number }[] = [
     { id: "offers", label: "My Offers", icon: <Ticket className="w-4 h-4" />, count: claims?.length },
     { id: "saved", label: "Saved Businesses", icon: <Bookmark className="w-4 h-4" />, count: savedBusinesses?.length },
+    { id: "notifications", label: "Notifications", icon: <Bell className="w-4 h-4" />, count: unreadCount ?? undefined },
     { id: "profile", label: "My Profile", icon: <User className="w-4 h-4" /> },
   ];
 
@@ -149,6 +159,74 @@ export default function AthleteDashboard() {
             </div>
           </div>
         </section>
+
+        {/* Recommended For You */}
+        {recommendations && recommendations.length > 0 && (
+          <section className="py-6 bg-gradient-to-b from-muted/30 to-transparent">
+            <div className="container">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                    Recommended For You
+                  </h2>
+                </div>
+                <Link href="/directory">
+                  <Button variant="ghost" size="sm" className="text-xs gap-1" style={{ textTransform: "none" }}>
+                    View All <ChevronRight className="w-3.5 h-3.5" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {recommendations.slice(0, 8).map((biz: any) => (
+                  <Link key={biz.id} href={`/business/${biz.slug}`}>
+                    <Card className="h-full hover:shadow-md transition-shadow cursor-pointer group overflow-hidden">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          {biz.logoUrl ? (
+                            <img src={biz.logoUrl} alt={biz.name} className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                              <Target className="w-5 h-5 text-primary" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <h3 className="font-semibold text-sm group-hover:text-primary transition-colors truncate" style={{ textTransform: "none" }}>
+                              {biz.name}
+                            </h3>
+                            <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                              {biz.businessTypeName}
+                            </p>
+                          </div>
+                        </div>
+                        {biz.city && (
+                          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                            <MapPin className="w-3 h-3" />
+                            <span style={{ textTransform: "none" }}>{biz.city}{biz.region ? `, ${biz.region}` : ''}</span>
+                          </div>
+                        )}
+                        {biz.googleRating > 0 && (
+                          <div className="flex items-center gap-1 mt-1 text-xs">
+                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                            <span className="text-muted-foreground">{Number(biz.googleRating).toFixed(1)}</span>
+                          </div>
+                        )}
+                        <div className="mt-2">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            {biz.matchReason === 'near_you' ? '📍 Near you' :
+                             biz.matchReason === 'your_sport' ? '🏅 Your sport' :
+                             biz.matchReason === 'your_interest' ? '🎯 Matches interests' :
+                             '🔥 Popular'}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Tab Content */}
         <section className="py-8">
@@ -370,6 +448,11 @@ export default function AthleteDashboard() {
               </div>
             )}
 
+            {/* ─── Notifications Tab ─── */}
+            {activeTab === "notifications" && (
+              <NotificationsTab />
+            )}
+
             {/* ─── My Profile Tab ─── */}
             {activeTab === "profile" && (
               <div>
@@ -489,4 +572,130 @@ export default function AthleteDashboard() {
       <Footer />
     </div>
   );
+}
+
+// ─── Notifications Tab Component ───
+function NotificationsTab() {
+  const { data: notifications, isLoading, refetch } = trpc.notification.list.useQuery({ limit: 50 });
+  const utils = trpc.useUtils();
+
+  const markRead = trpc.notification.markRead.useMutation({
+    onSuccess: () => { refetch(); utils.notification.unreadCount.invalidate(); },
+  });
+  const markAllRead = trpc.notification.markAllRead.useMutation({
+    onSuccess: () => { refetch(); utils.notification.unreadCount.invalidate(); },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!notifications || notifications.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="py-16 text-center">
+          <Bell className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
+          <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: "var(--font-heading)" }}>
+            No notifications yet
+          </h3>
+          <p className="text-muted-foreground text-sm max-w-md mx-auto" style={{ textTransform: "none", letterSpacing: "normal" }}>
+            Save some businesses you like and we'll ping you here when they post new offers. It's like a deal radar, but less annoying.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const hasUnread = notifications.some((n: any) => !n.notification.isRead);
+
+  return (
+    <div className="space-y-4">
+      {hasUnread && (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs gap-1.5"
+            onClick={() => markAllRead.mutate()}
+            disabled={markAllRead.isPending}
+            style={{ textTransform: "none" }}
+          >
+            <CheckCheck className="w-3.5 h-3.5" /> Mark all as read
+          </Button>
+        </div>
+      )}
+
+      {notifications.map((n: any) => (
+        <Card
+          key={n.notification.id}
+          className={`overflow-hidden transition-colors ${
+            !n.notification.isRead ? "border-primary/30 bg-primary/5" : ""
+          }`}
+        >
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              {n.business?.logoUrl ? (
+                <img src={n.business.logoUrl} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+              ) : (
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Bell className="w-5 h-5 text-primary" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm ${!n.notification.isRead ? "font-semibold text-foreground" : "text-muted-foreground"}`} style={{ textTransform: "none" }}>
+                  {n.notification.title}
+                </p>
+                {n.notification.message && (
+                  <p className="text-xs text-muted-foreground mt-0.5" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                    {n.notification.message}
+                  </p>
+                )}
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="text-[10px] text-muted-foreground">
+                    {formatNotificationTime(new Date(n.notification.createdAt))}
+                  </span>
+                  {n.business?.slug && (
+                    <Link href={`/business/${n.business.slug}`}>
+                      <span className="text-xs text-primary hover:underline cursor-pointer flex items-center gap-0.5" style={{ textTransform: "none" }}>
+                        View Business <ExternalLink className="w-3 h-3" />
+                      </span>
+                    </Link>
+                  )}
+                  {!n.notification.isRead && (
+                    <button
+                      onClick={() => markRead.mutate({ notificationId: n.notification.id })}
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5"
+                      style={{ textTransform: "none" }}
+                    >
+                      <Check className="w-3 h-3" /> Mark read
+                    </button>
+                  )}
+                </div>
+              </div>
+              {!n.notification.isRead && (
+                <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 mt-1.5" />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function formatNotificationTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return date.toLocaleDateString();
 }

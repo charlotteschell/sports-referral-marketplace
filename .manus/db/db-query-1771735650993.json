@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `user_notifications` (\n  `id` int AUTO_INCREMENT PRIMARY KEY,\n  `userId` int NOT NULL,\n  `type` varchar(50) NOT NULL,\n  `title` varchar(500) NOT NULL,\n  `message` text,\n  `businessId` int,\n  `offerId` int,\n  `isRead` boolean NOT NULL DEFAULT false,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  INDEX `idx_user_notifications_userId` (`userId`),\n  INDEX `idx_user_notifications_userId_isRead` (`userId`, `isRead`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute CREATE TABLE IF NOT EXISTS `user_notifications` (\n  `id` int AUTO_INCREMENT PRIMARY KEY,\n  `userId` int NOT NULL,\n  `type` varchar(50) NOT NULL,\n  `title` varchar(500) NOT NULL,\n  `message` text,\n  `businessId` int,\n  `offerId` int,\n  `isRead` boolean NOT NULL DEFAULT false,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  INDEX `idx_user_notifications_userId` (`userId`),\n  INDEX `idx_user_notifications_userId_isRead` (`userId`, `isRead`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 107
+}

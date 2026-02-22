@@ -123,6 +123,8 @@ export const appRouter = router({
         shortDescription: z.string().max(500).optional(),
         sportCategoryId: z.number(),
         businessTypeId: z.number(),
+        sportCategoryIds: z.array(z.number()).optional(),
+        businessTypeIds: z.array(z.number()).optional(),
         city: z.string().optional(),
         state: z.string().optional(),
         country: z.string().optional(),
@@ -134,18 +136,29 @@ export const appRouter = router({
         website: z.string().optional(),
         instagram: z.string().optional(),
         facebook: z.string().optional(),
+        brandsCarried: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const slug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         const uniqueSlug = `${slug}-${Date.now().toString(36)}`;
+        const { sportCategoryIds, businessTypeIds, ...createData } = input;
         const id = await db.createBusiness({
-          ...input,
+          ...createData,
           slug: uniqueSlug,
           isClaimed: true,
           claimedByUserId: ctx.user.id,
           claimedAt: new Date(),
-          approvalStatus: 'pending', // New businesses need admin approval
+          approvalStatus: 'pending',
         });
+        // Save junction table entries for multi-select
+        if (id) {
+          if (sportCategoryIds && sportCategoryIds.length > 0) {
+            await db.setBusinessSportCategories(id, sportCategoryIds);
+          }
+          if (businessTypeIds && businessTypeIds.length > 0) {
+            await db.setBusinessBusinessTypes(id, businessTypeIds);
+          }
+        }
         // Notify admin
         try {
           await notifyOwner({
@@ -332,6 +345,10 @@ export const appRouter = router({
           throw new TRPCError({ code: "FORBIDDEN" });
         }
         const id = await db.createReferralOffer(input);
+        // Notify athletes who saved this business (fire-and-forget)
+        db.notifyUsersOfNewOffer(input.businessId, biz.business.name, input.title, id)
+          .then(r => r?.notified && r.notified > 0 && console.log(`[Notification] Notified ${r.notified} users about new offer on ${biz.business.name}`))
+          .catch(e => console.warn('[Notification] Failed to send new-offer notifications:', e));
         return { id };
       }),
 
@@ -1015,6 +1032,40 @@ export const appRouter = router({
       }),
     savedIds: protectedProcedure.query(async ({ ctx }) => {
       return db.getSavedBusinessIds(ctx.user.id);
+    }),
+  }),
+
+  // ─── Recommendations ──────────────────────────────────────────
+  recommendation: router({
+    forYou: protectedProcedure
+      .input(z.object({ limit: z.number().min(1).max(30).optional() }).optional())
+      .query(async ({ input, ctx }) => {
+        return db.getRecommendedBusinesses(ctx.user.id, input?.limit ?? 12);
+      }),
+  }),
+
+  // ─── User Notifications ──────────────────────────────────────
+  notification: router({
+    list: protectedProcedure
+      .input(z.object({
+        limit: z.number().min(1).max(100).optional(),
+        offset: z.number().min(0).optional(),
+      }).optional())
+      .query(async ({ input, ctx }) => {
+        return db.getUserNotifications(ctx.user.id, input?.limit ?? 50, input?.offset ?? 0);
+      }),
+    unreadCount: protectedProcedure.query(async ({ ctx }) => {
+      return db.getUnreadNotificationCount(ctx.user.id);
+    }),
+    markRead: protectedProcedure
+      .input(z.object({ notificationId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.markNotificationRead(input.notificationId, ctx.user.id);
+        return { success: true };
+      }),
+    markAllRead: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.markAllNotificationsRead(ctx.user.id);
+      return { success: true };
     }),
   }),
 

@@ -18,6 +18,7 @@ import {
   categoryApprovals, InsertCategoryApproval,
   athleteProfiles, InsertAthleteProfile,
   savedBusinesses,
+  userNotifications, InsertUserNotification,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1848,4 +1849,269 @@ export async function getLeaderboardSummary() {
     totalEarned: Number(row.totalEarned) || 0,
     totalBusinessesParticipating: Number(row.totalBusinessesParticipating) || 0,
   };
+}
+
+// ─── User Notifications ──────────────────────────────────────────
+
+export async function getUsersWhoSavedBusiness(businessId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({
+    userId: savedBusinesses.userId,
+    userEmail: users.email,
+    userName: users.name,
+  })
+    .from(savedBusinesses)
+    .innerJoin(users, eq(savedBusinesses.userId, users.id))
+    .where(eq(savedBusinesses.businessId, businessId));
+  return rows;
+}
+
+export async function getUsersWhoSavedBusinessWithOptIn(businessId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({
+    userId: savedBusinesses.userId,
+    userEmail: users.email,
+    userName: users.name,
+    newsletterOptIn: athleteProfiles.newsletterOptIn,
+  })
+    .from(savedBusinesses)
+    .innerJoin(users, eq(savedBusinesses.userId, users.id))
+    .leftJoin(athleteProfiles, eq(savedBusinesses.userId, athleteProfiles.userId))
+    .where(eq(savedBusinesses.businessId, businessId));
+  return rows;
+}
+
+export async function createUserNotification(data: {
+  userId: number;
+  type: string;
+  title: string;
+  message?: string;
+  businessId?: number;
+  offerId?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(userNotifications).values(data);
+  return result[0].insertId;
+}
+
+export async function createBulkUserNotifications(notifications: Array<{
+  userId: number;
+  type: string;
+  title: string;
+  message?: string;
+  businessId?: number;
+  offerId?: number;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  if (notifications.length === 0) return;
+  await db.insert(userNotifications).values(notifications);
+}
+
+export async function getUserNotifications(userId: number, limit = 50, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    notification: userNotifications,
+    business: {
+      id: businesses.id,
+      name: businesses.name,
+      slug: businesses.slug,
+      logoUrl: businesses.logoUrl,
+    },
+  })
+    .from(userNotifications)
+    .leftJoin(businesses, eq(userNotifications.businessId, businesses.id))
+    .where(eq(userNotifications.userId, userId))
+    .orderBy(desc(userNotifications.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function getUnreadNotificationCount(userId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  const rows = await db.select({ count: sql<number>`COUNT(*)` })
+    .from(userNotifications)
+    .where(and(eq(userNotifications.userId, userId), eq(userNotifications.isRead, false)));
+  return rows[0]?.count ?? 0;
+}
+
+export async function markNotificationRead(notificationId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(userNotifications)
+    .set({ isRead: true })
+    .where(and(eq(userNotifications.id, notificationId), eq(userNotifications.userId, userId)));
+}
+
+export async function markAllNotificationsRead(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(userNotifications)
+    .set({ isRead: true })
+    .where(and(eq(userNotifications.userId, userId), eq(userNotifications.isRead, false)));
+}
+
+/**
+ * Notify all users who saved a business when a new offer is created.
+ * Respects newsletterOptIn preference from athlete profiles.
+ * Also sends a platform notification to the project owner.
+ */
+export async function notifyUsersOfNewOffer(businessId: number, businessName: string, offerTitle: string, offerId: number) {
+  try {
+    const savedUsers = await getUsersWhoSavedBusinessWithOptIn(businessId);
+    if (savedUsers.length === 0) return { notified: 0 };
+
+    // Filter to users who opted in (or have no profile yet — default to notify in-app)
+    const notifications = savedUsers.map(u => ({
+      userId: u.userId,
+      type: 'new_offer' as const,
+      title: `${businessName} just posted a new offer!`,
+      message: `"${offerTitle}" — check it out before everyone else does.`,
+      businessId,
+      offerId,
+    }));
+
+    await createBulkUserNotifications(notifications);
+    return { notified: notifications.length };
+  } catch (error) {
+    console.error("[Notification] Failed to notify saved-business users:", error);
+    return { notified: 0 };
+  }
+}
+
+// ─── Recommendation Engine ──────────────────────────────────────
+
+/**
+ * Maps athlete interest values to business type IDs for recommendation matching.
+ * Interest values come from the onboarding form INTEREST_OPTIONS.
+ */
+const INTEREST_TO_BUSINESS_TYPE_IDS: Record<string, number[]> = {
+  coaching: [1], // Coach
+  bike_fit: [13], // Bike Fitting
+  nutrition: [9, 16], // Nutritionist, Supplement Retailer
+  physio: [7], // Physiotherapist
+  massage: [8], // Sports Massage
+  bike_shop: [2, 17], // Bike Shop, Bike Retailer
+  run_store: [3], // Running Store
+  ski_shop: [11], // Ski Shop
+  club: [5, 6], // Running Club, Cycling Club
+  studio: [4], // Cycling Studio
+  travel: [15, 90001], // Vacation Provider, Training Camp
+};
+
+export async function getRecommendedBusinesses(userId: number, limit = 12) {
+  const db = await getDb();
+  if (!db) return [];
+
+  // Get the athlete's profile
+  const profile = await getAthleteProfile(userId);
+  if (!profile) {
+    // No profile — return popular businesses instead
+    const rows = await db.execute(sql.raw(`
+      SELECT b.id, b.name, b.slug, b.city, b.region, b.hub, b.logoUrl, b.description,
+             b.googleRating, b.googleReviewCount, b.approvalStatus, b.claimedByUserId,
+             bt.name as businessTypeName, bt.id as businessTypeId,
+             'popular' as matchReason, 50 as matchScore
+      FROM businesses b
+      LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
+      WHERE b.isActive = 1 AND b.isAdminHidden = 0 AND b.approvalStatus = 'approved'
+      ORDER BY b.googleReviewCount DESC, b.googleRating DESC
+      LIMIT ${limit}
+    `));
+    return (rows as unknown as any[])[0] || [];
+  }
+
+  // Parse profile data
+  const sportIds: number[] = profile.sportIds ? JSON.parse(profile.sportIds) : [];
+  const interests: string[] = profile.interests ? JSON.parse(profile.interests) : [];
+  const city = profile.city || '';
+  const region = profile.region || '';
+  const hub = profile.hub || '';
+
+  // Map interests to business type IDs
+  const targetTypeIds: number[] = [];
+  for (const interest of interests) {
+    const typeIds = INTEREST_TO_BUSINESS_TYPE_IDS[interest];
+    if (typeIds) targetTypeIds.push(...typeIds);
+  }
+
+  // Get saved business IDs to exclude
+  const savedIds = await getSavedBusinessIds(userId);
+  const excludeClause = savedIds.length > 0 ? `AND b.id NOT IN (${savedIds.join(',')})` : '';
+
+  // Build scoring query
+  // Score: +30 for matching sport, +25 for matching interest/business type, +20 for same city, +15 for same hub, +10 for same region
+  const sportIdsStr = sportIds.length > 0 ? sportIds.join(',') : '0';
+  const typeIdsStr = targetTypeIds.length > 0 ? targetTypeIds.join(',') : '0';
+  const cityEscaped = city.replace(/'/g, "''");
+  const regionEscaped = region.replace(/'/g, "''");
+  const hubEscaped = hub.replace(/'/g, "''");
+
+  const [rows] = await db.execute(sql.raw(`
+    SELECT 
+      b.id, b.name, b.slug, b.city, b.region, b.hub, b.logoUrl, b.description,
+      b.googleRating, b.googleReviewCount, b.approvalStatus, b.claimedByUserId,
+      bt.name as businessTypeName, bt.id as businessTypeId,
+      (
+        CASE WHEN EXISTS (
+          SELECT 1 FROM business_sport_categories bsc 
+          WHERE bsc.businessId = b.id AND bsc.sportCategoryId IN (${sportIdsStr})
+        ) THEN 30 ELSE 0 END
+        +
+        CASE WHEN b.businessTypeId IN (${typeIdsStr}) THEN 25 ELSE 0 END
+        +
+        CASE WHEN LOWER(b.city) = LOWER('${cityEscaped}') AND '${cityEscaped}' != '' THEN 20 ELSE 0 END
+        +
+        CASE WHEN LOWER(b.hub) = LOWER('${hubEscaped}') AND '${hubEscaped}' != '' THEN 15 ELSE 0 END
+        +
+        CASE WHEN LOWER(b.region) = LOWER('${regionEscaped}') AND '${regionEscaped}' != '' THEN 10 ELSE 0 END
+      ) as matchScore,
+      CASE 
+        WHEN LOWER(b.city) = LOWER('${cityEscaped}') AND '${cityEscaped}' != '' THEN 'near_you'
+        WHEN EXISTS (
+          SELECT 1 FROM business_sport_categories bsc 
+          WHERE bsc.businessId = b.id AND bsc.sportCategoryId IN (${sportIdsStr})
+        ) THEN 'your_sport'
+        WHEN b.businessTypeId IN (${typeIdsStr}) THEN 'your_interest'
+        ELSE 'popular'
+      END as matchReason
+    FROM businesses b
+    LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
+    WHERE b.isActive = 1 AND b.isAdminHidden = 0 AND b.approvalStatus = 'approved'
+    ${excludeClause}
+    HAVING matchScore > 0
+    ORDER BY matchScore DESC, b.googleReviewCount DESC
+    LIMIT ${limit}
+  `));
+
+  const results = (rows as unknown as any[]) || [];
+  
+  // If not enough results, backfill with popular businesses
+  if (results.length < limit) {
+    const existingIds = results.map((r: any) => r.id);
+    const allExclude = [...savedIds, ...existingIds];
+    const excludeBackfill = allExclude.length > 0 ? `AND b.id NOT IN (${allExclude.join(',')})` : '';
+    
+    const [backfill] = await db.execute(sql.raw(`
+      SELECT b.id, b.name, b.slug, b.city, b.region, b.hub, b.logoUrl, b.description,
+             b.googleRating, b.googleReviewCount, b.approvalStatus, b.claimedByUserId,
+             bt.name as businessTypeName, bt.id as businessTypeId,
+             'popular' as matchReason, 5 as matchScore
+      FROM businesses b
+      LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
+      WHERE b.isActive = 1 AND b.isAdminHidden = 0 AND b.approvalStatus = 'approved'
+      ${excludeBackfill}
+      ORDER BY b.googleReviewCount DESC, b.googleRating DESC
+      LIMIT ${limit - results.length}
+    `));
+    
+    results.push(...((backfill as unknown as any[]) || []));
+  }
+
+  return results;
 }

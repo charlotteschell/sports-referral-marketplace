@@ -9,9 +9,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-[oklch(0.55_0.15_45)] flex items-center justify-center">
-                <Mountain className="w-4 h-4 text-white" />
-              </div>
+              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663371988607/nSqkrjVTngkYHxee.png" alt="SportConnect" className="w-8 h-8 rounded-lg" />
               <div className="flex flex-col">
                 <span className="text-base font-bold text-white tracking-wide leading-tight" style={{ fontFamily: "var(--font-heading)" }}>
                   SPORTCONNECT

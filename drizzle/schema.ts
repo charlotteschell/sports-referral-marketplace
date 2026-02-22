@@ -390,3 +390,21 @@ export const savedBusinesses = mysqlTable("saved_businesses", {
 
 export type SavedBusiness = typeof savedBusinesses.$inferSelect;
 export type InsertSavedBusiness = typeof savedBusinesses.$inferInsert;
+
+/**
+ * In-app notifications for users (new offers on saved businesses, etc.)
+ */
+export const userNotifications = mysqlTable("user_notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // 'new_offer', 'offer_updated', etc.
+  title: varchar("title", { length: 500 }).notNull(),
+  message: text("message"),
+  businessId: int("businessId"),
+  offerId: int("offerId"),
+  isRead: boolean("isRead").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UserNotification = typeof userNotifications.$inferSelect;
+export type InsertUserNotification = typeof userNotifications.$inferInsert;

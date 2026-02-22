@@ -208,6 +208,12 @@ vi.mock("./db", () => ({
   setBusinessSportCategories: vi.fn().mockResolvedValue(undefined),
   getBusinessBusinessTypes: vi.fn().mockResolvedValue([]),
   setBusinessBusinessTypes: vi.fn().mockResolvedValue(undefined),
+  notifyUsersOfNewOffer: vi.fn().mockResolvedValue(undefined),
+  getUserNotifications: vi.fn().mockResolvedValue([]),
+  markNotificationRead: vi.fn().mockResolvedValue(undefined),
+  markAllNotificationsRead: vi.fn().mockResolvedValue(undefined),
+  getUnreadNotificationCount: vi.fn().mockResolvedValue(0),
+  getRecommendedBusinesses: vi.fn().mockResolvedValue([]),
   getBusinessSubmissionById: vi.fn().mockImplementation(async (id: number) => {
     if (id === 1) return {
       submission: { id: 1, businessName: "Test Submission", businessDescription: "A test business", sportCategoryId: 1, businessTypeId: 1, contactName: "Jane", contactEmail: "jane@test.com", contactPhone: "555-1234", website: "https://test.com", instagram: null, facebook: null, city: "Chamonix", state: null, country: "France", region: "Alps", hub: "Chamonix", status: "pending" },

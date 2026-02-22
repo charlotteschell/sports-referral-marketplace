@@ -4,6 +4,7 @@ import { getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
 import { Menu, X, Mountain } from "lucide-react";
 import { useState } from "react";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -30,7 +31,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/">
             <div className="flex items-center gap-2 cursor-pointer">
-              <img src="/favicon-64.png" alt="SportConnect" className="w-9 h-9 rounded-lg" />
+              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663371988607/nSqkrjVTngkYHxee.png" alt="SportConnect" className="w-9 h-9 rounded-lg" />
               <div className="flex flex-col">
                 <span className="text-lg font-bold text-white tracking-wide leading-tight" style={{ fontFamily: "var(--font-heading)" }}>
                   SPORTCONNECT
@@ -62,6 +63,7 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
+                <NotificationBell />
                 {user?.accountType === 'consumer' ? (
                   <Link href="/athlete-dashboard">
                     <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
@@ -143,6 +145,11 @@ export default function Header() {
               <div className="border-t border-white/10 mt-2 pt-2">
                 {isAuthenticated ? (
                   <>
+                    <Link href="/athlete-dashboard">
+                      <span className="block px-3 py-2 rounded-md text-sm font-medium text-amber-400/70 hover:text-amber-300 cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                        Notifications
+                      </span>
+                    </Link>
                     {user?.accountType === 'consumer' ? (
                       <Link href="/athlete-dashboard">
                         <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
