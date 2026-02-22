@@ -216,6 +216,9 @@ export default function BusinessProfile() {
   const isOwner = isAuthenticated && user?.id === business.claimedByUserId;
   const isAdmin = user?.role === 'admin';
   const isClaimed = business.isClaimed;
+  const isApproved = business.approvalStatus === 'approved';
+  const canEdit = (isOwner && isApproved) || isAdmin;
+  const isPendingApproval = isOwner && business.approvalStatus === 'pending';
   const isReallyVerified = isClaimed && !!business.claimedByUserId;
   const canSeePrivateInfo = isOwner || isAdmin;
 
@@ -399,7 +402,13 @@ export default function BusinessProfile() {
                   </Button>
                 </a>
               )}
-              {isOwner && (
+              {isPendingApproval && (
+                <div className="flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 rounded-lg px-4 py-2 text-amber-200">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm" style={{ textTransform: 'none', letterSpacing: 'normal' }}>Your claim is pending admin approval. You'll be able to edit this listing once approved.</span>
+                </div>
+              )}
+              {canEdit && (
                 <>
                   <Link href={`/dashboard/edit/${business.id}`}>
                     <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 bg-transparent" style={{ textTransform: "none" }}>

@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Gift, Plus, Trash2, Loader2, Handshake, Users, Pencil, Check, X, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Gift, Plus, Trash2, Loader2, Handshake, Users, Pencil, Check, X, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 type OfferForm = {
@@ -207,6 +207,23 @@ export default function ManageOffers() {
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <div className="flex-1 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+      </div>
+    );
+  }
+
+  if (bizData && bizData.business.approvalStatus !== 'approved' && user?.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="container py-20 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/20 mb-6">
+            <AlertCircle className="w-8 h-8 text-amber-500" />
+          </div>
+          <h2 className="text-2xl font-bold mb-4">Claim Pending Approval</h2>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto" style={{ textTransform: "none", letterSpacing: "normal" }}>Your claim on <strong>{bizData.business.name}</strong> is currently being reviewed by our admin team. You'll be able to manage offers once your claim is approved.</p>
+          <Link href="/dashboard"><Button className="bg-primary text-primary-foreground" style={{ textTransform: "none" }}>Back to Dashboard</Button></Link>
+        </div>
+        <Footer />
       </div>
     );
   }

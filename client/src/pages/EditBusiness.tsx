@@ -257,6 +257,23 @@ export default function EditBusiness() {
     );
   }
 
+  if (bizData && bizData.business.approvalStatus !== 'approved' && user?.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="container py-20 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/20 mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h2 className="text-2xl font-bold mb-4">Claim Pending Approval</h2>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto" style={{ textTransform: "none", letterSpacing: "normal" }}>Your claim on <strong>{bizData.business.name}</strong> is currently being reviewed by our admin team. You'll be able to edit this listing once your claim is approved.</p>
+          <Link href="/dashboard"><Button className="bg-primary text-primary-foreground" style={{ textTransform: "none" }}>Back to Dashboard</Button></Link>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />

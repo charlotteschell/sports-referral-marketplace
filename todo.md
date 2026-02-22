@@ -731,3 +731,8 @@
 - [x] Simplified claim flow: removed email verification step entirely (users already authenticated via OAuth)
   - Claim now goes directly to admin approval with a confirmation dialog
 - [x] Manually completed Carrie's claim on Score Nutrition (user 180773, business 56, approvalStatus=pending)
+## Multi-Business Claim & Edit Restrictions
+- [x] Test that a business owner can claim a second business (simplified flow, no email verification)
+- [x] Restrict business editing to only approved claims (backend: assertApprovedOwner on all mutation procedures)
+- [x] Update backend: all business mutation procedures check approvalStatus === 'approved'
+- [x] Update frontend: hide Edit/Offers/Logo buttons when claim is pending; show pending approval banner on Dashboard, EditBusiness, ManageOffers, BusinessProfile

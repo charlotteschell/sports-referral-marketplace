@@ -14,6 +14,18 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+// Helper: verify user owns the business AND claim is approved (admins bypass)
+function assertApprovedOwner(biz: { business: { claimedByUserId: number | null; approvalStatus: string | null } } | null, userId: number, userRole: string) {
+  if (!biz) throw new TRPCError({ code: 'NOT_FOUND', message: 'Business not found' });
+  if (userRole === 'admin') return; // admins can always edit
+  if (biz.business.claimedByUserId !== userId) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized to edit this business' });
+  }
+  if (biz.business.approvalStatus !== 'approved') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Your claim is still pending admin approval. You can edit this business once your claim is approved.' });
+  }
+}
+
 export const appRouter = router({
   system: systemRouter,
 
@@ -226,10 +238,7 @@ export const appRouter = router({
         // Normalize website URL
         if (input.website) input.website = normalizeWebsiteUrl(input.website);
         const biz = await db.getBusinessById(input.id);
-        if (!biz) throw new TRPCError({ code: "NOT_FOUND" });
-        if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized to edit this business" });
-        }
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
         const { id, sportCategoryIds, businessTypeIds, ...updateData } = input;
         // Update primary fields from first selected
         if (sportCategoryIds && sportCategoryIds.length > 0) {
@@ -254,10 +263,7 @@ export const appRouter = router({
       .input(z.object({ businessId: z.number(), isHidden: z.boolean() }))
       .mutation(async ({ input, ctx }) => {
         const biz = await db.getBusinessById(input.businessId);
-        if (!biz) throw new TRPCError({ code: "NOT_FOUND" });
-        if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
         await db.ownerToggleBusinessVisibility(input.businessId, input.isHidden);
         return { success: true };
       }),
@@ -265,6 +271,7 @@ export const appRouter = router({
 
   // ─── Unclaim & Delete Business ──────────────────────────────
   businessActions: router({
+    // Unclaim does NOT require approval — users can unclaim pending claims
     unclaim: protectedProcedure
       .input(z.object({ businessId: z.number() }))
       .mutation(async ({ input, ctx }) => {
@@ -281,10 +288,7 @@ export const appRouter = router({
       .input(z.object({ businessId: z.number() }))
       .mutation(async ({ input, ctx }) => {
         const biz = await db.getBusinessById(input.businessId);
-        if (!biz) throw new TRPCError({ code: 'NOT_FOUND', message: 'Business not found' });
-        if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized' });
-        }
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
         await db.deleteBusiness(input.businessId);
         return { success: true };
       }),
@@ -343,14 +347,11 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const biz = await db.getBusinessById(input.businessId);
-        if (!biz) throw new TRPCError({ code: "NOT_FOUND" });
-        if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
         const id = await db.createReferralOffer(input);
         // Notify athletes who saved this business (fire-and-forget)
-        db.notifyUsersOfNewOffer(input.businessId, biz.business.name, input.title, id)
-          .then(r => r?.notified && r.notified > 0 && console.log(`[Notification] Notified ${r.notified} users about new offer on ${biz.business.name}`))
+        db.notifyUsersOfNewOffer(input.businessId, biz!.business.name, input.title, id)
+          .then(r => r?.notified && r.notified > 0 && console.log(`[Notification] Notified ${r.notified} users about new offer on ${biz!.business.name}`))
           .catch(e => console.warn('[Notification] Failed to send new-offer notifications:', e));
         return { id };
       }),
@@ -370,9 +371,7 @@ export const appRouter = router({
         const offer = await db.getReferralOfferById(input.id);
         if (!offer) throw new TRPCError({ code: "NOT_FOUND" });
         const biz = await db.getBusinessById(offer.businessId);
-        if (!biz || (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin')) {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
         const { id, ...updateData } = input;
         await db.updateReferralOffer(id, updateData);
         return { success: true };
@@ -384,9 +383,7 @@ export const appRouter = router({
         const offer = await db.getReferralOfferById(input.id);
         if (!offer) throw new TRPCError({ code: "NOT_FOUND" });
         const biz = await db.getBusinessById(offer.businessId);
-        if (!biz || (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin')) {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
         await db.deleteReferralOffer(input.id);
         return { success: true };
       }),
@@ -398,9 +395,7 @@ export const appRouter = router({
         const offer = await db.getReferralOfferById(input.offerId);
         if (!offer) throw new TRPCError({ code: "NOT_FOUND" });
         const biz = await db.getBusinessById(offer.businessId);
-        if (!biz || (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin')) {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
         await db.ownerToggleOfferVisibility(input.offerId, input.isHidden);
         return { success: true };
       }),
@@ -613,9 +608,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const biz = await db.getBusinessById(input.referringBusinessId);
-        if (!biz || (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin')) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "You can only send referrals from your own business" });
-        }
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
         const id = await db.createReferral({
           ...input,
           referringUserId: ctx.user.id,
@@ -659,9 +652,7 @@ export const appRouter = router({
         if (!ref) throw new TRPCError({ code: 'NOT_FOUND' });
         // Check user owns the receiving business
         const biz = await db.getBusinessById(ref.receivingBusinessId);
-        if (!biz || biz.business.claimedByUserId !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the receiving business can honor referrals' });
-        }
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
         await db.markReferralHonored(input.referralId, ctx.user.id, input.notes);
         // Increment platform stats
         await db.incrementPlatformStat('total_referrals_honored');
@@ -680,9 +671,7 @@ export const appRouter = router({
         if (!ref) throw new TRPCError({ code: 'NOT_FOUND' });
         // Check user owns the referring business
         const biz = await db.getBusinessById(ref.referringBusinessId);
-        if (!biz || biz.business.claimedByUserId !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the referring business can mark cashout' });
-        }
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
         await db.markReferralCashedOut(input.referralId, ctx.user.id, input.amount, input.notes);
         // Increment platform stats
         if (input.amount) {
@@ -1121,10 +1110,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const biz = await db.getBusinessById(input.businessId);
-        if (!biz) throw new TRPCError({ code: 'NOT_FOUND' });
-        if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the business owner can upload a logo' });
-        }
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
         const { storagePut } = await import('./storage');
         const buffer = Buffer.from(input.logoData, 'base64');
         const ext = input.contentType.includes('png') ? 'png' : input.contentType.includes('svg') ? 'svg' : 'jpg';
@@ -1144,10 +1130,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const biz = await db.getBusinessById(input.businessId);
-        if (!biz) throw new TRPCError({ code: 'NOT_FOUND' });
-        if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: 'FORBIDDEN' });
-        }
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
         await db.updateBusinessBrands(input.businessId, input.brandsCarried);
         return { success: true };
       }),

@@ -850,40 +850,49 @@ export default function Dashboard() {
                       )}
 
                       {/* Action Buttons */}
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        <Link href={`/dashboard/edit/${item.business.id}`}>
-                          <Button size="sm" variant="outline" className="bg-transparent" style={{ textTransform: "none" }}>
-                            <Pencil className="w-3 h-3 mr-1" /> Edit Info
-                          </Button>
-                        </Link>
-                        <Link href={`/dashboard/offers/${item.business.id}`}>
-                          <Button size="sm" variant="outline" className="bg-transparent" style={{ textTransform: "none" }}>
-                            <Gift className="w-3 h-3 mr-1" /> Manage Offers
-                          </Button>
-                        </Link>
-                        <Link href={`/business/${item.business.slug}`}>
-                          <Button size="sm" variant="ghost" style={{ textTransform: "none" }}>
-                            <ExternalLink className="w-3 h-3 mr-1" /> View Profile
-                          </Button>
-                        </Link>
-                      </div>
+                      {item.business.approvalStatus === 'pending' ? (
+                        <div className="flex items-center gap-2 mb-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                          <Clock className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                          <p className="text-sm text-amber-700 dark:text-amber-300" style={{ textTransform: 'none', letterSpacing: 'normal' }}>Awaiting admin approval. You'll be able to edit and manage offers once approved.</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          <Link href={`/dashboard/edit/${item.business.id}`}>
+                            <Button size="sm" variant="outline" className="bg-transparent" style={{ textTransform: "none" }}>
+                              <Pencil className="w-3 h-3 mr-1" /> Edit Info
+                            </Button>
+                          </Link>
+                          <Link href={`/dashboard/offers/${item.business.id}`}>
+                            <Button size="sm" variant="outline" className="bg-transparent" style={{ textTransform: "none" }}>
+                              <Gift className="w-3 h-3 mr-1" /> Manage Offers
+                            </Button>
+                          </Link>
+                          <Link href={`/business/${item.business.slug}`}>
+                            <Button size="sm" variant="ghost" style={{ textTransform: "none" }}>
+                              <ExternalLink className="w-3 h-3 mr-1" /> View Profile
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
 
                       {/* Visibility, Unclaim & Delete Actions */}
                       <div className="flex flex-wrap gap-2 pt-3 border-t border-border/50">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className={`text-xs ${item.business.isHidden ? 'text-emerald-600 hover:text-emerald-700' : 'text-muted-foreground hover:text-gray-600'}`}
-                          style={{ textTransform: "none" }}
-                          onClick={() => toggleVisibilityMutation.mutate({ businessId: item.business.id, isHidden: !item.business.isHidden })}
-                          disabled={toggleVisibilityMutation.isPending}
-                        >
-                          {item.business.isHidden ? (
-                            <><Eye className="w-3 h-3 mr-1" /> Show</>  
-                          ) : (
-                            <><EyeOff className="w-3 h-3 mr-1" /> Hide</>  
-                          )}
-                        </Button>
+                        {item.business.approvalStatus !== 'pending' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={`text-xs ${item.business.isHidden ? 'text-emerald-600 hover:text-emerald-700' : 'text-muted-foreground hover:text-gray-600'}`}
+                            style={{ textTransform: "none" }}
+                            onClick={() => toggleVisibilityMutation.mutate({ businessId: item.business.id, isHidden: !item.business.isHidden })}
+                            disabled={toggleVisibilityMutation.isPending}
+                          >
+                            {item.business.isHidden ? (
+                              <><Eye className="w-3 h-3 mr-1" /> Show</>  
+                            ) : (
+                              <><EyeOff className="w-3 h-3 mr-1" /> Hide</>  
+                            )}
+                          </Button>
+                        )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-amber-600 text-xs" style={{ textTransform: "none" }}>

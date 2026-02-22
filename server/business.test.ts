@@ -39,7 +39,7 @@ vi.mock("./db", () => ({
   getBusinessBySlug: vi.fn().mockImplementation(async (slug: string) => {
     if (slug === "test-cycling") {
       return {
-        business: { id: 1, name: "Test Cycling", slug: "test-cycling", isClaimed: true, claimedByUserId: 1, isActive: true, sportCategoryId: 1, businessTypeId: 1, region: "Western US", hub: "Boulder" },
+        business: { id: 1, name: "Test Cycling", slug: "test-cycling", isClaimed: true, claimedByUserId: 1, isActive: true, sportCategoryId: 1, businessTypeId: 1, region: "Western US", hub: "Boulder", approvalStatus: "approved" },
         sportCategory: { id: 1, name: "Cycling", slug: "cycling" },
         businessType: { id: 1, name: "Coach", slug: "coach" },
       };
@@ -49,7 +49,7 @@ vi.mock("./db", () => ({
   getBusinessById: vi.fn().mockImplementation(async (id: number) => {
     if (id === 1) {
       return {
-        business: { id: 1, name: "Test Cycling", slug: "test-cycling", isClaimed: true, claimedByUserId: 1, isActive: true, sportCategoryId: 1, businessTypeId: 1, region: "Western US", hub: "Boulder" },
+        business: { id: 1, name: "Test Cycling", slug: "test-cycling", isClaimed: true, claimedByUserId: 1, isActive: true, sportCategoryId: 1, businessTypeId: 1, region: "Western US", hub: "Boulder", approvalStatus: "approved" },
         sportCategory: { id: 1, name: "Cycling", slug: "cycling" },
         businessType: { id: 1, name: "Coach", slug: "coach" },
       };
