@@ -802,3 +802,27 @@
 - [x] Database: soft-delete user (mark as deleted, anonymize PII)
 - [x] Database: cascade hide/delete businesses owned by deleted user
 - [x] Write tests for account deletion (18 new tests, 180 total pass)
+
+## E2E Claim Flow Notification Test
+- [x] Test claim flow end-to-end in browser (APEX Coaching)
+- [x] Verify in-app notification appears on bell icon after claiming a business ("Claim submitted for APEX Coaching")
+- [x] Verify admin approval triggers notification back to the claiming user ("Your claim for APEX Coaching has been approved!")
+- [x] Fix any issues found during E2E testing (none — working correctly)
+
+## Email Delivery Integration
+- [x] Integrate email sending using Resend API (server/email.ts)
+- [x] Wire email delivery into the notifyUser helper for email_only and both preferences
+- [x] Send email notifications for key events (all notifyUser calls now attempt email)
+- [x] Graceful fallback to in-app only when no API key configured
+- [ ] REMINDER: User needs to set up Resend API key (RESEND_API_KEY) to activate email delivery
+- [ ] Write tests for email delivery
+
+## Dual-Verification Referral Amount System
+- [x] Add senderConfirmedAmount and receiverConfirmedAmount fields to referrals schema (already existed)
+- [x] Add verification status tracking (isIncentiveVerified, isRevenueVerified fields already in schema)
+- [x] Build backend procedures for sender/receiver to confirm referral amounts (honor, cashout, athleteConfirmPayment, businessConfirmClaimSavings)
+- [x] Build frontend UI for sender to confirm amount they paid (cashout dialog with amount field)
+- [x] Build frontend UI for receiver to confirm amount they received (honor dialog with incentive/revenue fields)
+- [x] Show verification status on referral cards (dual-verification badges: Verified, Sender Confirmed, Receiver Confirmed, Pending)
+- [x] Build verified scorecards showing confirmed/verified referral stats (Verified Scorecard card with progress bars)
+- [x] Write tests for dual-verification system (8 new tests, 188 total pass)

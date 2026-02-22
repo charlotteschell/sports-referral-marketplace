@@ -1,0 +1,16 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'businesses' AND COLUMN_NAME LIKE '%claim%' OR TABLE_NAME = 'businesses' AND COLUMN_NAME LIKE '%owner%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'businesses' AND COLUMN_NAME LIKE '%claim%' OR TABLE_NAME = 'businesses' AND COLUMN_NAME LIKE '%owner%';",
+  "rows": [
+    {
+      "COLUMN_NAME": "claimedByUserId"
+    },
+    {
+      "COLUMN_NAME": "claimedAt"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nclaimedByUserId\nclaimedAt\n",
+  "stderr": "",
+  "execution_time_ms": 95
+}

@@ -831,21 +831,35 @@ export async function deleteBusiness(businessId: number) {
 
 export async function getDashboardAnalytics(userId: number) {
   const db = await getDb();
-  if (!db) return { totalReferralsSent: 0, totalReferralsReceived: 0, conversionRate: 0, activeOffers: 0, statusBreakdown: { pending: 0, contacted: 0, converted: 0, declined: 0, expired: 0 }, topPartners: [], recentActivity: [] };
+  if (!db) return { totalReferralsSent: 0, totalReferralsReceived: 0, conversionRate: 0, activeOffers: 0, statusBreakdown: { pending: 0, contacted: 0, converted: 0, declined: 0, expired: 0 }, topPartners: [], recentActivity: [], verifiedScorecard: { sent: { incentiveVerified: 0, totalVerifiedEarned: '0', honored: 0 }, received: { incentiveVerified: 0, revenueVerified: 0, totalVerifiedIncentivePaid: '0', totalVerifiedRevenue: '0', honored: 0 } } };
 
   const userBizIds = await db.select({ id: businesses.id, name: businesses.name })
     .from(businesses)
     .where(eq(businesses.claimedByUserId, userId));
 
-  if (userBizIds.length === 0) return { totalReferralsSent: 0, totalReferralsReceived: 0, conversionRate: 0, activeOffers: 0, statusBreakdown: { pending: 0, contacted: 0, converted: 0, declined: 0, expired: 0 }, topPartners: [], recentActivity: [] };
+  if (userBizIds.length === 0) return { totalReferralsSent: 0, totalReferralsReceived: 0, conversionRate: 0, activeOffers: 0, statusBreakdown: { pending: 0, contacted: 0, converted: 0, declined: 0, expired: 0 }, topPartners: [], recentActivity: [], verifiedScorecard: { sent: { incentiveVerified: 0, totalVerifiedEarned: '0', honored: 0 }, received: { incentiveVerified: 0, revenueVerified: 0, totalVerifiedIncentivePaid: '0', totalVerifiedRevenue: '0', honored: 0 } } };
 
   const bizIds = userBizIds.map(b => b.id);
 
-  const [sentResult, receivedResult, convertedResult, activeOffersResult] = await Promise.all([
+  const [sentResult, receivedResult, convertedResult, activeOffersResult, verifiedSentResult, verifiedReceivedResult] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(referrals).where(inArray(referrals.referringBusinessId, bizIds)),
     db.select({ count: sql<number>`count(*)` }).from(referrals).where(inArray(referrals.receivingBusinessId, bizIds)),
     db.select({ count: sql<number>`count(*)` }).from(referrals).where(and(inArray(referrals.receivingBusinessId, bizIds), eq(referrals.status, 'converted'))),
     db.select({ count: sql<number>`count(*)` }).from(referralOffers).where(and(inArray(referralOffers.businessId, bizIds), eq(referralOffers.isActive, true))),
+    // Verified scorecard stats for sent referrals
+    db.select({
+      incentiveVerified: sql<number>`SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN 1 ELSE 0 END)`,
+      totalVerifiedEarned: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN CAST(${referrals.senderConfirmedIncentiveAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
+      honored: sql<number>`SUM(CASE WHEN ${referrals.receiverHonored} = true THEN 1 ELSE 0 END)`,
+    }).from(referrals).where(inArray(referrals.referringBusinessId, bizIds)),
+    // Verified scorecard stats for received referrals
+    db.select({
+      incentiveVerified: sql<number>`SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN 1 ELSE 0 END)`,
+      revenueVerified: sql<number>`SUM(CASE WHEN ${referrals.isRevenueVerified} = true THEN 1 ELSE 0 END)`,
+      totalVerifiedIncentivePaid: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN CAST(${referrals.receiverConfirmedIncentiveAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
+      totalVerifiedRevenue: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.isRevenueVerified} = true THEN CAST(${referrals.receiverConfirmedRevenueAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
+      honored: sql<number>`SUM(CASE WHEN ${referrals.receiverHonored} = true THEN 1 ELSE 0 END)`,
+    }).from(referrals).where(inArray(referrals.receivingBusinessId, bizIds)),
   ]);
 
   const totalSent = Number(sentResult[0]?.count || 0);
@@ -929,6 +943,21 @@ export async function getDashboardAnalytics(userId: number) {
     statusBreakdown,
     topPartners,
     recentActivity,
+    // Verified scorecard
+    verifiedScorecard: {
+      sent: {
+        incentiveVerified: Number(verifiedSentResult[0]?.incentiveVerified || 0),
+        totalVerifiedEarned: verifiedSentResult[0]?.totalVerifiedEarned || '0',
+        honored: Number(verifiedSentResult[0]?.honored || 0),
+      },
+      received: {
+        incentiveVerified: Number(verifiedReceivedResult[0]?.incentiveVerified || 0),
+        revenueVerified: Number(verifiedReceivedResult[0]?.revenueVerified || 0),
+        totalVerifiedIncentivePaid: verifiedReceivedResult[0]?.totalVerifiedIncentivePaid || '0',
+        totalVerifiedRevenue: verifiedReceivedResult[0]?.totalVerifiedRevenue || '0',
+        honored: Number(verifiedReceivedResult[0]?.honored || 0),
+      },
+    },
   };
 }
 
@@ -1335,6 +1364,10 @@ export async function getBusinessAnalytics(businessId: number) {
     honored: sql<number>`SUM(CASE WHEN ${referrals.receiverHonored} = true THEN 1 ELSE 0 END)`,
     disputed: sql<number>`SUM(CASE WHEN ${referrals.isDisputed} = true THEN 1 ELSE 0 END)`,
     pending: sql<number>`SUM(CASE WHEN ${referrals.receiverHonored} = false AND ${referrals.isDisputed} = false THEN 1 ELSE 0 END)`,
+    incentiveVerified: sql<number>`SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN 1 ELSE 0 END)`,
+    revenueVerified: sql<number>`SUM(CASE WHEN ${referrals.isRevenueVerified} = true THEN 1 ELSE 0 END)`,
+    totalIncentivePaid: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN CAST(${referrals.receiverConfirmedIncentiveAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
+    totalRevenueVerified: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.isRevenueVerified} = true THEN CAST(${referrals.receiverConfirmedRevenueAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
   }).from(referrals).where(eq(referrals.receivingBusinessId, businessId));
   
   // Referrals sent
@@ -1344,6 +1377,8 @@ export async function getBusinessAnalytics(businessId: number) {
     totalEarned: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.senderCashedOut} = true THEN CAST(${referrals.incentiveAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
     disputed: sql<number>`SUM(CASE WHEN ${referrals.isDisputed} = true THEN 1 ELSE 0 END)`,
     pending: sql<number>`SUM(CASE WHEN ${referrals.senderCashedOut} = false AND ${referrals.isDisputed} = false THEN 1 ELSE 0 END)`,
+    incentiveVerified: sql<number>`SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN 1 ELSE 0 END)`,
+    totalIncentiveVerified: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN CAST(${referrals.senderConfirmedIncentiveAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
   }).from(referrals).where(eq(referrals.referringBusinessId, businessId));
   
   // Consumer claims received
@@ -1352,6 +1387,8 @@ export async function getBusinessAnalytics(businessId: number) {
     redeemed: sql<number>`SUM(CASE WHEN ${consumerClaims.isHonored} = true THEN 1 ELSE 0 END)`,
     disputed: sql<number>`SUM(CASE WHEN ${consumerClaims.isDisputed} = true THEN 1 ELSE 0 END)`,
     pending: sql<number>`SUM(CASE WHEN ${consumerClaims.isHonored} = false AND ${consumerClaims.isDisputed} = false THEN 1 ELSE 0 END)`,
+    amountVerified: sql<number>`SUM(CASE WHEN ${consumerClaims.isAmountVerified} = true THEN 1 ELSE 0 END)`,
+    totalSavingsVerified: sql<string>`COALESCE(SUM(CASE WHEN ${consumerClaims.isAmountVerified} = true THEN CAST(${consumerClaims.amountSaved} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
   }).from(consumerClaims).where(eq(consumerClaims.businessId, businessId));
   
   return {
@@ -1360,6 +1397,10 @@ export async function getBusinessAnalytics(businessId: number) {
       honored: Number(receivedRows[0]?.honored || 0),
       disputed: Number(receivedRows[0]?.disputed || 0),
       pending: Number(receivedRows[0]?.pending || 0),
+      incentiveVerified: Number(receivedRows[0]?.incentiveVerified || 0),
+      revenueVerified: Number(receivedRows[0]?.revenueVerified || 0),
+      totalIncentivePaid: receivedRows[0]?.totalIncentivePaid || '0',
+      totalRevenueVerified: receivedRows[0]?.totalRevenueVerified || '0',
     },
     referralsSent: {
       total: Number(sentRows[0]?.total || 0),
@@ -1367,12 +1408,16 @@ export async function getBusinessAnalytics(businessId: number) {
       totalEarned: sentRows[0]?.totalEarned || '0',
       disputed: Number(sentRows[0]?.disputed || 0),
       pending: Number(sentRows[0]?.pending || 0),
+      incentiveVerified: Number(sentRows[0]?.incentiveVerified || 0),
+      totalIncentiveVerified: sentRows[0]?.totalIncentiveVerified || '0',
     },
     consumerClaims: {
       total: Number(claimRows[0]?.total || 0),
       redeemed: Number(claimRows[0]?.redeemed || 0),
       disputed: Number(claimRows[0]?.disputed || 0),
       pending: Number(claimRows[0]?.pending || 0),
+      amountVerified: Number(claimRows[0]?.amountVerified || 0),
+      totalSavingsVerified: claimRows[0]?.totalSavingsVerified || '0',
     },
   };
 }
@@ -2078,18 +2123,24 @@ export async function notifyUser(data: {
     let inAppSent = false;
     let emailSent = false;
 
-    // Always create in-app notification unless user explicitly chose email_only
-    // (even for email_only, we create in-app as fallback since email isn't implemented yet)
+    // Create in-app notification for in_app_only and both preferences
+    // For email_only, also create in-app as a safety net in case email fails
     if (shouldSendInApp || shouldSendEmail) {
       await createUserNotification(data);
       inAppSent = true;
     }
 
-    if (shouldSendEmail) {
-      // TODO: Implement email sending when email service is available
-      // For now, log that email would be sent
-      console.log(`[Notification] Email would be sent to user ${data.userId} (${user.email}): ${data.title}`);
-      // emailSent = await sendEmail(user.email, data.title, data.message);
+    if (shouldSendEmail && user.email) {
+      try {
+        const { sendEmail } = await import('./email');
+        emailSent = await sendEmail({
+          to: user.email,
+          subject: data.title,
+          body: data.message || data.title,
+        });
+      } catch (err) {
+        console.warn(`[Notification] Email delivery failed for user ${data.userId}:`, err);
+      }
     }
 
     const method = [inAppSent && 'in_app', emailSent && 'email'].filter(Boolean).join('+') || 'in_app_fallback';
@@ -2192,6 +2243,26 @@ export async function notifyUsersOfNewOffer(businessId: number, businessName: st
     }));
 
     await createBulkUserNotifications(notifications);
+
+    // Also send email notifications for users who want email
+    try {
+      const { sendEmail } = await import('./email');
+      for (const u of usersToNotify) {
+        const user = await getUserById(u.userId);
+        if (!user || !user.email) continue;
+        const pref = user.notificationPreference || 'both';
+        if (pref === 'email_only' || pref === 'both') {
+          await sendEmail({
+            to: user.email,
+            subject: `${businessName} just posted a new offer!`,
+            body: `"${offerTitle}" — check it out before everyone else does.`,
+          }).catch(() => {}); // best-effort
+        }
+      }
+    } catch (err) {
+      console.warn('[Notification] Bulk email delivery error:', err);
+    }
+
     return { notified: notifications.length };
   } catch (error) {
     console.error("[Notification] Failed to notify saved-business users:", error);

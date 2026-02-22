@@ -326,6 +326,88 @@ export default function Dashboard() {
             ))}
           </div>
 
+          {/* Verified Scorecard */}
+          {analytics?.verifiedScorecard && (analytics.verifiedScorecard.sent.honored > 0 || analytics.verifiedScorecard.received.honored > 0) && (
+            <Card className="mb-8 border-blue-200/30 bg-gradient-to-r from-blue-950/20 to-purple-950/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Shield className="w-5 h-5 text-blue-400" />
+                  Verified Scorecard
+                </CardTitle>
+                <CardDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
+                  Dual-verified referral stats — amounts confirmed by both sender and receiver
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Sent Referrals Scorecard */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+                      <ArrowUpRight className="w-4 h-4" /> As Referrer (Sent)
+                    </h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="p-3 rounded-lg bg-green-500/10 text-center">
+                        <p className="text-xl font-bold text-green-400">{analytics.verifiedScorecard.sent.honored}</p>
+                        <p className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>Honored</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-blue-500/10 text-center">
+                        <p className="text-xl font-bold text-blue-400">{analytics.verifiedScorecard.sent.incentiveVerified}</p>
+                        <p className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>Verified</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-emerald-500/10 text-center">
+                        <p className="text-xl font-bold text-emerald-400">${parseFloat(analytics.verifiedScorecard.sent.totalVerifiedEarned).toFixed(0)}</p>
+                        <p className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>Verified Earned</p>
+                      </div>
+                    </div>
+                    {analytics.verifiedScorecard.sent.honored > 0 && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 rounded-full transition-all"
+                            style={{ width: `${Math.round((analytics.verifiedScorecard.sent.incentiveVerified / analytics.verifiedScorecard.sent.honored) * 100)}%` }}
+                          />
+                        </div>
+                        <span>{Math.round((analytics.verifiedScorecard.sent.incentiveVerified / analytics.verifiedScorecard.sent.honored) * 100)}% verified</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Received Referrals Scorecard */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-[oklch(0.55_0.15_45)] flex items-center gap-2">
+                      <ArrowDownRight className="w-4 h-4" /> As Receiver
+                    </h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="p-3 rounded-lg bg-green-500/10 text-center">
+                        <p className="text-xl font-bold text-green-400">{analytics.verifiedScorecard.received.honored}</p>
+                        <p className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>Honored</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-blue-500/10 text-center">
+                        <p className="text-xl font-bold text-blue-400">{analytics.verifiedScorecard.received.incentiveVerified}</p>
+                        <p className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>Incentive Verified</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-purple-500/10 text-center">
+                        <p className="text-xl font-bold text-purple-400">${parseFloat(analytics.verifiedScorecard.received.totalVerifiedRevenue).toFixed(0)}</p>
+                        <p className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>Verified Revenue</p>
+                      </div>
+                    </div>
+                    {analytics.verifiedScorecard.received.honored > 0 && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-purple-500 rounded-full transition-all"
+                            style={{ width: `${Math.round((analytics.verifiedScorecard.received.revenueVerified / analytics.verifiedScorecard.received.honored) * 100)}%` }}
+                          />
+                        </div>
+                        <span>{Math.round((analytics.verifiedScorecard.received.revenueVerified / analytics.verifiedScorecard.received.honored) * 100)}% revenue verified</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Main Content Grid */}
           <div className="grid lg:grid-cols-3 gap-6 mb-8">
 
@@ -573,6 +655,20 @@ export default function Dashboard() {
                                   <Clock className="w-3 h-3 mr-1" /> Awaiting honor confirmation
                                 </Badge>
                               )}
+                              {/* Dual-verification: incentive amount */}
+                              {r.isIncentiveVerified ? (
+                                <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs" style={{ textTransform: "none" }}>
+                                  <Shield className="w-3 h-3 mr-1" /> Incentive verified ${r.senderConfirmedIncentiveAmount ? `$${r.senderConfirmedIncentiveAmount}` : ''}
+                                </Badge>
+                              ) : r.senderConfirmedIncentiveAmount && !r.receiverConfirmedIncentiveAmount ? (
+                                <Badge className="bg-amber-100 text-amber-800 text-xs" style={{ textTransform: "none" }}>
+                                  <Clock className="w-3 h-3 mr-1" /> You confirmed ${`$${r.senderConfirmedIncentiveAmount}`} — awaiting receiver
+                                </Badge>
+                              ) : !r.senderConfirmedIncentiveAmount && r.receiverConfirmedIncentiveAmount ? (
+                                <Badge className="bg-amber-100 text-amber-800 text-xs" style={{ textTransform: "none" }}>
+                                  <Info className="w-3 h-3 mr-1" /> Receiver says ${`$${r.receiverConfirmedIncentiveAmount}`} — confirm your amount
+                                </Badge>
+                              ) : null}
                               {r.senderCashedOut ? (
                                 <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs" style={{ textTransform: "none" }}>
                                   <CheckCircle2 className="w-3 h-3 mr-1" /> Cashed out{r.incentiveAmount ? ` $${r.incentiveAmount}` : ''}
@@ -755,6 +851,34 @@ export default function Dashboard() {
                                   <CheckCircle2 className="w-3 h-3 mr-1" /> Sender cashed out{r.incentiveAmount ? ` $${r.incentiveAmount}` : ''}
                                 </Badge>
                               )}
+                              {/* Dual-verification: incentive amount */}
+                              {r.isIncentiveVerified ? (
+                                <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs" style={{ textTransform: "none" }}>
+                                  <Shield className="w-3 h-3 mr-1" /> Incentive verified {r.receiverConfirmedIncentiveAmount ? `$${r.receiverConfirmedIncentiveAmount}` : ''}
+                                </Badge>
+                              ) : r.receiverConfirmedIncentiveAmount && !r.senderConfirmedIncentiveAmount ? (
+                                <Badge className="bg-amber-100 text-amber-800 text-xs" style={{ textTransform: "none" }}>
+                                  <Clock className="w-3 h-3 mr-1" /> You confirmed {`$${r.receiverConfirmedIncentiveAmount}`} — awaiting sender
+                                </Badge>
+                              ) : !r.receiverConfirmedIncentiveAmount && r.senderConfirmedIncentiveAmount ? (
+                                <Badge className="bg-amber-100 text-amber-800 text-xs" style={{ textTransform: "none" }}>
+                                  <Info className="w-3 h-3 mr-1" /> Sender says {`$${r.senderConfirmedIncentiveAmount}`} — confirm your amount
+                                </Badge>
+                              ) : null}
+                              {/* Dual-verification: revenue amount */}
+                              {r.isRevenueVerified ? (
+                                <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-xs" style={{ textTransform: "none" }}>
+                                  <Shield className="w-3 h-3 mr-1" /> Revenue verified {r.receiverConfirmedRevenueAmount ? `$${r.receiverConfirmedRevenueAmount}` : ''}
+                                </Badge>
+                              ) : r.receiverConfirmedRevenueAmount && !r.athleteConfirmedPaymentAmount ? (
+                                <Badge className="bg-amber-100 text-amber-800 text-xs" style={{ textTransform: "none" }}>
+                                  <Clock className="w-3 h-3 mr-1" /> Revenue {`$${r.receiverConfirmedRevenueAmount}`} — awaiting athlete confirmation
+                                </Badge>
+                              ) : !r.receiverConfirmedRevenueAmount && r.athleteConfirmedPaymentAmount ? (
+                                <Badge className="bg-amber-100 text-amber-800 text-xs" style={{ textTransform: "none" }}>
+                                  <Info className="w-3 h-3 mr-1" /> Athlete says {`$${r.athleteConfirmedPaymentAmount}`} — confirm your revenue
+                                </Badge>
+                              ) : null}
                               {r.isDisputed && (
                                 <Badge className="bg-red-100 text-red-800 text-xs" style={{ textTransform: "none" }}>
                                   <AlertTriangle className="w-3 h-3 mr-1" /> Disputed
