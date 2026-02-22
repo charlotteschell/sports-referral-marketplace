@@ -675,3 +675,11 @@
 
 ## Mobile Info Icons
 - [x] Make info icons clickable/tappable on mobile (click-to-toggle on Home, inline desc on Onboarding & AthleteDashboard)
+
+## VersaMC & Featured Businesses
+- [x] Add VersaMC (versamc.com) to the business directory (id=150001, featured)
+- [ ] Feature VersaMC and North Wind Cycling on homepage within first scroll
+
+## VersaMC & Featured Businesses
+- [x] Add VersaMC (versamc.com) to the business directory (id=150001, featured)
+- [ ] Feature VersaMC and North Wind Cycling on homepage within first scroll

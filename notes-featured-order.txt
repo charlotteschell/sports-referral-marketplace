@@ -1,0 +1,1 @@
+Featured Businesses section now shows VersaMC first, then North Wind Cycles second in the carousel. The Spotlight section has been removed. The featured carousel order is: 1. Versa Movement Collective, 2. North Wind Cycles, 3. Intrinsi, 4. Inspire Health, 5. The Doctrine Training, etc. This matches the user's request.

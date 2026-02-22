@@ -1,0 +1,26 @@
+{
+  "query": "SELECT id, name FROM sportCategories ORDER BY id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name FROM sportCategories ORDER BY id",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Cycling"
+    },
+    {
+      "id": "2",
+      "name": "Running"
+    },
+    {
+      "id": "3",
+      "name": "Snowsports"
+    },
+    {
+      "id": "4",
+      "name": "Sport Vacations"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n1\tCycling\n2\tRunning\n3\tSnowsports\n4\tSport Vacations\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

@@ -1,0 +1,9 @@
+Spotlight Section Findings:
+- The "Meet the Network" spotlight section is now visible after one scroll
+- VersaMC (left card) shows: Physiotherapist, Calgary Canada, Western Canada, Cycling, View Profile link
+- North Wind Cycles (right card) shows: Bike Shop, 5.0 rating, incentives (10% Off First Purchase, Bike Shop Referral), Alaró Spain, Mallorca, Cycling, View Profile link
+- Both cards have the amber gradient top bar
+- The section appears between the Stats Bar and The Scoreboard
+- Both cards are clickable and link to their respective business profiles
+- Layout is clean, two-column grid on desktop
+- The section is reachable within one scroll from the top of the page
