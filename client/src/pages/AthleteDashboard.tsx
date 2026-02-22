@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,16 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Link } from "wouter";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Loader2, Gift, Heart, Bookmark, MapPin, ExternalLink,
   Ticket, CheckCircle2, Clock, AlertTriangle, Trash2,
   User, Target, Bike, Settings, ArrowRight, Bell, Check, CheckCheck,
-  Sparkles, Star, ChevronRight
+  Sparkles, Star, ChevronRight, Pencil, X, Save, Zap, Mail, BellRing, BellOff
 } from "lucide-react";
 
 type TabId = "offers" | "saved" | "notifications" | "profile";
@@ -61,6 +66,92 @@ export default function AthleteDashboard() {
       toast.success("Thanks for the feedback!");
     },
   });
+
+  // Profile editing state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editForm, setEditForm] = useState({
+    displayName: "",
+    selectedSports: [] as number[],
+    experienceLevels: {} as Record<number, string>,
+    city: "",
+    state: "",
+    country: "",
+    interests: [] as string[],
+    goals: "",
+    referralSource: "",
+    newsletterOptIn: true,
+    notificationPreference: "both" as string,
+  });
+
+  // Populate edit form when entering edit mode
+  useEffect(() => {
+    if (isEditingProfile && athleteProfile) {
+      const sportIds = athleteProfile.sportIds ? JSON.parse(athleteProfile.sportIds) : [];
+      const expLevels = athleteProfile.experienceLevels ? JSON.parse(athleteProfile.experienceLevels) : {};
+      const interests = athleteProfile.interests ? JSON.parse(athleteProfile.interests) : [];
+      setEditForm({
+        displayName: athleteProfile.displayName || user?.name || "",
+        selectedSports: sportIds,
+        experienceLevels: expLevels,
+        city: athleteProfile.city || "",
+        state: athleteProfile.state || "",
+        country: athleteProfile.country || "",
+        interests,
+        goals: athleteProfile.goals || "",
+        referralSource: athleteProfile.referralSource || "",
+        newsletterOptIn: athleteProfile.newsletterOptIn ?? true,
+        notificationPreference: (athleteProfile as any).notificationPreference || "both",
+      });
+    }
+  }, [isEditingProfile, athleteProfile, user]);
+
+  const saveProfileMutation = trpc.athleteProfile.save.useMutation({
+    onSuccess: () => {
+      utils.athleteProfile.get.invalidate();
+      utils.auth.me.invalidate();
+      toast.success("Profile updated!");
+      setIsEditingProfile(false);
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to save profile.");
+    },
+  });
+
+  const handleSaveProfile = () => {
+    saveProfileMutation.mutate({
+      displayName: editForm.displayName || undefined,
+      sportIds: editForm.selectedSports.length > 0 ? JSON.stringify(editForm.selectedSports) : undefined,
+      experienceLevels: Object.keys(editForm.experienceLevels).length > 0 ? JSON.stringify(editForm.experienceLevels) : undefined,
+      city: editForm.city || undefined,
+      state: editForm.state || undefined,
+      country: editForm.country || undefined,
+      interests: editForm.interests.length > 0 ? JSON.stringify(editForm.interests) : undefined,
+      goals: editForm.goals || undefined,
+      referralSource: editForm.referralSource || undefined,
+      newsletterOptIn: editForm.newsletterOptIn,
+      notificationPreference: editForm.notificationPreference as any,
+    });
+  };
+
+  const toggleEditSport = (id: number) => {
+    setEditForm(prev => {
+      const selected = prev.selectedSports.includes(id)
+        ? prev.selectedSports.filter(s => s !== id)
+        : [...prev.selectedSports, id];
+      const levels = { ...prev.experienceLevels };
+      if (!selected.includes(id)) delete levels[id];
+      return { ...prev, selectedSports: selected, experienceLevels: levels };
+    });
+  };
+
+  const toggleEditInterest = (value: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      interests: prev.interests.includes(value)
+        ? prev.interests.filter(i => i !== value)
+        : [...prev.interests, value],
+    }));
+  };
 
   if (loading) {
     return (
@@ -455,115 +546,24 @@ export default function AthleteDashboard() {
 
             {/* ─── My Profile Tab ─── */}
             {activeTab === "profile" && (
-              <div>
-                {profileLoading ? (
-                  <div className="flex items-center justify-center py-16">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  </div>
-                ) : !athleteProfile ? (
-                  <Card className="border-dashed">
-                    <CardContent className="py-16 text-center">
-                      <User className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
-                      <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: "var(--font-heading)" }}>
-                        Profile not set up yet
-                      </h3>
-                      <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                        Tell us about your sports and what you're looking for. Takes 60 seconds and helps us recommend the right businesses.
-                      </p>
-                      <Link href="/onboarding?type=athlete">
-                        <Button className="gap-2" style={{ textTransform: "none" }}>
-                          Set Up Profile <ArrowRight className="w-4 h-4" />
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-6">
-                    {/* Profile Summary */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2" style={{ fontFamily: "var(--font-heading)" }}>
-                          <User className="w-5 h-5 text-primary" />
-                          {athleteProfile.displayName || user?.name || "Athlete"}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {/* Location */}
-                        {(athleteProfile.city || athleteProfile.country) && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground" style={{ textTransform: "none" }}>
-                            <MapPin className="w-4 h-4 shrink-0" />
-                            {[athleteProfile.city, athleteProfile.state, athleteProfile.country].filter(Boolean).join(', ')}
-                          </div>
-                        )}
-
-                        {/* Sports */}
-                        {parsedSportIds.length > 0 && (
-                          <div>
-                            <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5" style={{ textTransform: "none" }}>
-                              <Bike className="w-4 h-4 text-primary" /> Sports
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {parsedSportIds.map((id: number) => (
-                                <Badge key={id} variant="secondary" className="text-xs">
-                                  {getSportName(id)}
-                                  {parsedExperience[id.toString()] && (
-                                    <span className="ml-1 text-primary">
-                                      · {parsedExperience[id.toString()]}
-                                    </span>
-                                  )}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Interests */}
-                        {parsedInterests.length > 0 && (
-                          <div>
-                            <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5" style={{ textTransform: "none" }}>
-                              <Target className="w-4 h-4 text-primary" /> Looking For
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {parsedInterests.map((interest: string) => (
-                                <Badge key={interest} variant="outline" className="text-xs capitalize">
-                                  {interest.replace(/_/g, ' ')}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Goals */}
-                        {athleteProfile.goals && (
-                          <div>
-                            <h4 className="text-sm font-semibold mb-1" style={{ textTransform: "none" }}>Goals</h4>
-                            <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                              {athleteProfile.goals}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Newsletter */}
-                        <div className="text-xs text-muted-foreground pt-2 border-t border-border" style={{ textTransform: "none" }}>
-                          Newsletter: {athleteProfile.newsletterOptIn ? "Subscribed" : "Not subscribed"}
-                          {athleteProfile.referralSource && (
-                            <span className="ml-3">· Found us via: {athleteProfile.referralSource}</span>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Edit Profile Link */}
-                    <div className="text-center">
-                      <Link href="/onboarding?type=athlete">
-                        <Button variant="outline" className="gap-2" style={{ textTransform: "none" }}>
-                          <Settings className="w-4 h-4" /> Edit Profile
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <ProfileTab
+                user={user}
+                athleteProfile={athleteProfile}
+                profileLoading={profileLoading}
+                sportCategories={sportCategories}
+                parsedSportIds={parsedSportIds}
+                parsedExperience={parsedExperience}
+                parsedInterests={parsedInterests}
+                getSportName={getSportName}
+                isEditingProfile={isEditingProfile}
+                setIsEditingProfile={setIsEditingProfile}
+                editForm={editForm}
+                setEditForm={setEditForm}
+                toggleEditSport={toggleEditSport}
+                toggleEditInterest={toggleEditInterest}
+                handleSaveProfile={handleSaveProfile}
+                saveProfileMutation={saveProfileMutation}
+              />
             )}
           </div>
         </section>
@@ -698,4 +698,460 @@ function formatNotificationTime(date: Date): string {
   const diffDay = Math.floor(diffHr / 24);
   if (diffDay < 7) return `${diffDay}d ago`;
   return date.toLocaleDateString();
+}
+
+
+// ─── Constants for Profile Edit ───
+const EXPERIENCE_LEVELS = [
+  { value: "beginner", label: "Beginner", desc: "Just getting started" },
+  { value: "intermediate", label: "Intermediate", desc: "A few seasons in" },
+  { value: "advanced", label: "Advanced", desc: "Serious about it" },
+  { value: "competitive", label: "Competitive", desc: "Racing / competing" },
+  { value: "pro", label: "Pro / Semi-Pro", desc: "It's basically my job" },
+];
+const INTEREST_OPTIONS = [
+  { value: "coaching", label: "Coaching / Training Plans" },
+  { value: "bike_fit", label: "Bike Fitting" },
+  { value: "nutrition", label: "Nutrition / Dietitian" },
+  { value: "physio", label: "Physio / Sports Medicine" },
+  { value: "massage", label: "Sports Massage" },
+  { value: "bike_shop", label: "Bike Shop / Gear" },
+  { value: "run_store", label: "Running Store" },
+  { value: "ski_shop", label: "Ski / Snowboard Shop" },
+  { value: "club", label: "Clubs / Group Rides / Runs" },
+  { value: "studio", label: "Indoor Studio / Gym" },
+  { value: "travel", label: "Sports Travel / Camps" },
+  { value: "other", label: "Other" },
+];
+const REFERRAL_SOURCES = [
+  "Word of mouth", "Social media", "Google search",
+  "A business on SportConnect", "Blog / article", "Podcast", "Other",
+];
+const NOTIFICATION_OPTIONS = [
+  { value: "both", label: "In-App + Email", icon: <BellRing className="w-4 h-4" />, desc: "Get notified everywhere" },
+  { value: "in_app_only", label: "In-App Only", icon: <Bell className="w-4 h-4" />, desc: "Notifications in the app only" },
+  { value: "email_only", label: "Email Only", icon: <Mail className="w-4 h-4" />, desc: "Email notifications only" },
+  { value: "none", label: "None", icon: <BellOff className="w-4 h-4" />, desc: "No notifications" },
+];
+
+// ─── Profile Tab Component ───
+function ProfileTab({
+  user, athleteProfile, profileLoading, sportCategories,
+  parsedSportIds, parsedExperience, parsedInterests, getSportName,
+  isEditingProfile, setIsEditingProfile, editForm, setEditForm,
+  toggleEditSport, toggleEditInterest, handleSaveProfile, saveProfileMutation,
+}: {
+  user: any;
+  athleteProfile: any;
+  profileLoading: boolean;
+  sportCategories: any;
+  parsedSportIds: number[];
+  parsedExperience: Record<string, string>;
+  parsedInterests: string[];
+  getSportName: (id: number) => string;
+  isEditingProfile: boolean;
+  setIsEditingProfile: (v: boolean) => void;
+  editForm: any;
+  setEditForm: (fn: any) => void;
+  toggleEditSport: (id: number) => void;
+  toggleEditInterest: (value: string) => void;
+  handleSaveProfile: () => void;
+  saveProfileMutation: any;
+}) {
+  if (profileLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!athleteProfile && !isEditingProfile) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="py-16 text-center">
+          <User className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
+          <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: "var(--font-heading)" }}>
+            Profile not set up yet
+          </h3>
+          <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6" style={{ textTransform: "none", letterSpacing: "normal" }}>
+            Tell us about your sports and what you're looking for. Takes 60 seconds and helps us recommend the right businesses.
+          </p>
+          <Link href="/onboarding?type=athlete">
+            <Button className="gap-2" style={{ textTransform: "none" }}>
+              Set Up Profile <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isEditingProfile) {
+    const isPending = saveProfileMutation.isPending;
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2" style={{ fontFamily: "var(--font-heading)" }}>
+                <Pencil className="w-5 h-5 text-primary" />
+                Edit Profile
+              </CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setIsEditingProfile(false)} className="gap-1 text-muted-foreground" style={{ textTransform: "none" }}>
+                <X className="w-4 h-4" /> Cancel
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Display Name */}
+            <div>
+              <Label className="text-sm font-semibold" style={{ textTransform: "none" }}>Display Name</Label>
+              <Input
+                value={editForm.displayName}
+                onChange={(e: any) => setEditForm((prev: any) => ({ ...prev, displayName: e.target.value }))}
+                placeholder="Your name or trail alias"
+                className="mt-1.5 text-sm"
+                style={{ textTransform: "none" }}
+              />
+            </div>
+
+            {/* Sports Selection */}
+            <div>
+              <Label className="text-sm font-semibold flex items-center gap-1.5" style={{ textTransform: "none" }}>
+                <Bike className="w-4 h-4" /> Sports
+              </Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {sportCategories?.map((sport: any) => (
+                  <button
+                    key={sport.id}
+                    type="button"
+                    onClick={() => toggleEditSport(sport.id)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                      editForm.selectedSports.includes(sport.id)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted text-muted-foreground border-border hover:border-primary/40"
+                    }`}
+                    style={{ textTransform: "none" }}
+                  >
+                    {sport.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Experience Levels */}
+            {editForm.selectedSports.length > 0 && (
+              <div>
+                <Label className="text-sm font-semibold flex items-center gap-1.5" style={{ textTransform: "none" }}>
+                  <Zap className="w-4 h-4" /> Experience Level
+                </Label>
+                <div className="space-y-3 mt-2">
+                  {editForm.selectedSports.map((sportId: number) => {
+                    const sport = sportCategories?.find((s: any) => s.id === sportId);
+                    if (!sport) return null;
+                    return (
+                      <div key={sportId} className="flex items-center gap-3 flex-wrap">
+                        <span className="text-sm font-medium w-28 shrink-0" style={{ textTransform: "none" }}>{sport.name}</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {EXPERIENCE_LEVELS.map(level => (
+                            <button
+                              key={level.value}
+                              type="button"
+                              onClick={() => setEditForm((prev: any) => ({
+                                ...prev,
+                                experienceLevels: { ...prev.experienceLevels, [sportId]: level.value },
+                              }))}
+                              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors border ${
+                                editForm.experienceLevels[sportId] === level.value
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-muted text-muted-foreground border-border hover:border-primary/40"
+                              }`}
+                              style={{ textTransform: "none" }}
+                              title={level.desc}
+                            >
+                              {level.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Location */}
+            <div>
+              <Label className="text-sm font-semibold flex items-center gap-1.5" style={{ textTransform: "none" }}>
+                <MapPin className="w-4 h-4" /> Location
+              </Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+                <Input
+                  value={editForm.city}
+                  onChange={(e: any) => setEditForm((prev: any) => ({ ...prev, city: e.target.value }))}
+                  placeholder="City"
+                  className="text-sm"
+                  style={{ textTransform: "none" }}
+                />
+                <Input
+                  value={editForm.state}
+                  onChange={(e: any) => setEditForm((prev: any) => ({ ...prev, state: e.target.value }))}
+                  placeholder="State / Province"
+                  className="text-sm"
+                  style={{ textTransform: "none" }}
+                />
+                <Input
+                  value={editForm.country}
+                  onChange={(e: any) => setEditForm((prev: any) => ({ ...prev, country: e.target.value }))}
+                  placeholder="Country"
+                  className="text-sm"
+                  style={{ textTransform: "none" }}
+                />
+              </div>
+            </div>
+
+            {/* Interests */}
+            <div>
+              <Label className="text-sm font-semibold flex items-center gap-1.5" style={{ textTransform: "none" }}>
+                <Target className="w-4 h-4" /> What kind of services interest you?
+              </Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {INTEREST_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => toggleEditInterest(opt.value)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                      editForm.interests.includes(opt.value)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted text-muted-foreground border-border hover:border-primary/40"
+                    }`}
+                    style={{ textTransform: "none" }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Goals */}
+            <div>
+              <Label className="text-sm font-semibold" style={{ textTransform: "none" }}>Goals</Label>
+              <Textarea
+                value={editForm.goals}
+                onChange={(e: any) => setEditForm((prev: any) => ({ ...prev, goals: e.target.value }))}
+                placeholder="Training for a century ride, recovering from a knee thing..."
+                className="mt-1.5 text-sm min-h-[80px]"
+                style={{ textTransform: "none" }}
+              />
+            </div>
+
+            {/* How did you find us */}
+            <div>
+              <Label className="text-sm font-semibold" style={{ textTransform: "none" }}>How did you find us?</Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {REFERRAL_SOURCES.map((source) => (
+                  <button
+                    key={source}
+                    type="button"
+                    onClick={() => setEditForm((prev: any) => ({ ...prev, referralSource: source }))}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                      editForm.referralSource === source
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted text-muted-foreground border-border hover:border-primary/40"
+                    }`}
+                    style={{ textTransform: "none" }}
+                  >
+                    {source}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Newsletter */}
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="newsletter-edit"
+                checked={editForm.newsletterOptIn}
+                onCheckedChange={(checked: any) =>
+                  setEditForm((prev: any) => ({ ...prev, newsletterOptIn: checked === true }))
+                }
+                className="mt-0.5"
+              />
+              <label htmlFor="newsletter-edit" className="text-sm text-muted-foreground cursor-pointer" style={{ textTransform: "none" }}>
+                Send me occasional updates about new businesses, deals, and features.
+              </label>
+            </div>
+
+            {/* Notification Preferences */}
+            <div>
+              <Label className="text-sm font-semibold flex items-center gap-1.5 mb-3" style={{ textTransform: "none" }}>
+                <Bell className="w-4 h-4" /> Notification Preferences
+              </Label>
+              <p className="text-xs text-muted-foreground mb-3" style={{ textTransform: "none" }}>
+                Choose how you'd like to receive notifications about referrals, offers, and updates.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {NOTIFICATION_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setEditForm((prev: any) => ({ ...prev, notificationPreference: opt.value }))}
+                    className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-colors ${
+                      editForm.notificationPreference === opt.value
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border hover:border-primary/30"
+                    }`}
+                  >
+                    <span className={editForm.notificationPreference === opt.value ? "text-primary" : "text-muted-foreground"}>
+                      {opt.icon}
+                    </span>
+                    <div>
+                      <span className="text-sm font-medium block" style={{ textTransform: "none" }}>{opt.label}</span>
+                      <span className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>{opt.desc}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Save / Cancel */}
+            <div className="flex items-center gap-3 pt-4 border-t border-border">
+              <Button
+                variant="ghost"
+                className="text-muted-foreground gap-2"
+                style={{ textTransform: "none" }}
+                onClick={() => setIsEditingProfile(false)}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <div className="flex-1" />
+              <Button
+                className="gap-2"
+                style={{ textTransform: "none" }}
+                onClick={handleSaveProfile}
+                disabled={isPending}
+              >
+                {isPending ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                ) : (
+                  <><Save className="w-4 h-4" /> Save Changes</>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // View mode
+  return (
+    <div className="space-y-6">
+      {/* Profile Summary */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2" style={{ fontFamily: "var(--font-heading)" }}>
+              <User className="w-5 h-5 text-primary" />
+              {athleteProfile.displayName || user?.name || "Athlete"}
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              style={{ textTransform: "none" }}
+              onClick={() => setIsEditingProfile(true)}
+            >
+              <Pencil className="w-3.5 h-3.5" /> Edit
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Location */}
+          {(athleteProfile.city || athleteProfile.country) && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground" style={{ textTransform: "none" }}>
+              <MapPin className="w-4 h-4 shrink-0" />
+              {[athleteProfile.city, athleteProfile.state, athleteProfile.country].filter(Boolean).join(', ')}
+            </div>
+          )}
+
+          {/* Sports */}
+          {parsedSportIds.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5" style={{ textTransform: "none" }}>
+                <Bike className="w-4 h-4 text-primary" /> Sports
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {parsedSportIds.map((id: number) => (
+                  <Badge key={id} variant="secondary" className="text-xs">
+                    {getSportName(id)}
+                    {parsedExperience[id.toString()] && (
+                      <span className="ml-1 text-primary">
+                        · {parsedExperience[id.toString()]}
+                      </span>
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Interests */}
+          {parsedInterests.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5" style={{ textTransform: "none" }}>
+                <Target className="w-4 h-4 text-primary" /> Looking For
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {parsedInterests.map((interest: string) => (
+                  <Badge key={interest} variant="outline" className="text-xs capitalize">
+                    {interest.replace(/_/g, ' ')}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Goals */}
+          {athleteProfile.goals && (
+            <div>
+              <h4 className="text-sm font-semibold mb-1" style={{ textTransform: "none" }}>Goals</h4>
+              <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                {athleteProfile.goals}
+              </p>
+            </div>
+          )}
+
+          {/* Notification Preferences */}
+          <div className="pt-3 border-t border-border">
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5" style={{ textTransform: "none" }}>
+              <Bell className="w-4 h-4 text-primary" /> Notification Preferences
+            </h4>
+            <div className="text-sm text-muted-foreground" style={{ textTransform: "none" }}>
+              {(() => {
+                const pref = (athleteProfile as any).notificationPreference || "both";
+                const opt = NOTIFICATION_OPTIONS.find(o => o.value === pref);
+                return opt ? (
+                  <span className="flex items-center gap-2">
+                    {opt.icon} {opt.label} — {opt.desc}
+                  </span>
+                ) : "Both (In-App + Email)";
+              })()}
+            </div>
+          </div>
+
+          {/* Newsletter & Referral Source */}
+          <div className="text-xs text-muted-foreground pt-2 border-t border-border" style={{ textTransform: "none" }}>
+            Newsletter: {athleteProfile.newsletterOptIn ? "Subscribed" : "Not subscribed"}
+            {athleteProfile.referralSource && (
+              <span className="ml-3">· Found us via: {athleteProfile.referralSource}</span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

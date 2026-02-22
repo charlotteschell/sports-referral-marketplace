@@ -12,6 +12,7 @@ export const users = mysqlTable("users", {
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   accountType: mysqlEnum("accountType", ["consumer", "business_owner"]).default("consumer").notNull(),
+  onboardingComplete: boolean("onboardingComplete").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -371,6 +372,8 @@ export const athleteProfiles = mysqlTable("athlete_profiles", {
   referralSource: varchar("referralSource", { length: 255 }),
   // Newsletter opt-in
   newsletterOptIn: boolean("newsletterOptIn").default(false).notNull(),
+  // Notification preferences: in_app_only, email_only, both, none
+  notificationPreference: varchar("notificationPreference", { length: 20 }).default("both").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

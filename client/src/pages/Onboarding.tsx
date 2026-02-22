@@ -54,12 +54,22 @@ export default function Onboarding() {
   const urlParams = new URLSearchParams(window.location.search);
   const typeFromUrl = urlParams.get('type');
   const [selected, setSelected] = useState<"business_owner" | "consumer" | null>(
-    typeFromUrl === 'athlete' || typeFromUrl === 'enthusiast' ? 'consumer' : null
+    typeFromUrl === 'athlete' || typeFromUrl === 'enthusiast' ? 'consumer' :
+    typeFromUrl === 'business' ? 'business_owner' : null
   );
   const [step, setStep] = useState<'choose' | 'athlete-form'>(
     typeFromUrl === 'athlete' || typeFromUrl === 'enthusiast' ? 'athlete-form' : 'choose'
   );
   const utils = trpc.useUtils();
+
+  // If user already completed onboarding, redirect to their dashboard
+  useEffect(() => {
+    if (user && user.onboardingComplete && !typeFromUrl) {
+      if (user.role === 'admin') navigate('/admin');
+      else if (user.accountType === 'business_owner') navigate('/dashboard');
+      else navigate('/athlete-dashboard');
+    }
+  }, [user, typeFromUrl, navigate]);
 
   // Sport categories from API
   const { data: sportCategories } = trpc.categories.sportCategories.useQuery();
@@ -78,17 +88,11 @@ export default function Onboarding() {
     newsletterOptIn: true,
   });
 
-  // Pre-fill display name from user
-  useEffect(() => {
-    if (user?.name && !athleteForm.displayName) {
-      setAthleteForm(prev => ({ ...prev, displayName: user.name || "" }));
-    }
-  }, [user]);
-
+  // All hooks must be declared before any useEffect that uses them
   const setAccountType = trpc.accountType.set.useMutation({
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       utils.auth.me.invalidate();
-      if (selected === "business_owner") {
+      if (variables.accountType === "business_owner") {
         toast.success("You're in! Let's get your business listed.");
         navigate("/submit-business");
       }
@@ -110,6 +114,24 @@ export default function Onboarding() {
     },
   });
 
+  const completeOnboarding = trpc.onboarding.complete.useMutation();
+
+  // Pre-fill display name from user
+  useEffect(() => {
+    if (user?.name && !athleteForm.displayName) {
+      setAthleteForm(prev => ({ ...prev, displayName: user.name || "" }));
+    }
+  }, [user]);
+
+  // Auto-proceed for business type from URL (when clicking "List Your Business")
+  const [autoProceeded, setAutoProceeded] = useState(false);
+  useEffect(() => {
+    if (typeFromUrl === 'business' && user && !autoProceeded && !user.onboardingComplete) {
+      setAutoProceeded(true);
+      setAccountType.mutate({ accountType: "business_owner" });
+    }
+  }, [typeFromUrl, user, autoProceeded]);
+
   const handleChoose = () => {
     if (!selected) {
       toast.error("Please select how you'd like to use SportConnect.");
@@ -123,7 +145,7 @@ export default function Onboarding() {
   };
 
   const handleAthleteSubmit = () => {
-    // Set account type first, then save profile
+    // Set account type first, then save profile (which also marks onboarding complete)
     setAccountType.mutate({ accountType: "consumer" }, {
       onSuccess: () => {
         saveProfile.mutate({
@@ -145,9 +167,14 @@ export default function Onboarding() {
   const handleSkipProfile = () => {
     setAccountType.mutate({ accountType: "consumer" }, {
       onSuccess: () => {
-        utils.auth.me.invalidate();
-        toast.success("You're in! Browse around and fill out your profile later.");
-        navigate("/directory");
+        // Mark onboarding complete even when skipping profile
+        completeOnboarding.mutate(undefined, {
+          onSuccess: () => {
+            utils.auth.me.invalidate();
+            toast.success("You're in! Browse around and fill out your profile later.");
+            navigate("/directory");
+          },
+        });
       },
     });
   };

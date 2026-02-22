@@ -1,0 +1,9 @@
+Header audit from screenshot:
+- Current logged-in user is admin (role=admin)
+- Header shows: Directory | Referral Offers | Leaderboard | About | Support | [bell] | Admin Panel | Admin | Athlete View | Sign Out
+- Issue: "Admin Panel" and "Admin" are redundant - admin user sees both because:
+  - getDashboardLink() returns "/admin" for admin
+  - Then there's a separate isAdmin && <Link href="/admin"> block
+- Fix needed: For admin users, show "Admin Panel" as primary + "Business Dashboard" and "Athlete View" as secondary options
+- The header is now correctly showing user-type-specific navigation
+- No TS errors, server running fine

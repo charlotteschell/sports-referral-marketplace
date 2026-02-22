@@ -3,13 +3,26 @@ import { Button } from "@/components/ui/button";
 import { getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
 import { Menu, X, Mountain } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NotificationBell } from "@/components/NotificationBell";
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+
+  // Determine user type for navigation
+  const isAdmin = isAuthenticated && user?.role === 'admin';
+  const isBusinessOwner = isAuthenticated && user?.accountType === 'business_owner';
+  const isAthlete = isAuthenticated && user?.accountType === 'consumer';
+  const needsOnboarding = isAuthenticated && user && !user.onboardingComplete;
+
+  // Redirect to onboarding if user hasn't completed it (except if already on onboarding page)
+  useEffect(() => {
+    if (needsOnboarding && location !== '/onboarding' && !location.startsWith('/onboarding')) {
+      navigate('/onboarding');
+    }
+  }, [needsOnboarding, location, navigate]);
 
   const navLinks = [
     { href: "/directory", label: "Directory" },
@@ -22,6 +35,19 @@ export default function Header() {
   const isActive = (href: string) => {
     if (href === "/") return location === "/";
     return location.startsWith(href);
+  };
+
+  // Determine the correct dashboard link based on user type
+  const getDashboardLink = () => {
+    if (isAdmin) return "/admin";
+    if (isBusinessOwner) return "/dashboard";
+    return "/athlete-dashboard";
+  };
+
+  const getDashboardLabel = () => {
+    if (isAdmin) return "Admin Panel";
+    if (isBusinessOwner) return "Dashboard";
+    return "My Dashboard";
   };
 
   return (
@@ -64,26 +90,39 @@ export default function Header() {
             {isAuthenticated ? (
               <>
                 <NotificationBell />
-                {user?.accountType === 'consumer' ? (
+
+                {/* Primary dashboard link - correct per user type */}
+                <Link href={getDashboardLink()}>
+                  <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
+                    {getDashboardLabel()}
+                  </Button>
+                </Link>
+
+                {/* Admin gets secondary links to business and athlete dashboards */}
+                {isAdmin && (
+                  <>
+                    <Link href="/dashboard">
+                      <Button variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
+                        Biz Dashboard
+                      </Button>
+                    </Link>
+                    <Link href="/athlete-dashboard">
+                      <Button variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
+                        Athlete View
+                      </Button>
+                    </Link>
+                  </>
+                )}
+
+                {/* Business owners can also access athlete dashboard for consumer features */}
+                {!isAdmin && isBusinessOwner && (
                   <Link href="/athlete-dashboard">
-                    <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
-                      My Dashboard
-                    </Button>
-                  </Link>
-                ) : (
-                  <Link href="/dashboard">
-                    <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
-                      Dashboard
+                    <Button variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
+                      Athlete View
                     </Button>
                   </Link>
                 )}
-                {user?.role === 'admin' && (
-                  <Link href="/admin">
-                    <Button variant="ghost" className="text-amber-400/80 hover:text-amber-300 hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
-                      Admin
-                    </Button>
-                  </Link>
-                )}
+
                 <Button
                   variant="ghost"
                   className="text-white/60 hover:text-white hover:bg-white/10 text-sm"
@@ -105,7 +144,7 @@ export default function Header() {
                     <Mountain className="w-3.5 h-3.5 mr-1.5" /> I'm an Athlete
                   </Button>
                 </a>
-                <a href={getLoginUrl("/submit-business")}>
+                <a href={getLoginUrl("/onboarding?type=business")}>
                   <Button className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white text-sm" style={{ textTransform: "none" }}>
                     List Your Business
                   </Button>
@@ -145,31 +184,38 @@ export default function Header() {
               <div className="border-t border-white/10 mt-2 pt-2">
                 {isAuthenticated ? (
                   <>
-                    <Link href="/athlete-dashboard">
-                      <span className="block px-3 py-2 rounded-md text-sm font-medium text-amber-400/70 hover:text-amber-300 cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
-                        Notifications
+                    {/* Primary dashboard link */}
+                    <Link href={getDashboardLink()}>
+                      <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                        {getDashboardLabel()}
                       </span>
                     </Link>
-                    {user?.accountType === 'consumer' ? (
+
+                    {/* Admin gets secondary links */}
+                    {isAdmin && (
+                      <>
+                        <Link href="/dashboard">
+                          <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/50 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                            Biz Dashboard
+                          </span>
+                        </Link>
+                        <Link href="/athlete-dashboard">
+                          <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/50 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                            Athlete View
+                          </span>
+                        </Link>
+                      </>
+                    )}
+
+                    {/* Business owners can switch to athlete view */}
+                    {!isAdmin && isBusinessOwner && (
                       <Link href="/athlete-dashboard">
-                        <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
-                          My Dashboard
-                        </span>
-                      </Link>
-                    ) : (
-                      <Link href="/dashboard">
-                        <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
-                          Dashboard
+                        <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/50 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                          Athlete View
                         </span>
                       </Link>
                     )}
-                    {user?.role === 'admin' && (
-                      <Link href="/admin">
-                        <span className="block px-3 py-2 rounded-md text-sm font-medium text-amber-400/80 hover:text-amber-300 cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
-                          Admin Panel
-                        </span>
-                      </Link>
-                    )}
+
                     <button
                       className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white/60 hover:text-white"
                       onClick={() => { logout(); setMobileOpen(false); }}
@@ -190,7 +236,7 @@ export default function Header() {
                         <span className="inline-flex items-center gap-1.5"><Mountain className="w-3.5 h-3.5" /> I'm an Athlete</span>
                       </span>
                     </a>
-                    <a href={getLoginUrl("/submit-business")}>
+                    <a href={getLoginUrl("/onboarding?type=business")}>
                       <span className="block px-3 py-2 rounded-md text-sm font-medium text-[oklch(0.55_0.15_45)] hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
                         List Your Business
                       </span>

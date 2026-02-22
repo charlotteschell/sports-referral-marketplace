@@ -632,3 +632,20 @@
 ## Logo Update v2 - Combined Design
 - [x] Generate logo: mountain from image 1 (detailed multi-peak) + arrows from image 2 (clean two-arrow circular flywheel)
 - [x] Upload to CDN and replace across the site (header, footer, favicon)
+
+## User-Type Differentiation & First-Login Onboarding
+- [x] DB: Add onboardingComplete field to users table
+- [x] DB: Add notificationPreference field to athlete_profiles
+- [x] OAuth callback: support returnPath in state, redirect new users to /onboarding
+- [x] First-login: force account type selection before anything else
+- [x] First-login athlete: redirect to athlete onboarding form
+- [x] First-login business owner: redirect to submit-business form
+- [x] Header nav: show correct buttons per user type (admin/business/athlete/unauthenticated)
+- [x] Post-login routing: business owners see business dashboard, not athlete dashboard
+- [x] Post-login routing: admins see admin panel, not athlete dashboard
+- [x] Post-login routing: athletes see athlete dashboard
+- [x] Dashboard links in header: correct dashboard per user type
+- [x] Athlete profile edit mode on dashboard My Profile tab
+- [x] Notification preferences (in-app only, email, both, none) on athlete profile
+- [x] Set onboardingComplete=true after completing onboarding for both paths
+- [x] Write tests for user-type routing and onboarding flows (12 new tests, 116 total pass)

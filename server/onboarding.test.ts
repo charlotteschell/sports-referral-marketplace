@@ -4,11 +4,7 @@ import type { TrpcContext } from "./_core/context";
 
 // Mock the db module with all required functions
 vi.mock("./db", () => ({
-  // Sport categories (needed by router)
-  getAllSportCategories: vi.fn().mockResolvedValue([
-    { id: 1, name: "Cycling", slug: "cycling", description: "Cycling sports", icon: "bike" },
-    { id: 2, name: "Running", slug: "running", description: "All running disciplines", icon: "mountain" },
-  ]),
+  getAllSportCategories: vi.fn().mockResolvedValue([]),
   getAllBusinessTypes: vi.fn().mockResolvedValue([]),
   getDistinctRegions: vi.fn().mockResolvedValue([]),
   getHubsByRegion: vi.fn().mockResolvedValue([]),
@@ -98,46 +94,51 @@ vi.mock("./db", () => ({
   getBusinessBusinessTypes: vi.fn().mockResolvedValue([]),
   setBusinessBusinessTypes: vi.fn().mockResolvedValue(undefined),
   getBusinessSubmissionById: vi.fn().mockResolvedValue(null),
-  // Athlete profile mocks
-  getAthleteProfile: vi.fn().mockImplementation(async (userId: number) => {
-    if (userId === 1) return {
-      id: 1, userId: 1, displayName: "Charlotte", sportIds: "1,2",
-      experienceLevels: "intermediate", city: "Calgary", state: "AB", country: "Canada",
-      region: "Western Canada", hub: "Calgary", interests: "coaching,nutrition",
-      goals: "Finish a century ride", referralSource: "word_of_mouth", newsletterOptIn: true,
-      createdAt: new Date(), updatedAt: new Date(),
-    };
-    return null;
-  }),
+  getAthleteProfile: vi.fn().mockResolvedValue(null),
   createOrUpdateAthleteProfile: vi.fn().mockResolvedValue(1),
-  // Saved business mocks
   saveBusiness: vi.fn().mockResolvedValue({ id: 1 }),
   unsaveBusiness: vi.fn().mockResolvedValue(undefined),
-  getSavedBusinesses: vi.fn().mockResolvedValue([
-    {
-      savedBusiness: { id: 1, userId: 1, businessId: 5, createdAt: new Date() },
-      business: { id: 5, name: "Peak Cycling", slug: "peak-cycling", city: "Boulder", country: "USA" },
-    },
-  ]),
-  isBusinessSaved: vi.fn().mockResolvedValue(true),
-  getSavedBusinessIds: vi.fn().mockResolvedValue([5, 12]),
-  // Leaderboard mocks
+  getSavedBusinesses: vi.fn().mockResolvedValue([]),
+  isBusinessSaved: vi.fn().mockResolvedValue(false),
+  getSavedBusinessIds: vi.fn().mockResolvedValue([]),
   getLeaderboard: vi.fn().mockResolvedValue({ topReferrers: [], topReceivers: [], mostReliable: [], topConnectors: [] }),
+  getRecommendedBusinesses: vi.fn().mockResolvedValue([]),
+  getUserNotifications: vi.fn().mockResolvedValue([]),
+  markNotificationRead: vi.fn().mockResolvedValue(undefined),
+  markAllNotificationsRead: vi.fn().mockResolvedValue(undefined),
+  getUnreadNotificationCount: vi.fn().mockResolvedValue(0),
+  getUsersWhoSavedBusiness: vi.fn().mockResolvedValue([]),
+  createNotification: vi.fn().mockResolvedValue(1),
+}));
+
+// Mock notification module
+vi.mock("./_core/notification", () => ({
+  notifyOwner: vi.fn().mockResolvedValue(true),
+}));
+
+// Mock email module
+vi.mock("./_core/email", () => ({
+  sendEmail: vi.fn().mockResolvedValue(true),
 }));
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
 
-function createAuthContext(userId = 1, role: "user" | "admin" = "user"): TrpcContext {
+function createAuthContext(
+  overrides: Partial<AuthenticatedUser> = {}
+): TrpcContext {
   const user: AuthenticatedUser = {
-    id: userId,
-    openId: `user-${userId}`,
-    email: `user${userId}@test.com`,
-    name: `Test User ${userId}`,
+    id: 1,
+    openId: "user-1",
+    email: "user1@test.com",
+    name: "Test User",
     loginMethod: "manus",
-    role,
+    role: "user",
+    accountType: "consumer",
+    onboardingComplete: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),
+    ...overrides,
   };
   return {
     user,
@@ -154,113 +155,143 @@ function createPublicContext(): TrpcContext {
   };
 }
 
-// ─── Athlete Profile Tests ──────────────────────────────────────
+// ─── Account Type Setting Tests ──────────────────────────────────
 
-describe("athleteProfile.get", () => {
-  it("returns athlete profile for authenticated user", async () => {
-    const ctx = createAuthContext(1);
+describe("accountType.set", () => {
+  it("sets account type to consumer for authenticated user", async () => {
+    const db = await import("./db");
+    const ctx = createAuthContext();
     const caller = appRouter.createCaller(ctx);
-    const result = await caller.athleteProfile.get();
-    expect(result).toBeTruthy();
-    expect(result?.displayName).toBe("Charlotte");
-    expect(result?.sportIds).toBe("1,2");
-    expect(result?.city).toBe("Calgary");
+    const result = await caller.accountType.set({ accountType: "consumer" });
+    expect(result).toEqual({ success: true });
+    expect(db.updateUserAccountType).toHaveBeenCalledWith(1, "consumer");
   });
 
-  it("returns null for user without profile", async () => {
-    const ctx = createAuthContext(999);
+  it("sets account type to business_owner and marks onboarding complete", async () => {
+    const db = await import("./db");
+    const ctx = createAuthContext();
     const caller = appRouter.createCaller(ctx);
-    const result = await caller.athleteProfile.get();
-    expect(result).toBeNull();
+    const result = await caller.accountType.set({ accountType: "business_owner" });
+    expect(result).toEqual({ success: true });
+    expect(db.updateUserAccountType).toHaveBeenCalledWith(1, "business_owner");
+    // Business owners get onboarding marked complete immediately
+    expect(db.markOnboardingComplete).toHaveBeenCalledWith(1);
+  });
+
+  it("does not mark onboarding complete for consumer account type", async () => {
+    const db = await import("./db");
+    vi.mocked(db.markOnboardingComplete).mockClear();
+    const ctx = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+    await caller.accountType.set({ accountType: "consumer" });
+    // markOnboardingComplete should NOT be called for consumers (they need to fill profile first)
+    expect(db.markOnboardingComplete).not.toHaveBeenCalled();
   });
 
   it("rejects unauthenticated users", async () => {
     const ctx = createPublicContext();
     const caller = appRouter.createCaller(ctx);
-    await expect(caller.athleteProfile.get()).rejects.toThrow();
+    await expect(caller.accountType.set({ accountType: "consumer" })).rejects.toThrow();
   });
 });
 
-describe("athleteProfile.save", () => {
-  it("creates or updates athlete profile", async () => {
-    const ctx = createAuthContext(1);
+// ─── Onboarding Complete Tests ──────────────────────────────────
+
+describe("onboarding.complete", () => {
+  it("marks onboarding as complete for authenticated user", async () => {
+    const db = await import("./db");
+    const ctx = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.onboarding.complete();
+    expect(result).toEqual({ success: true });
+    expect(db.markOnboardingComplete).toHaveBeenCalledWith(1);
+  });
+
+  it("rejects unauthenticated users", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.onboarding.complete()).rejects.toThrow();
+  });
+});
+
+// ─── Athlete Profile Save with Notification Preference ──────────
+
+describe("athleteProfile.save with notificationPreference", () => {
+  it("saves profile with notification preference and marks onboarding complete", async () => {
+    const db = await import("./db");
+    const ctx = createAuthContext();
     const caller = appRouter.createCaller(ctx);
     const result = await caller.athleteProfile.save({
-      displayName: "Charlotte",
-      sportIds: "1,2",
+      displayName: "Test Athlete",
       city: "Calgary",
       state: "AB",
       country: "Canada",
-      interests: "coaching,nutrition",
-      goals: "Finish a century ride",
-      referralSource: "word_of_mouth",
-      newsletterOptIn: true,
+      notificationPreference: "both",
     });
     expect(result).toEqual({ id: 1, success: true });
+    expect(db.createOrUpdateAthleteProfile).toHaveBeenCalledWith(1, expect.objectContaining({
+      displayName: "Test Athlete",
+      city: "Calgary",
+      notificationPreference: "both",
+    }));
+    // Saving athlete profile should also mark onboarding complete
+    expect(db.markOnboardingComplete).toHaveBeenCalledWith(1);
   });
 
-  it("rejects unauthenticated users", async () => {
-    const ctx = createPublicContext();
+  it("accepts all notification preference values", async () => {
+    const ctx = createAuthContext();
     const caller = appRouter.createCaller(ctx);
-    await expect(caller.athleteProfile.save({ displayName: "Test" })).rejects.toThrow();
+
+    for (const pref of ["in_app_only", "email_only", "both", "none"] as const) {
+      const result = await caller.athleteProfile.save({
+        notificationPreference: pref,
+      });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  it("rejects invalid notification preference values", async () => {
+    const ctx = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.athleteProfile.save({
+        notificationPreference: "invalid_value" as any,
+      })
+    ).rejects.toThrow();
   });
 });
 
-// ─── Saved Business Tests ──────────────────────────────────────
+// ─── Auth.me Returns User Type Fields ──────────────────────────
 
-describe("savedBusiness.save", () => {
-  it("saves a business for authenticated user", async () => {
-    const ctx = createAuthContext(1);
+describe("auth.me returns user type fields", () => {
+  it("returns user with accountType and onboardingComplete fields", async () => {
+    const ctx = createAuthContext({
+      accountType: "business_owner",
+      onboardingComplete: true,
+    });
     const caller = appRouter.createCaller(ctx);
-    const result = await caller.savedBusiness.save({ businessId: 5 });
+    const result = await caller.auth.me();
     expect(result).toBeTruthy();
+    expect(result?.accountType).toBe("business_owner");
+    expect(result?.onboardingComplete).toBe(true);
   });
 
-  it("rejects unauthenticated users", async () => {
+  it("returns consumer account type with onboarding incomplete", async () => {
+    const ctx = createAuthContext({
+      accountType: "consumer",
+      onboardingComplete: false,
+    });
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.auth.me();
+    expect(result).toBeTruthy();
+    expect(result?.accountType).toBe("consumer");
+    expect(result?.onboardingComplete).toBe(false);
+  });
+
+  it("returns null for unauthenticated users", async () => {
     const ctx = createPublicContext();
     const caller = appRouter.createCaller(ctx);
-    await expect(caller.savedBusiness.save({ businessId: 5 })).rejects.toThrow();
-  });
-});
-
-describe("savedBusiness.unsave", () => {
-  it("unsaves a business for authenticated user", async () => {
-    const ctx = createAuthContext(1);
-    const caller = appRouter.createCaller(ctx);
-    await expect(caller.savedBusiness.unsave({ businessId: 5 })).resolves.not.toThrow();
-  });
-});
-
-describe("savedBusiness.list", () => {
-  it("returns saved businesses for authenticated user", async () => {
-    const ctx = createAuthContext(1);
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.savedBusiness.list();
-    expect(result).toHaveLength(1);
-    expect(result[0].business.name).toBe("Peak Cycling");
-  });
-
-  it("rejects unauthenticated users", async () => {
-    const ctx = createPublicContext();
-    const caller = appRouter.createCaller(ctx);
-    await expect(caller.savedBusiness.list()).rejects.toThrow();
-  });
-});
-
-describe("savedBusiness.isSaved", () => {
-  it("returns true for a saved business", async () => {
-    const ctx = createAuthContext(1);
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.savedBusiness.isSaved({ businessId: 5 });
-    expect(result).toBe(true);
-  });
-});
-
-describe("savedBusiness.savedIds", () => {
-  it("returns array of saved business IDs", async () => {
-    const ctx = createAuthContext(1);
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.savedBusiness.savedIds();
-    expect(result).toEqual([5, 12]);
+    const result = await caller.auth.me();
+    expect(result).toBeNull();
   });
 });

@@ -1498,6 +1498,12 @@ export async function updateUserAccountType(userId: number, accountType: 'consum
   await db.update(users).set({ accountType }).where(eq(users.id, userId));
 }
 
+export async function markOnboardingComplete(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ onboardingComplete: true }).where(eq(users.id, userId));
+}
+
 // ─── Logo Upload ────────────────────────────────────────────
 export async function updateBusinessLogo(businessId: number, logoUrl: string) {
   const db = await getDb();

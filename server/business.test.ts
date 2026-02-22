@@ -185,6 +185,7 @@ vi.mock("./db", () => ({
   createHub: vi.fn().mockResolvedValue(1),
   // Account type mock
   updateUserAccountType: vi.fn().mockResolvedValue(undefined),
+  markOnboardingComplete: vi.fn().mockResolvedValue(undefined),
   // Logo upload mock
   updateBusinessLogo: vi.fn().mockResolvedValue(undefined),
   // Multi-select search mock

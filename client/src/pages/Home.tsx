@@ -106,7 +106,7 @@ function LaunchTimer() {
 }
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { data: categories } = trpc.categories.sportCategories.useQuery();
   const { data: stats } = trpc.stats.directory.useQuery();
   const { data: featured } = trpc.business.featured.useQuery({ limit: 30 });
@@ -179,7 +179,7 @@ export default function Home() {
                 </Button>
               </Link>
               {!isAuthenticated && (
-                <a href={getLoginUrl()}>
+                <a href={getLoginUrl("/onboarding?type=business")}>
                   <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 font-semibold text-base px-8 h-12 bg-transparent">
                     List Your Business
                     <ArrowRight className="w-5 h-5 ml-2" />
@@ -187,7 +187,7 @@ export default function Home() {
                 </a>
               )}
               {isAuthenticated && (
-                <Link href="/dashboard">
+                <Link href={user?.role === 'admin' ? '/admin' : user?.accountType === 'business_owner' ? '/dashboard' : '/athlete-dashboard'}>
                   <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 font-semibold text-base px-8 h-12 bg-transparent">
                     My Dashboard
                     <ArrowRight className="w-5 h-5 ml-2" />

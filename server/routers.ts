@@ -980,8 +980,21 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         await db.updateUserAccountType(ctx.user.id, input.accountType);
+        // For business owners, mark onboarding complete when they set account type
+        // (they'll be redirected to submit-business next)
+        if (input.accountType === 'business_owner') {
+          await db.markOnboardingComplete(ctx.user.id);
+        }
         return { success: true };
       }),
+  }),
+
+  // ─── Onboarding ──────────────────────────────────────────────────
+  onboarding: router({
+    complete: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.markOnboardingComplete(ctx.user.id);
+      return { success: true };
+    }),
   }),
 
   // ─── Athlete Profile ─────────────────────────────────────────────
@@ -1003,9 +1016,12 @@ export const appRouter = router({
         goals: z.string().optional(),
         referralSource: z.string().optional(),
         newsletterOptIn: z.boolean().optional(),
+        notificationPreference: z.enum(['in_app_only', 'email_only', 'both', 'none']).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const id = await db.createOrUpdateAthleteProfile(ctx.user.id, input);
+        // Mark onboarding complete when athlete saves their profile
+        await db.markOnboardingComplete(ctx.user.id);
         return { id, success: true };
       }),
   }),

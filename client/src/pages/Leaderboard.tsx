@@ -1,6 +1,8 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -285,11 +287,7 @@ export default function Leaderboard() {
                     Browse Directory
                   </Button>
                 </Link>
-                <Link href="/submit-business">
-                  <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                    List Your Business
-                  </Button>
-                </Link>
+                <ListYourBusinessCTA />
               </div>
             </CardContent>
           </Card>
@@ -298,5 +296,43 @@ export default function Leaderboard() {
 
       <Footer />
     </div>
+  );
+}
+
+
+// Helper component: routes authenticated business owners to /submit-business,
+// unauthenticated users to login with onboarding?type=business return path
+function ListYourBusinessCTA() {
+  const { isAuthenticated, user } = useAuth();
+  
+  // If authenticated and already a business owner, go straight to submit-business
+  if (isAuthenticated && user?.accountType === 'business_owner') {
+    return (
+      <Link href="/submit-business">
+        <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+          List Your Business
+        </Button>
+      </Link>
+    );
+  }
+  
+  // If authenticated but not a business owner (athlete), go to onboarding with business type
+  if (isAuthenticated) {
+    return (
+      <Link href="/onboarding?type=business">
+        <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+          List Your Business
+        </Button>
+      </Link>
+    );
+  }
+  
+  // Not authenticated — go through login flow with returnPath
+  return (
+    <a href={getLoginUrl("/onboarding?type=business")}>
+      <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+        List Your Business
+      </Button>
+    </a>
   );
 }
