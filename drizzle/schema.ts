@@ -345,3 +345,48 @@ export const categoryApprovals = mysqlTable("category_approvals", {
 
 export type CategoryApproval = typeof categoryApprovals.$inferSelect;
 export type InsertCategoryApproval = typeof categoryApprovals.$inferInsert;
+
+/**
+ * Athlete profiles: data collected from consumer/athlete signups for recommendations
+ */
+export const athleteProfiles = mysqlTable("athlete_profiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  displayName: varchar("displayName", { length: 255 }),
+  // Sports they participate in (JSON array of sport category IDs)
+  sportIds: text("sportIds"),
+  // Experience level per sport (JSON object: { sportId: level })
+  experienceLevels: text("experienceLevels"),
+  // Location
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 100 }),
+  country: varchar("country", { length: 100 }),
+  region: varchar("region", { length: 100 }),
+  hub: varchar("hub", { length: 100 }),
+  // What they're looking for (JSON array: e.g. ["coaching", "bike_fit", "nutrition", "physio"])
+  interests: text("interests"),
+  // Goals (free text)
+  goals: text("goals"),
+  // How they heard about us
+  referralSource: varchar("referralSource", { length: 255 }),
+  // Newsletter opt-in
+  newsletterOptIn: boolean("newsletterOptIn").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AthleteProfile = typeof athleteProfiles.$inferSelect;
+export type InsertAthleteProfile = typeof athleteProfiles.$inferInsert;
+
+/**
+ * Saved/bookmarked businesses by consumers
+ */
+export const savedBusinesses = mysqlTable("saved_businesses", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  businessId: int("businessId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SavedBusiness = typeof savedBusinesses.$inferSelect;
+export type InsertSavedBusiness = typeof savedBusinesses.$inferInsert;

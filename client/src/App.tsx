@@ -20,6 +20,7 @@ import About from "./pages/About";
 import SupportTicket from "./pages/SupportTicket";
 import Leaderboard from "./pages/Leaderboard";
 import Onboarding from "./pages/Onboarding";
+import AthleteDashboard from "./pages/AthleteDashboard";
 
 function Router() {
   return (
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/support" component={SupportTicket} />
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/onboarding" component={Onboarding} />
+      <Route path="/athlete-dashboard" component={AthleteDashboard} />
       <Route path="/admin" component={AdminPanel} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

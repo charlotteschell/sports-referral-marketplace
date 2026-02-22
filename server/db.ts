@@ -16,6 +16,8 @@ import {
   partnershipEmails, InsertPartnershipEmail,
   supportTickets, InsertSupportTicket, SupportTicket,
   categoryApprovals, InsertCategoryApproval,
+  athleteProfiles, InsertAthleteProfile,
+  savedBusinesses,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1668,6 +1670,87 @@ export async function createBusinessType(data: { name: string; slug: string; des
     if (e.code === 'ER_DUP_ENTRY') return; // already exists
     throw e;
   }
+}
+
+// ─── Athlete Profiles ──────────────────────────────────────────
+
+export async function createOrUpdateAthleteProfile(userId: number, data: Partial<InsertAthleteProfile>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await db.select().from(athleteProfiles).where(eq(athleteProfiles.userId, userId)).limit(1);
+  if (existing.length > 0) {
+    await db.update(athleteProfiles).set(data).where(eq(athleteProfiles.userId, userId));
+    return existing[0].id;
+  } else {
+    const result = await db.insert(athleteProfiles).values({ userId, ...data });
+    return Number(result[0].insertId);
+  }
+}
+
+export async function getAthleteProfile(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(athleteProfiles).where(eq(athleteProfiles.userId, userId)).limit(1);
+  return rows[0] || null;
+}
+
+// ─── Saved Businesses ──────────────────────────────────────────
+
+export async function saveBusiness(userId: number, businessId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  try {
+    await db.insert(savedBusinesses).values({ userId, businessId });
+    return { success: true };
+  } catch (e: any) {
+    if (e.code === 'ER_DUP_ENTRY') return { success: true, alreadySaved: true };
+    throw e;
+  }
+}
+
+export async function unsaveBusiness(userId: number, businessId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(savedBusinesses).where(
+    and(eq(savedBusinesses.userId, userId), eq(savedBusinesses.businessId, businessId))
+  );
+  return { success: true };
+}
+
+export async function getSavedBusinesses(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    savedBusiness: savedBusinesses,
+    business: businesses,
+    sportCategory: sportCategories,
+    businessType: businessTypes,
+  })
+    .from(savedBusinesses)
+    .innerJoin(businesses, eq(savedBusinesses.businessId, businesses.id))
+    .leftJoin(sportCategories, eq(businesses.sportCategoryId, sportCategories.id))
+    .leftJoin(businessTypes, eq(businesses.businessTypeId, businessTypes.id))
+    .where(eq(savedBusinesses.userId, userId))
+    .orderBy(desc(savedBusinesses.createdAt));
+}
+
+export async function isBusinessSaved(userId: number, businessId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  const rows = await db.select({ id: savedBusinesses.id })
+    .from(savedBusinesses)
+    .where(and(eq(savedBusinesses.userId, userId), eq(savedBusinesses.businessId, businessId)))
+    .limit(1);
+  return rows.length > 0;
+}
+
+export async function getSavedBusinessIds(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({ businessId: savedBusinesses.businessId })
+    .from(savedBusinesses)
+    .where(eq(savedBusinesses.userId, userId));
+  return rows.map(r => r.businessId);
 }
 
 // ─── Leaderboard Queries ─────────────────────────────────────

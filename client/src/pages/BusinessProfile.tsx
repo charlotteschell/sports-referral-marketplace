@@ -17,7 +17,7 @@ import {
   Bike, Mountain, Snowflake, Star, Handshake, Compass,
   Instagram, Facebook, Pencil, Gift, Send, ExternalLink,
   Users, Info, Sparkles, Heart, Loader2, CheckCircle2, AlertCircle,
-  Upload, Camera, Tag, MessageSquare
+  Upload, Camera, Tag, MessageSquare, Bookmark, BookmarkCheck
 } from "lucide-react";
 
 const sportIcons: Record<string, React.ReactNode> = {
@@ -265,7 +265,23 @@ export default function BusinessProfile() {
   const b2bOffers = offers?.filter(o => o.offerType === "b2b") || [];
   const consumerOffers = offers?.filter(o => o.offerType === "consumer") || [];
 
-
+  // Save business functionality
+  const { data: savedList } = trpc.savedBusiness.list.useQuery(undefined, { enabled: isAuthenticated });
+  const isSaved = savedList?.some((s: any) => s.business.id === business.id) || false;
+  const saveMutation = trpc.savedBusiness.save.useMutation({
+    onSuccess: () => {
+      utils.savedBusiness.list.invalidate();
+      toast.success("Business saved!");
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to save"),
+  });
+  const unsaveMutation = trpc.savedBusiness.unsave.useMutation({
+    onSuccess: () => {
+      utils.savedBusiness.list.invalidate();
+      toast.success("Business removed from saved list.");
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to unsave"),
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -399,6 +415,30 @@ export default function BusinessProfile() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 shrink-0">
+              {/* Save/Unsave Button */}
+              {isAuthenticated && !isOwner && (
+                <Button
+                  variant="outline"
+                  className={`border-white/30 hover:bg-white/10 bg-transparent ${
+                    isSaved ? "text-primary border-primary/40" : "text-white"
+                  }`}
+                  style={{ textTransform: "none" }}
+                  onClick={() => {
+                    if (isSaved) {
+                      unsaveMutation.mutate({ businessId: business.id });
+                    } else {
+                      saveMutation.mutate({ businessId: business.id });
+                    }
+                  }}
+                  disabled={saveMutation.isPending || unsaveMutation.isPending}
+                >
+                  {isSaved ? (
+                    <><BookmarkCheck className="w-4 h-4 mr-2" /> Saved</>
+                  ) : (
+                    <><Bookmark className="w-4 h-4 mr-2" /> Save</>
+                  )}
+                </Button>
+              )}
               {(!isReallyVerified) && isAuthenticated && claimStep === 'idle' && (
                 <Button
                   onClick={() => setClaimStep('email')}

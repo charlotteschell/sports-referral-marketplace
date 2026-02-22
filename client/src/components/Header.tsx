@@ -62,11 +62,19 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
-                <Link href="/dashboard">
-                  <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
-                    Dashboard
-                  </Button>
-                </Link>
+                {user?.accountType === 'consumer' ? (
+                  <Link href="/athlete-dashboard">
+                    <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
+                      My Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link href="/dashboard">
+                    <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
+                      Dashboard
+                    </Button>
+                  </Link>
+                )}
                 {user?.role === 'admin' && (
                   <Link href="/admin">
                     <Button variant="ghost" className="text-amber-400/80 hover:text-amber-300 hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
@@ -90,9 +98,9 @@ export default function Header() {
                     Sign In
                   </Button>
                 </a>
-                <a href={getLoginUrl("/onboarding?type=enthusiast")}>
+                <a href={getLoginUrl("/onboarding?type=athlete")}>
                   <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 bg-transparent text-sm" style={{ textTransform: "none" }}>
-                    <Mountain className="w-3.5 h-3.5 mr-1.5" /> I'm an Enthusiast
+                    <Mountain className="w-3.5 h-3.5 mr-1.5" /> I'm an Athlete
                   </Button>
                 </a>
                 <a href={getLoginUrl("/submit-business")}>
@@ -135,11 +143,19 @@ export default function Header() {
               <div className="border-t border-white/10 mt-2 pt-2">
                 {isAuthenticated ? (
                   <>
-                    <Link href="/dashboard">
-                      <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
-                        Dashboard
-                      </span>
-                    </Link>
+                    {user?.accountType === 'consumer' ? (
+                      <Link href="/athlete-dashboard">
+                        <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                          My Dashboard
+                        </span>
+                      </Link>
+                    ) : (
+                      <Link href="/dashboard">
+                        <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                          Dashboard
+                        </span>
+                      </Link>
+                    )}
                     {user?.role === 'admin' && (
                       <Link href="/admin">
                         <span className="block px-3 py-2 rounded-md text-sm font-medium text-amber-400/80 hover:text-amber-300 cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
@@ -162,9 +178,9 @@ export default function Header() {
                         Sign In
                       </span>
                     </a>
-                    <a href={getLoginUrl("/onboarding?type=enthusiast")}>
+                    <a href={getLoginUrl("/onboarding?type=athlete")}>
                       <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
-                        <span className="inline-flex items-center gap-1.5"><Mountain className="w-3.5 h-3.5" /> I'm an Enthusiast</span>
+                        <span className="inline-flex items-center gap-1.5"><Mountain className="w-3.5 h-3.5" /> I'm an Athlete</span>
                       </span>
                     </a>
                     <a href={getLoginUrl("/submit-business")}>

@@ -586,3 +586,15 @@
 
 ## Counter Launch
 - [x] Set launch counter to Monday Feb 23, 2026 at 12:00 PM MST (shows countdown before, elapsed after)
+
+## Consumer/Athlete Dashboard & Signup
+- [x] Change "I'm an enthusiast" to "I'm an athlete" across the site
+- [x] Build athlete signup form collecting: sports, experience level, location, interests, goals
+- [x] Create athlete_profiles database table for recommendation data
+- [x] Create consumer/athlete dashboard page
+- [x] Dashboard: Claimed offers section with status tracking
+- [x] Dashboard: Saved/bookmarked businesses section
+- [x] Dashboard: Referral history (offers they've used)
+- [x] Add save/bookmark business functionality
+- [x] Wire up all API endpoints for athlete dashboard data
+- [x] Write tests for new endpoints

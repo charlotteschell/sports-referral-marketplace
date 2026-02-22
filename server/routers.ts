@@ -967,6 +967,57 @@ export const appRouter = router({
       }),
   }),
 
+  // ─── Athlete Profile ─────────────────────────────────────────────
+  athleteProfile: router({
+    get: protectedProcedure.query(async ({ ctx }) => {
+      return db.getAthleteProfile(ctx.user.id);
+    }),
+    save: protectedProcedure
+      .input(z.object({
+        displayName: z.string().optional(),
+        sportIds: z.string().optional(),
+        experienceLevels: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        country: z.string().optional(),
+        region: z.string().optional(),
+        hub: z.string().optional(),
+        interests: z.string().optional(),
+        goals: z.string().optional(),
+        referralSource: z.string().optional(),
+        newsletterOptIn: z.boolean().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.createOrUpdateAthleteProfile(ctx.user.id, input);
+        return { id, success: true };
+      }),
+  }),
+
+  // ─── Saved Businesses ─────────────────────────────────────────────
+  savedBusiness: router({
+    save: protectedProcedure
+      .input(z.object({ businessId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        return db.saveBusiness(ctx.user.id, input.businessId);
+      }),
+    unsave: protectedProcedure
+      .input(z.object({ businessId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        return db.unsaveBusiness(ctx.user.id, input.businessId);
+      }),
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return db.getSavedBusinesses(ctx.user.id);
+    }),
+    isSaved: protectedProcedure
+      .input(z.object({ businessId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        return db.isBusinessSaved(ctx.user.id, input.businessId);
+      }),
+    savedIds: protectedProcedure.query(async ({ ctx }) => {
+      return db.getSavedBusinessIds(ctx.user.id);
+    }),
+  }),
+
   // ─── Logo Upload ──────────────────────────────────────────────
   logoUpload: router({
     upload: protectedProcedure
