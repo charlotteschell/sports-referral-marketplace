@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, name, isClaimed, claimedByUserId, approvalStatus FROM businesses WHERE isClaimed = 1 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name, isClaimed, claimedByUserId, approvalStatus FROM businesses WHERE isClaimed = 1 LIMIT 10;",
+  "rows": [
+    {
+      "id": "2",
+      "name": "Bighorn Mountain Biking",
+      "isClaimed": "1",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "3",
+      "name": "Run the Alps",
+      "isClaimed": "1",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "4",
+      "name": "Powder Guides Ski Adventures",
+      "isClaimed": "1",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "5",
+      "name": "Peak Performance PTS Physical Therapy",
+      "isClaimed": "1",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "6",
+      "name": "On Pace Wellness",
+      "isClaimed": "1",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "7",
+      "name": "Rapha Massage",
+      "isClaimed": "1",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "8",
+      "name": "Love Cycling Studio",
+      "isClaimed": "1",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "9",
+      "name": "Gear West",
+      "isClaimed": "1",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "10",
+      "name": "FootZone Bend",
+      "isClaimed": "1",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "11",
+      "name": "Jackson Hole Fitness Coaching",
+      "isClaimed": "1",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tisClaimed\tclaimedByUserId\tapprovalStatus\n2\tBighorn Mountain Biking\t1\tNULL\tapproved\n3\tRun the Alps\t1\tNULL\tapproved\n4\tPowder Guides Ski Adventures\t1\tNULL\tapproved\n5\tPeak Performance PTS Physical Therapy\t1\tNULL\tapproved\n6\tOn Pace Wellness\t1\tNULL\tapproved\n7\tRapha Massage\t1\tNULL\tapproved\n8\tLove Cycling Studio\t1\tNULL\tapproved\n9\tGear West\t1\tNULL\tapproved\n10\tFootZone Bend\t1\tNULL\tapproved\n11\tJackson Hole Fitness Coaching\t1\tNULL\tapproved\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

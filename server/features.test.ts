@@ -57,7 +57,7 @@ vi.mock("./db", () => ({
   disputeReferral: vi.fn().mockResolvedValue(undefined),
   incrementPlatformStat: vi.fn().mockResolvedValue(undefined),
   hasUserClaimedOffer: vi.fn().mockResolvedValue(false),
-  createConsumerClaim: vi.fn().mockResolvedValue(1),
+  createConsumerClaim: vi.fn().mockResolvedValue({ id: 1, claimCode: 'SC-TEST1' }),
   verifyConsumerClaim: vi.fn().mockResolvedValue(undefined),
   getConsumerClaimsByUser: vi.fn().mockResolvedValue([]),
   getConsumerClaimsByBusiness: vi.fn().mockResolvedValue([]),
@@ -132,6 +132,7 @@ vi.mock("./db", () => ({
   markAllNotificationsRead: vi.fn().mockResolvedValue(undefined),
   getUnreadNotificationCount: vi.fn().mockResolvedValue(0),
   getRecommendedBusinesses: vi.fn().mockResolvedValue([]),
+  getRecommendedBusinessesForProfile: vi.fn().mockResolvedValue([{ id: 1, name: 'Test Biz', slug: 'test-biz', matchReason: 'your_sport', matchScore: 30 }]),
   getBusinessSubmissionById: vi.fn().mockImplementation(async (id: number) => {
     if (id === 1) return {
       submission: { id: 1, businessName: "Test Submission", userId: 2, sportCategoryId: 1, businessTypeId: 1, contactName: "Jane", contactEmail: "jane@test.com", status: "pending" },
@@ -593,5 +594,190 @@ describe("file upload", () => {
         fileSize: 100,
       })
     ).rejects.toThrow();
+  });
+});
+
+describe("consumer offer claiming (FEAT-001)", () => {
+  const adminCtx: TrpcContext = {
+    user: { id: 1, name: "Admin", email: "admin@test.com", role: "admin", openId: "admin-open-id" } as any,
+    res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+  };
+  const userCtx: TrpcContext = {
+    user: { id: 2, name: "User", email: "user@test.com", role: "user", openId: "user-open-id" } as any,
+    res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+  };
+  const anonCtx: TrpcContext = {
+    user: null,
+    res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+  };
+
+  it("authenticated user can claim a consumer offer", async () => {
+    const { getReferralOfferById, hasUserClaimedOffer, createConsumerClaim } = await import("./db");
+    (getReferralOfferById as any).mockResolvedValueOnce({ id: 1, businessId: 1, title: "10% Off", offerType: "consumer", isActive: true });
+    (hasUserClaimedOffer as any).mockResolvedValueOnce(false);
+    (createConsumerClaim as any).mockResolvedValueOnce({ id: 1, claimCode: "SC-ABC12" });
+
+    const caller = appRouter.createCaller(userCtx);
+    const result = await caller.consumerClaim.claim({ referralOfferId: 1, businessId: 1 });
+    expect(result).toHaveProperty("claimCode");
+    expect(createConsumerClaim).toHaveBeenCalledWith({
+      referralOfferId: 1,
+      businessId: 1,
+      userId: 2,
+    });
+  });
+
+  it("prevents double claiming of the same offer", async () => {
+    const { getReferralOfferById, hasUserClaimedOffer } = await import("./db");
+    (getReferralOfferById as any).mockResolvedValueOnce({ id: 1, businessId: 1, title: "10% Off", offerType: "consumer", isActive: true });
+    (hasUserClaimedOffer as any).mockResolvedValueOnce(true);
+
+    const caller = appRouter.createCaller(userCtx);
+    await expect(
+      caller.consumerClaim.claim({ referralOfferId: 1, businessId: 1 })
+    ).rejects.toThrow("already claimed");
+  });
+
+  it("rejects claiming a non-consumer offer", async () => {
+    const { getReferralOfferById } = await import("./db");
+    (getReferralOfferById as any).mockResolvedValueOnce({ id: 1, businessId: 1, title: "B2B Offer", offerType: "b2b", isActive: true });
+
+    const caller = appRouter.createCaller(userCtx);
+    await expect(
+      caller.consumerClaim.claim({ referralOfferId: 1, businessId: 1 })
+    ).rejects.toThrow();
+  });
+
+  it("unauthenticated user cannot claim offers", async () => {
+    const caller = appRouter.createCaller(anonCtx);
+    await expect(
+      caller.consumerClaim.claim({ referralOfferId: 1, businessId: 1 })
+    ).rejects.toThrow();
+  });
+
+  it("user can list their claims", async () => {
+    const caller = appRouter.createCaller(userCtx);
+    const result = await caller.consumerClaim.myClaims();
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("user can verify a claim", async () => {
+    const caller = appRouter.createCaller(userCtx);
+    const result = await caller.consumerClaim.verify({ claimId: 1, honored: true, amountSaved: "10.00" });
+    expect(result).toEqual({ success: true });
+  });
+});
+
+describe("BUG-001: claim business flow fix", () => {
+  it("allows claiming a business with isClaimed=true but no claimedByUserId (seeded data)", async () => {
+    const { getBusinessById, claimBusiness } = await import("./db");
+    // Simulate seeded business: isClaimed=true but claimedByUserId=null
+    (getBusinessById as any).mockResolvedValueOnce({
+      business: { id: 2, name: "Seeded Biz", slug: "seeded-biz", isClaimed: true, claimedByUserId: null, isActive: true, approvalStatus: "approved" },
+      sportCategory: { id: 1, name: "Cycling" },
+      businessType: { id: 1, name: "Coach" },
+    });
+    (claimBusiness as any).mockResolvedValueOnce(undefined);
+
+    const ctx: TrpcContext = {
+      user: { id: 2, name: "User", email: "user@test.com", role: "user", openId: "user-open-id" } as any,
+      res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+    };
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.business.claim({ businessId: 2 });
+    expect(result).toHaveProperty("message");
+    expect(claimBusiness).toHaveBeenCalled();
+  });
+
+  it("rejects claiming a business that already has an owner", async () => {
+    const { getBusinessById } = await import("./db");
+    (getBusinessById as any).mockResolvedValueOnce({
+      business: { id: 1, name: "Owned Biz", slug: "owned-biz", isClaimed: true, claimedByUserId: 1, isActive: true, approvalStatus: "approved" },
+      sportCategory: { id: 1, name: "Cycling" },
+      businessType: { id: 1, name: "Coach" },
+    });
+
+    const ctx: TrpcContext = {
+      user: { id: 2, name: "User", email: "user@test.com", role: "user", openId: "user-open-id" } as any,
+      res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+    };
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.business.claim({ businessId: 1 })
+    ).rejects.toThrow("already claimed");
+  });
+});
+
+describe("contact info hiding for non-owners", () => {
+  it("business owner can see their own email and phone", async () => {
+    const { getBusinessBySlug } = await import("./db");
+    (getBusinessBySlug as any).mockResolvedValueOnce({
+      business: { id: 1, name: "My Biz", slug: "my-biz", isClaimed: true, claimedByUserId: 1, isActive: true, approvalStatus: "approved", email: "owner@test.com", phone: "555-1234" },
+      sportCategory: { id: 1, name: "Cycling" },
+      businessType: { id: 1, name: "Coach" },
+    });
+
+    const ctx: TrpcContext = {
+      user: { id: 1, name: "Owner", email: "owner@test.com", role: "user", openId: "owner-open-id" } as any,
+      res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+    };
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.business.getBySlug({ slug: "my-biz" });
+    expect(result?.business.email).toBe("owner@test.com");
+    expect(result?.business.phone).toBe("555-1234");
+  });
+
+  it("non-owner user cannot see email and phone", async () => {
+    const { getBusinessBySlug } = await import("./db");
+    (getBusinessBySlug as any).mockResolvedValueOnce({
+      business: { id: 1, name: "Other Biz", slug: "other-biz", isClaimed: true, claimedByUserId: 1, isActive: true, approvalStatus: "approved", email: "owner@test.com", phone: "555-1234" },
+      sportCategory: { id: 1, name: "Cycling" },
+      businessType: { id: 1, name: "Coach" },
+    });
+
+    const ctx: TrpcContext = {
+      user: { id: 2, name: "Visitor", email: "visitor@test.com", role: "user", openId: "visitor-open-id" } as any,
+      res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+    };
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.business.getBySlug({ slug: "other-biz" });
+    expect(result?.business.email).toBeNull();
+    expect(result?.business.phone).toBeNull();
+  });
+
+  it("admin can see email and phone of any business", async () => {
+    const { getBusinessBySlug } = await import("./db");
+    (getBusinessBySlug as any).mockResolvedValueOnce({
+      business: { id: 1, name: "Any Biz", slug: "any-biz", isClaimed: true, claimedByUserId: 2, isActive: true, approvalStatus: "approved", email: "biz@test.com", phone: "555-9999" },
+      sportCategory: { id: 1, name: "Cycling" },
+      businessType: { id: 1, name: "Coach" },
+    });
+
+    const ctx: TrpcContext = {
+      user: { id: 1, name: "Admin", email: "admin@test.com", role: "admin", openId: "admin-open-id" } as any,
+      res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+    };
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.business.getBySlug({ slug: "any-biz" });
+    expect(result?.business.email).toBe("biz@test.com");
+    expect(result?.business.phone).toBe("555-9999");
+  });
+
+  it("anonymous user cannot see email and phone", async () => {
+    const { getBusinessBySlug } = await import("./db");
+    (getBusinessBySlug as any).mockResolvedValueOnce({
+      business: { id: 1, name: "Public Biz", slug: "public-biz", isClaimed: true, claimedByUserId: 1, isActive: true, approvalStatus: "approved", email: "pub@test.com", phone: "555-0000" },
+      sportCategory: { id: 1, name: "Cycling" },
+      businessType: { id: 1, name: "Coach" },
+    });
+
+    const ctx: TrpcContext = {
+      user: null,
+      res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+    };
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.business.getBySlug({ slug: "public-biz" });
+    expect(result?.business.email).toBeNull();
+    expect(result?.business.phone).toBeNull();
   });
 });

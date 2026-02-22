@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, title, incentiveType, incentiveValue FROM referralOffers WHERE offerType = 'consumer' AND incentiveValue LIKE '%$%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, title, incentiveType, incentiveValue FROM referralOffers WHERE offerType = 'consumer' AND incentiveValue LIKE '%$%' LIMIT 10;",
+  "rows": [
+    {
+      "id": "120002",
+      "title": "First class for $1 only",
+      "incentiveType": "fixed",
+      "incentiveValue": "$1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tincentiveType\tincentiveValue\n120002\tFirst class for $1 only\tfixed\t$1\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

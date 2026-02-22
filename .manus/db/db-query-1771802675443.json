@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, name, isClaimed, claimedByUserId, approvalStatus FROM businesses WHERE isClaimed = 0 LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name, isClaimed, claimedByUserId, approvalStatus FROM businesses WHERE isClaimed = 0 LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "APEX Coaching",
+      "isClaimed": "0",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "13",
+      "name": "Cortina Bike Tours",
+      "isClaimed": "0",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "14",
+      "name": "Runcation Travel",
+      "isClaimed": "0",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "15",
+      "name": "Dolomiti Physiocenter",
+      "isClaimed": "0",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    },
+    {
+      "id": "16",
+      "name": "On the Rocks Bike Shop, Rental & Guide",
+      "isClaimed": "0",
+      "claimedByUserId": "NULL",
+      "approvalStatus": "approved"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tisClaimed\tclaimedByUserId\tapprovalStatus\n1\tAPEX Coaching\t0\tNULL\tapproved\n13\tCortina Bike Tours\t0\tNULL\tapproved\n14\tRuncation Travel\t0\tNULL\tapproved\n15\tDolomiti Physiocenter\t0\tNULL\tapproved\n16\tOn the Rocks Bike Shop, Rental & Guide\t0\tNULL\tapproved\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(CASE WHEN isClaimed = 1 THEN 1 ELSE 0 END) as claimed, SUM(CASE WHEN isClaimed = 0 THEN 1 ELSE 0 END) as unclaimed FROM businesses;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT COUNT(*) as total, SUM(CASE WHEN isClaimed = 1 THEN 1 ELSE 0 END) as claimed, SUM(CASE WHEN isClaimed = 0 THEN 1 ELSE 0 END) as unclaimed FROM businesses;",
+  "rows": [
+    {
+      "total": "202",
+      "claimed": "14",
+      "unclaimed": "188"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tclaimed\tunclaimed\n202\t14\t188\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

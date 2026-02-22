@@ -2449,3 +2449,94 @@ export async function getAttachmentsForTicket(ticketId: number) {
     .where(eq(supportTicketAttachments.ticketId, ticketId))
     .orderBy(supportTicketAttachments.createdAt);
 }
+
+// ─── Recommendations for Admin Test Profile ──────────────────────
+export async function getRecommendedBusinessesForProfile(
+  profile: { sportIds: string | null; interests: string | null; city: string | null; region: string | null; hub: string | null },
+  limit = 12
+) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const sportIds: number[] = profile.sportIds ? JSON.parse(profile.sportIds) : [];
+  const interests: string[] = profile.interests ? JSON.parse(profile.interests) : [];
+  const city = profile.city || '';
+  const region = profile.region || '';
+  const hub = profile.hub || '';
+
+  // Map interests to business type IDs
+  const targetTypeIds: number[] = [];
+  for (const interest of interests) {
+    const typeIds = INTEREST_TO_BUSINESS_TYPE_IDS[interest];
+    if (typeIds) targetTypeIds.push(...typeIds);
+  }
+
+  const sportIdsStr = sportIds.length > 0 ? sportIds.join(',') : '0';
+  const typeIdsStr = targetTypeIds.length > 0 ? targetTypeIds.join(',') : '0';
+  const cityEscaped = city.replace(/'/g, "''");
+  const regionEscaped = region.replace(/'/g, "''");
+  const hubEscaped = hub.replace(/'/g, "''");
+
+  const [rows] = await db.execute(sql.raw(`
+    SELECT * FROM (
+      SELECT 
+        b.id, b.name, b.slug, b.city, b.region, b.hub, b.logoUrl, b.description,
+        b.googleRating, b.googleReviewCount, b.approvalStatus, b.claimedByUserId,
+        bt.name as businessTypeName, bt.id as businessTypeId,
+        (
+          CASE WHEN EXISTS (
+            SELECT 1 FROM business_sport_categories bsc 
+            WHERE bsc.businessId = b.id AND bsc.sportCategoryId IN (${sportIdsStr})
+          ) THEN 30 ELSE 0 END
+          +
+          CASE WHEN b.businessTypeId IN (${typeIdsStr}) THEN 25 ELSE 0 END
+          +
+          CASE WHEN LOWER(b.city) = LOWER('${cityEscaped}') AND '${cityEscaped}' != '' THEN 20 ELSE 0 END
+          +
+          CASE WHEN LOWER(b.hub) = LOWER('${hubEscaped}') AND '${hubEscaped}' != '' THEN 15 ELSE 0 END
+          +
+          CASE WHEN LOWER(b.region) = LOWER('${regionEscaped}') AND '${regionEscaped}' != '' THEN 10 ELSE 0 END
+        ) as matchScore,
+        CASE 
+          WHEN LOWER(b.city) = LOWER('${cityEscaped}') AND '${cityEscaped}' != '' THEN 'near_you'
+          WHEN EXISTS (
+            SELECT 1 FROM business_sport_categories bsc 
+            WHERE bsc.businessId = b.id AND bsc.sportCategoryId IN (${sportIdsStr})
+          ) THEN 'your_sport'
+          WHEN b.businessTypeId IN (${typeIdsStr}) THEN 'your_interest'
+          ELSE 'popular'
+        END as matchReason
+      FROM businesses b
+      LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
+      WHERE b.isActive = 1 AND b.isAdminHidden = 0 AND b.approvalStatus = 'approved'
+    ) AS scored
+    WHERE matchScore > 0
+    ORDER BY matchScore DESC, googleReviewCount DESC
+    LIMIT ${limit}
+  `));
+
+  const results = (rows as unknown as any[]) || [];
+
+  // Backfill with popular businesses if not enough results
+  if (results.length < limit) {
+    const existingIds = results.map((r: any) => r.id);
+    const excludeBackfill = existingIds.length > 0 ? `AND b.id NOT IN (${existingIds.join(',')})` : '';
+    
+    const [backfill] = await db.execute(sql.raw(`
+      SELECT b.id, b.name, b.slug, b.city, b.region, b.hub, b.logoUrl, b.description,
+             b.googleRating, b.googleReviewCount, b.approvalStatus, b.claimedByUserId,
+             bt.name as businessTypeName, bt.id as businessTypeId,
+             'popular' as matchReason, 5 as matchScore
+      FROM businesses b
+      LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
+      WHERE b.isActive = 1 AND b.isAdminHidden = 0 AND b.approvalStatus = 'approved'
+      ${excludeBackfill}
+      ORDER BY b.googleReviewCount DESC, b.googleRating DESC
+      LIMIT ${limit - results.length}
+    `));
+    
+    results.push(...((backfill as unknown as any[]) || []));
+  }
+
+  return results;
+}

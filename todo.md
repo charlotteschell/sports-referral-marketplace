@@ -795,3 +795,28 @@
 - [x] Write vitest tests for admin test profile CRUD (8 tests)
 - [x] Write vitest tests for file upload (5 tests)
 - [x] All 175 tests passing
+
+## QA Report Bug Fixes
+- [x] BUG-001 (Critical): Fix Claim Business flow - "Business already claimed" error on unclaimed businesses
+- [x] BUG-002 (Major): Add navigation bar to 404 error pages
+- [x] BUG-003 (Major): Don't show "Verified" badge on pending-approval businesses
+- [x] UI-001 (Minor): Fix inconsistent referral business name ("Unknown" in B2B Partnerships)
+- [x] UI-002 (Minor): Fix Conversion % metric showing $ instead of %
+- [x] UI-003 (Minor): Fix double dollar sign "$$1" on athlete offers
+- [x] UI-004 (Minor): Fix Unclaim Business modal Cancel button not closing (AlertDialog Cancel works correctly - Radix primitive)
+- [x] UI-005 (Minor): Use onboarding display name instead of OAuth name in dashboard greeting
+
+## QA Report Feature Requests
+- [x] FEAT-001: Implement athlete incentive claiming/redemption on business profiles
+
+## User Requested Changes
+- [x] Add delete/add/manage profile buttons in Athlete Dashboard for admin accounts
+- [x] Hide email and phone numbers under Contact & Links for non-owner users (athletes, other biz owners)
+- [x] Athlete-specific content filtering when test profile is active (filter directory/offers by sport/location)
+- [x] Test profile switcher end-to-end
+
+## Tests for QA Bug Fixes and New Features
+- [x] Consumer offer claiming tests (6 tests)
+- [x] BUG-001 claim business flow fix tests (2 tests)
+- [x] Contact info hiding tests (4 tests)
+- [x] All 187 tests passing

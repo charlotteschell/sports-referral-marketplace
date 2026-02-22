@@ -1,52 +1,66 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, Home } from "lucide-react";
+import { AlertCircle, Home, Search, ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export default function NotFound() {
   const [, setLocation] = useLocation();
 
-  const handleGoHome = () => {
-    setLocation("/");
-  };
-
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-      <Card className="w-full max-w-lg mx-4 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-        <CardContent className="pt-8 pb-8 text-center">
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header />
+
+      <main className="flex-1 flex items-center justify-center py-20">
+        <div className="w-full max-w-lg mx-4 text-center">
           <div className="flex justify-center mb-6">
             <div className="relative">
-              <div className="absolute inset-0 bg-red-100 rounded-full animate-pulse" />
-              <AlertCircle className="relative h-16 w-16 text-red-500" />
+              <div className="absolute inset-0 bg-[oklch(0.55_0.15_45)]/20 rounded-full animate-pulse" />
+              <AlertCircle className="relative h-16 w-16 text-[oklch(0.65_0.18_55)]" />
             </div>
           </div>
 
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">404</h1>
+          <h1 className="text-5xl font-black text-foreground mb-2" style={{ fontFamily: "'Oswald', sans-serif" }}>404</h1>
 
-          <h2 className="text-xl font-semibold text-slate-700 mb-4">
+          <h2 className="text-xl font-semibold text-muted-foreground mb-4">
             Wrong Turn
           </h2>
 
-          <p className="text-slate-600 mb-8 leading-relaxed">
+          <p className="text-muted-foreground mb-8 leading-relaxed">
             This page doesn't exist. Kind of like your rest days.
             <br />
             Let's get you back on course.
           </p>
 
-          <div
-            id="not-found-button-group"
-            className="flex flex-col sm:flex-row gap-3 justify-center"
-          >
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button
-              onClick={handleGoHome}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+              onClick={() => setLocation("/")}
+              className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white"
             >
               <Home className="w-4 h-4 mr-2" />
               Go Home
             </Button>
+            <Button
+              onClick={() => setLocation("/directory")}
+              variant="outline"
+              className="border-border text-foreground hover:bg-accent"
+            >
+              <Search className="w-4 h-4 mr-2" />
+              Browse Directory
+            </Button>
+            <Button
+              onClick={() => window.history.back()}
+              variant="outline"
+              className="border-border text-foreground hover:bg-accent"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Go Back
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </main>
+
+      <Footer />
     </div>
   );
 }

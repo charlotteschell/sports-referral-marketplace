@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, title, incentiveType, incentiveValue FROM referralOffers WHERE incentiveType = 'fixed' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, title, incentiveType, incentiveValue FROM referralOffers WHERE incentiveType = 'fixed' LIMIT 5;",
+  "rows": [
+    {
+      "id": "3",
+      "title": "$25 Per Qualified Lead",
+      "incentiveType": "fixed",
+      "incentiveValue": "25"
+    },
+    {
+      "id": "5",
+      "title": "Ski Lesson Referral Bonus",
+      "incentiveType": "fixed",
+      "incentiveValue": "30"
+    },
+    {
+      "id": "7",
+      "title": "Running Club Collaboration",
+      "incentiveType": "fixed",
+      "incentiveValue": "10"
+    },
+    {
+      "id": "8",
+      "title": "Physio Partnership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "40"
+    },
+    {
+      "id": "12",
+      "title": "$20 Off Ski Lesson Package",
+      "incentiveType": "fixed",
+      "incentiveValue": "20"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tincentiveType\tincentiveValue\n3\t$25 Per Qualified Lead\tfixed\t25\n5\tSki Lesson Referral Bonus\tfixed\t30\n7\tRunning Club Collaboration\tfixed\t10\n8\tPhysio Partnership Referral\tfixed\t40\n12\t$20 Off Ski Lesson Package\tfixed\t20\n",
+  "stderr": "",
+  "execution_time_ms": 79
+}

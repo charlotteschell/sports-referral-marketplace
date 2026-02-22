@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, name, isClaimed, claimedByUserId, approvalStatus FROM businesses WHERE isClaimed = 1 AND approvalStatus != 'approved' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name, isClaimed, claimedByUserId, approvalStatus FROM businesses WHERE isClaimed = 1 AND approvalStatus != 'approved' LIMIT 5;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 61
+}

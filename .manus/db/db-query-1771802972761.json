@@ -1,0 +1,535 @@
+{
+  "query": "SELECT id, businessId, title, incentiveType, incentiveValue FROM referralOffers WHERE incentiveValue LIKE '%$%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, businessId, title, incentiveType, incentiveValue FROM referralOffers WHERE incentiveValue LIKE '%$%';",
+  "rows": [
+    {
+      "id": "30001",
+      "businessId": "30074",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30002",
+      "businessId": "30073",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30004",
+      "businessId": "30064",
+      "title": "Club Membership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$30"
+    },
+    {
+      "id": "30005",
+      "businessId": "30062",
+      "title": "Club Membership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$30"
+    },
+    {
+      "id": "30006",
+      "businessId": "30068",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30008",
+      "businessId": "30085",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30010",
+      "businessId": "30086",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30012",
+      "businessId": "30075",
+      "title": "Running Club Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30014",
+      "businessId": "30088",
+      "title": "Ski Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30016",
+      "businessId": "30063",
+      "title": "Club Membership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$30"
+    },
+    {
+      "id": "30018",
+      "businessId": "30089",
+      "title": "Ski Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30028",
+      "businessId": "30069",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30029",
+      "businessId": "30070",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30031",
+      "businessId": "30071",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30033",
+      "businessId": "30077",
+      "title": "Club Membership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$30"
+    },
+    {
+      "id": "30037",
+      "businessId": "30078",
+      "title": "Running Store Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$20"
+    },
+    {
+      "id": "30038",
+      "businessId": "30084",
+      "title": "Running Store Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$20"
+    },
+    {
+      "id": "30040",
+      "businessId": "30083",
+      "title": "Running Store Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$20"
+    },
+    {
+      "id": "30042",
+      "businessId": "30072",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30043",
+      "businessId": "30090",
+      "title": "Ski Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30046",
+      "businessId": "30087",
+      "title": "Ski Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30052",
+      "businessId": "60009",
+      "title": "Nutrition Client Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$50"
+    },
+    {
+      "id": "30057",
+      "businessId": "60012",
+      "title": "Club Membership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$30"
+    },
+    {
+      "id": "30061",
+      "businessId": "60014",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30062",
+      "businessId": "60005",
+      "title": "Running Club Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30064",
+      "businessId": "60016",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30066",
+      "businessId": "60018",
+      "title": "Club Membership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$30"
+    },
+    {
+      "id": "30067",
+      "businessId": "60021",
+      "title": "Running Club Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30069",
+      "businessId": "60007",
+      "title": "Running Store Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$20"
+    },
+    {
+      "id": "30071",
+      "businessId": "60023",
+      "title": "Running Store Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$20"
+    },
+    {
+      "id": "30073",
+      "businessId": "60004",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30075",
+      "businessId": "60015",
+      "title": "Running Club Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30076",
+      "businessId": "60008",
+      "title": "Ski Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30078",
+      "businessId": "60003",
+      "title": "Club Membership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$30"
+    },
+    {
+      "id": "30085",
+      "businessId": "60020",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30088",
+      "businessId": "16",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30089",
+      "businessId": "38",
+      "title": "Running Club Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30094",
+      "businessId": "29",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30100",
+      "businessId": "60048",
+      "title": "Running Store Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$20"
+    },
+    {
+      "id": "30103",
+      "businessId": "60047",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30105",
+      "businessId": "60049",
+      "title": "Running Club Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30107",
+      "businessId": "60051",
+      "title": "Nutrition Client Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$50"
+    },
+    {
+      "id": "30112",
+      "businessId": "30053",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30113",
+      "businessId": "30091",
+      "title": "Nutrition Client Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$50"
+    },
+    {
+      "id": "30115",
+      "businessId": "30049",
+      "title": "Club Membership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$30"
+    },
+    {
+      "id": "30116",
+      "businessId": "30056",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30120",
+      "businessId": "30058",
+      "title": "Running Store Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$20"
+    },
+    {
+      "id": "30125",
+      "businessId": "30055",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30126",
+      "businessId": "54",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30128",
+      "businessId": "30054",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30134",
+      "businessId": "30048",
+      "title": "Club Membership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$30"
+    },
+    {
+      "id": "30140",
+      "businessId": "23",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30141",
+      "businessId": "30052",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30144",
+      "businessId": "60056",
+      "title": "Running Store Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$20"
+    },
+    {
+      "id": "30145",
+      "businessId": "60058",
+      "title": "Nutrition Client Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$50"
+    },
+    {
+      "id": "30149",
+      "businessId": "60035",
+      "title": "Club Membership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$30"
+    },
+    {
+      "id": "30150",
+      "businessId": "60057",
+      "title": "Ski Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30152",
+      "businessId": "60062",
+      "title": "Running Store Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$20"
+    },
+    {
+      "id": "30154",
+      "businessId": "60039",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30156",
+      "businessId": "60042",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30158",
+      "businessId": "60028",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30160",
+      "businessId": "60033",
+      "title": "Running Club Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30161",
+      "businessId": "60060",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30164",
+      "businessId": "60054",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30167",
+      "businessId": "60026",
+      "title": "Club Membership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$30"
+    },
+    {
+      "id": "30169",
+      "businessId": "60030",
+      "title": "Running Club Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30176",
+      "businessId": "60029",
+      "title": "Running Club Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30184",
+      "businessId": "60031",
+      "title": "Running Club Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30186",
+      "businessId": "60032",
+      "title": "Running Club Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30193",
+      "businessId": "21",
+      "title": "Nutrition Client Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$50"
+    },
+    {
+      "id": "30201",
+      "businessId": "33",
+      "title": "Club Membership Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$30"
+    },
+    {
+      "id": "30203",
+      "businessId": "45",
+      "title": "Bike Shop Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "30206",
+      "businessId": "46",
+      "title": "Running Store Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$20"
+    },
+    {
+      "id": "30208",
+      "businessId": "41",
+      "title": "Running Club Referral",
+      "incentiveType": "fixed",
+      "incentiveValue": "$25"
+    },
+    {
+      "id": "120002",
+      "businessId": "52",
+      "title": "First class for $1 only",
+      "incentiveType": "fixed",
+      "incentiveValue": "$1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tbusinessId\ttitle\tincentiveType\tincentiveValue\n30001\t30074\tBike Shop Referral\tfixed\t$25\n30002\t30073\tBike Shop Referral\tfixed\t$25\n30004\t30064\tClub Membership Referral\tfixed\t$30\n30005\t30062\tClub Membership Referral\tfixed\t$30\n30006\t30068\tBike Shop Referral\tfixed\t$25\n30008\t30085\tBike Shop Referral\tfixed\t$25\n30010\t30086\tBike Shop Referral\tfixed\t$25\n30012\t30075\tRunning Club Referral\tfixed\t$25\n30014\t30088\tSki Shop Referral\tfixed\t$25\n30016\t30063\tClub Membership Referral\tfixed\t$30\n30018\t30089\tSki Shop Referral\tfixed\t$25\n30028\t30069\tBike Shop Referral\tfixed\t$25\n30029\t30070\tBike Shop Referral\tfixed\t$25\n30031\t30071\tBike Shop Referral\tfixed\t$25\n30033\t30077\tClub Membership Referral\tfixed\t$30\n30037\t30078\tRunning Store Referral\tfixed\t$20\n30038\t30084\tRunning Store Referral\tfixed\t$20\n30040\t30083\tRunning Store Referral\tfixed\t$20\n30042\t30072\tBike Shop Referral\tfixed\t$25\n30043\t30090\tSki Shop Referral\tfixed\t$25\n30046\t30087\tSki Shop Referral\tfixed\t$25\n30052\t60009\tNutrition Client Referral\tfixed\t$50\n30057\t60012\tClub Membership Referral\tfixed\t$30\n30061\t60014\tBike Shop Referral\tfixed\t$25\n30062\t60005\tRunning Club Referral\tfixed\t$25\n30064\t60016\tBike Shop Referral\tfixed\t$25\n30066\t60018\tClub Membership Referral\tfixed\t$30\n30067\t60021\tRunning Club Referral\tfixed\t$25\n30069\t60007\tRunning Store Referral\tfixed\t$20\n30071\t60023\tRunning Store Referral\tfixed\t$20\n30073\t60004\tBike Shop Referral\tfixed\t$25\n30075\t60015\tRunning Club Referral\tfixed\t$25\n30076\t60008\tSki Shop Referral\tfixed\t$25\n30078\t60003\tClub Membership Referral\tfixed\t$30\n30085\t60020\tBike Shop Referral\tfixed\t$25\n30088\t16\tBike Shop Referral\tfixed\t$25\n30089\t38\tRunning Club Referral\tfixed\t$25\n30094\t29\tBike Shop Referral\tfixed\t$25\n30100\t60048\tRunning Store Referral\tfixed\t$20\n30103\t60047\tBike Shop Referral\tfixed\t$25\n30105\t60049\tRunning Club Referral\tfixed\t$25\n30107\t60051\tNutrition Client Referral\tfixed\t$50\n30112\t30053\tBike Shop Referral\tfixed\t$25\n30113\t30091\tNutrition Client Referral\tfixed\t$50\n30115\t30049\tClub Membership Referral\tfixed\t$30\n30116\t30056\tBike Shop Referral\tfixed\t$25\n30120\t30058\tRunning Store Referral\tfixed\t$20\n30125\t30055\tBike Shop Referral\tfixed\t$25\n30126\t54\tBike Shop Referral\tfixed\t$25\n30128\t30054\tBike Shop Referral\tfixed\t$25\n30134\t30048\tClub Membership Referral\tfixed\t$30\n30140\t23\tBike Shop Referral\tfixed\t$25\n30141\t30052\tBike Shop Referral\tfixed\t$25\n30144\t60056\tRunning Store Referral\tfixed\t$20\n30145\t60058\tNutrition Client Referral\tfixed\t$50\n30149\t60035\tClub Membership Referral\tfixed\t$30\n30150\t60057\tSki Shop Referral\tfixed\t$25\n30152\t60062\tRunning Store Referral\tfixed\t$20\n30154\t60039\tBike Shop Referral\tfixed\t$25\n30156\t60042\tBike Shop Referral\tfixed\t$25\n30158\t60028\tBike Shop Referral\tfixed\t$25\n30160\t60033\tRunning Club Referral\tfixed\t$25\n30161\t60060\tBike Shop Referral\tfixed\t$25\n30164\t60054\tBike Shop Referral\tfixed\t$25\n30167\t60026\tClub Membership Referral\tfixed\t$30\n30169\t60030\tRunning Club Referral\tfixed\t$25\n30176\t60029\tRunning Club Referral\tfixed\t$25\n30184\t60031\tRunning Club Referral\tfixed\t$25\n30186\t60032\tRunning Club Referral\tfixed\t$25\n30193\t21\tNutrition Client Referral\tfixed\t$50\n30201\t33\tClub Membership Referral\tfixed\t$30\n30203\t45\tBike Shop Referral\tfixed\t$25\n30206\t46\tRunning Store Referral\tfixed\t$20\n30208\t41\tRunning Club Referral\tfixed\t$25\n120002\t52\tFirst class for $1 only\tfixed\t$1\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

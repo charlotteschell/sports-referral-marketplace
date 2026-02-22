@@ -101,6 +101,25 @@ export default function BusinessProfile() {
     onError: (err: any) => toast.error(err.message || "Failed to send email"),
   });
 
+  // Consumer offer claiming
+  const [claimingOfferId, setClaimingOfferId] = useState<number | null>(null);
+  const [showClaimSuccess, setShowClaimSuccess] = useState(false);
+  const [lastClaimCode, setLastClaimCode] = useState('');
+  const { data: myClaims } = trpc.consumerClaim.myClaims.useQuery(undefined, { enabled: isAuthenticated });
+  const claimOfferMut = trpc.consumerClaim.claim.useMutation({
+    onSuccess: (result: any) => {
+      setLastClaimCode(result?.claimCode || '');
+      setShowClaimSuccess(true);
+      setClaimingOfferId(null);
+      utils.consumerClaim.myClaims.invalidate();
+      toast.success('Offer claimed! Show the code to the business.');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to claim offer');
+      setClaimingOfferId(null);
+    },
+  });
+
   // Save business functionality (must be before early returns to maintain hook order)
   const { data: savedList } = trpc.savedBusiness.list.useQuery(undefined, { enabled: isAuthenticated });
   const saveMutation = trpc.savedBusiness.save.useMutation({
@@ -257,9 +276,13 @@ export default function BusinessProfile() {
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-3 mb-2">
                 <h1 className="text-3xl md:text-4xl font-bold">{business.name}</h1>
-                {isReallyVerified ? (
+                {isReallyVerified && isApproved ? (
                   <Badge className="bg-primary/20 text-primary border-primary/30" style={{ textTransform: "none" }}>
                     <Shield className="w-3 h-3 mr-1" /> Verified
+                  </Badge>
+                ) : isReallyVerified && business.approvalStatus === 'pending' ? (
+                  <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30" style={{ textTransform: "none" }}>
+                    <AlertCircle className="w-3 h-3 mr-1" /> Pending Approval
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="border-white/30 text-white/60" style={{ textTransform: "none" }}>
@@ -539,8 +562,8 @@ export default function BusinessProfile() {
                               )}
                             </div>
                             <Badge className="bg-[oklch(0.55_0.15_45)] text-white" style={{ textTransform: "none" }}>
-                              {offer.incentiveType === "percentage" ? `${offer.incentiveValue}%` :
-                               offer.incentiveType === "fixed" ? `$${offer.incentiveValue}` :
+                              {offer.incentiveType === "percentage" ? `${(offer.incentiveValue || '').replace(/^\$+/, '')}%` :
+                               offer.incentiveType === "fixed" ? `$${(offer.incentiveValue || '').replace(/^\$+/, '')}` :
                                offer.incentiveType}
                             </Badge>
                           </div>
@@ -604,8 +627,8 @@ export default function BusinessProfile() {
                               )}
                             </div>
                             <Badge className="bg-primary text-primary-foreground" style={{ textTransform: "none" }}>
-                              {offer.incentiveType === "percentage" ? `${offer.incentiveValue}%` :
-                               offer.incentiveType === "fixed" ? `$${offer.incentiveValue}` :
+                              {offer.incentiveType === "percentage" ? `${(offer.incentiveValue || '').replace(/^\$+/, '')}%` :
+                               offer.incentiveType === "fixed" ? `$${(offer.incentiveValue || '').replace(/^\$+/, '')}` :
                                offer.incentiveType}
                             </Badge>
                           </div>
@@ -619,6 +642,53 @@ export default function BusinessProfile() {
                               <strong>Offer details:</strong> {offer.incentiveDescription}
                             </p>
                           )}
+                          {/* Claim / Already Claimed */}
+                          <div className="mt-3 pt-3 border-t border-primary/10">
+                            {(() => {
+                              const alreadyClaimed = myClaims?.some((c: any) => c.claim.referralOfferId === offer.id && ['claimed', 'redeemed'].includes(c.claim.status));
+                              const existingClaim = myClaims?.find((c: any) => c.claim.referralOfferId === offer.id && ['claimed', 'redeemed'].includes(c.claim.status));
+                              if (alreadyClaimed) {
+                                return (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                    <span className="text-green-600 dark:text-green-400 font-medium" style={{ textTransform: 'none' }}>
+                                      {existingClaim?.claim.status === 'redeemed' ? 'Redeemed' : 'Claimed'}
+                                    </span>
+                                    {existingClaim?.claim.claimCode && (
+                                      <code className="text-xs bg-muted px-2 py-0.5 rounded font-mono">{existingClaim.claim.claimCode}</code>
+                                    )}
+                                  </div>
+                                );
+                              }
+                              if (!isAuthenticated) {
+                                return (
+                                  <a href={getLoginUrl()}>
+                                    <Button size="sm" className="gap-1.5" style={{ textTransform: 'none' }}>
+                                      <Gift className="w-3.5 h-3.5" /> Sign In to Claim
+                                    </Button>
+                                  </a>
+                                );
+                              }
+                              return (
+                                <Button
+                                  size="sm"
+                                  className="gap-1.5"
+                                  style={{ textTransform: 'none' }}
+                                  disabled={claimOfferMut.isPending && claimingOfferId === offer.id}
+                                  onClick={() => {
+                                    setClaimingOfferId(offer.id);
+                                    claimOfferMut.mutate({ referralOfferId: offer.id, businessId: data!.business.id });
+                                  }}
+                                >
+                                  {claimOfferMut.isPending && claimingOfferId === offer.id ? (
+                                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Claiming...</>
+                                  ) : (
+                                    <><Gift className="w-3.5 h-3.5" /> Claim This Offer</>
+                                  )}
+                                </Button>
+                              );
+                            })()}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -710,7 +780,7 @@ export default function BusinessProfile() {
                   )}
                   {!canSeePrivateInfo && (business.phone || business.email) && (
                     <p className="text-xs text-muted-foreground/60 italic" style={{ textTransform: "none" }}>
-                      Phone and email are only visible to verified business owners.
+                      Phone and email are private. Use the website or social links above to reach this business.
                     </p>
                   )}
                 </CardContent>
@@ -903,6 +973,35 @@ export default function BusinessProfile() {
               {sendPartnershipEmail.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
               Send Email
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Claim Success Dialog */}
+      <Dialog open={showClaimSuccess} onOpenChange={setShowClaimSuccess}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-green-500" />
+              Offer Claimed!
+            </DialogTitle>
+            <DialogDescription style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+              Show this code when you visit the business to redeem your offer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-3 py-4">
+            {lastClaimCode && (
+              <div className="bg-muted rounded-lg px-6 py-3 text-center">
+                <div className="text-xs text-muted-foreground mb-1" style={{ textTransform: 'none' }}>Your Claim Code</div>
+                <code className="text-2xl font-bold font-mono tracking-wider">{lastClaimCode}</code>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground text-center" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+              You can also find this code in your Athlete Dashboard under "My Offers".
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowClaimSuccess(false)} style={{ textTransform: 'none' }}>Got It</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

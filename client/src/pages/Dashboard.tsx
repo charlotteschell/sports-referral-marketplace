@@ -1054,7 +1054,7 @@ export default function Dashboard() {
                     <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Converted</p>
                   </div>
                   <div className="p-3 rounded-lg bg-emerald-50 text-center">
-                    <p className="text-2xl font-bold text-emerald-600">${analytics.conversionRate || 0}</p>
+                    <p className="text-2xl font-bold text-emerald-600">{analytics.conversionRate || 0}%</p>
                     <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Conversion %</p>
                   </div>
                   <div className="p-3 rounded-lg bg-amber-50 text-center">
@@ -1092,7 +1092,7 @@ export default function Dashboard() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium" style={{ textTransform: "none" }}>
-                              Referral to <Link href={`/business/${ref.toBusiness?.slug || ''}`}><span className="text-primary cursor-pointer hover:underline">{ref.toBusiness?.name || 'Unknown'}</span></Link>
+                              Referral to <Link href={`/business/${ref.receivingBusiness?.slug || ''}`}><span className="text-primary cursor-pointer hover:underline">{ref.receivingBusiness?.name || 'Unknown'}</span></Link>
                             </p>
                             <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
                               {ref.referral.customerName || 'Customer'}

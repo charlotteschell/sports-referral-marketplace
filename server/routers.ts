@@ -104,7 +104,7 @@ export const appRouter = router({
 
     getBySlug: publicProcedure
       .input(z.object({ slug: z.string() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const result = await db.getBusinessBySlug(input.slug);
         if (!result) throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
         // Fetch all categories and types from junction tables
@@ -112,18 +112,30 @@ export const appRouter = router({
           db.getBusinessSportCategories(result.business.id),
           db.getBusinessBusinessTypes(result.business.id),
         ]);
+        // Redact private contact info for non-owners
+        const isOwner = ctx.user && ctx.user.id === result.business.claimedByUserId;
+        const isAdmin = ctx.user?.role === 'admin';
+        if (!isOwner && !isAdmin) {
+          result.business = { ...result.business, email: null, phone: null };
+        }
         return { ...result, allSportCategories, allBusinessTypes };
       }),
 
     getById: publicProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const result = await db.getBusinessById(input.id);
         if (!result) throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
         const [allSportCategories, allBusinessTypes] = await Promise.all([
           db.getBusinessSportCategories(result.business.id),
           db.getBusinessBusinessTypes(result.business.id),
         ]);
+        // Redact private contact info for non-owners
+        const isOwner = ctx.user && ctx.user.id === result.business.claimedByUserId;
+        const isAdmin = ctx.user?.role === 'admin';
+        if (!isOwner && !isAdmin) {
+          result.business = { ...result.business, email: null, phone: null };
+        }
         return { ...result, allSportCategories, allBusinessTypes };
       }),
 
@@ -195,7 +207,8 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const biz = await db.getBusinessById(input.businessId);
         if (!biz) throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
-        if (biz.business.isClaimed) throw new TRPCError({ code: "CONFLICT", message: "Business already claimed" });
+        // A business is truly claimed only if it has a claimedByUserId (seeded businesses may have isClaimed=true but no owner)
+        if (biz.business.isClaimed && biz.business.claimedByUserId) throw new TRPCError({ code: "CONFLICT", message: "Business already claimed" });
         // User is already authenticated via OAuth — skip email verification
         // Claim goes directly to admin approval
         await db.claimBusiness(input.businessId, ctx.user.id);
@@ -1262,6 +1275,10 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const id = await db.createOrUpdateAthleteProfile(ctx.user.id, input);
+        // Also update user's contactName from displayName so dashboard greeting uses it
+        if (input.displayName) {
+          await db.updateUserProfile(ctx.user.id, { contactName: input.displayName });
+        }
         // Mark onboarding complete when athlete saves their profile
         await db.markOnboardingComplete(ctx.user.id);
         return { id, success: true };
@@ -1296,8 +1313,18 @@ export const appRouter = router({
   // ─── Recommendations ──────────────────────────────────────────
   recommendation: router({
     forYou: protectedProcedure
-      .input(z.object({ limit: z.number().min(1).max(30).optional() }).optional())
+      .input(z.object({
+        limit: z.number().min(1).max(30).optional(),
+        testProfileId: z.number().optional(),
+      }).optional())
       .query(async ({ input, ctx }) => {
+        // If admin is using a test profile, use that profile's preferences
+        if (input?.testProfileId && ctx.user.role === 'admin') {
+          const testProfile = await db.getAdminTestProfileById(input.testProfileId);
+          if (testProfile && testProfile.adminUserId === ctx.user.id) {
+            return db.getRecommendedBusinessesForProfile(testProfile, input?.limit ?? 12);
+          }
+        }
         return db.getRecommendedBusinesses(ctx.user.id, input?.limit ?? 12);
       }),
   }),

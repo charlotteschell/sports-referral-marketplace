@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, title, incentiveType, incentiveValue FROM referralOffers WHERE offerType = 'consumer' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, title, incentiveType, incentiveValue FROM referralOffers WHERE offerType = 'consumer' LIMIT 10;",
+  "rows": [
+    {
+      "id": "10",
+      "title": "Free Nutrition Assessment",
+      "incentiveType": "service",
+      "incentiveValue": ""
+    },
+    {
+      "id": "11",
+      "title": "First Trail Run Free",
+      "incentiveType": "other",
+      "incentiveValue": ""
+    },
+    {
+      "id": "12",
+      "title": "$20 Off Ski Lesson Package",
+      "incentiveType": "fixed",
+      "incentiveValue": "20"
+    },
+    {
+      "id": "13",
+      "title": "10% Off Guided Cycling Tour",
+      "incentiveType": "percentage",
+      "incentiveValue": "10"
+    },
+    {
+      "id": "14",
+      "title": "Free Bike Tune-Up with Purchase",
+      "incentiveType": "service",
+      "incentiveValue": ""
+    },
+    {
+      "id": "15",
+      "title": "20% Off Sport Massage",
+      "incentiveType": "percentage",
+      "incentiveValue": "20"
+    },
+    {
+      "id": "16",
+      "title": "Free Trail Running Clinic",
+      "incentiveType": "other",
+      "incentiveValue": ""
+    },
+    {
+      "id": "18",
+      "title": "15% off first indoor season",
+      "incentiveType": "percentage",
+      "incentiveValue": "15"
+    },
+    {
+      "id": "20",
+      "title": "New Member Welcome",
+      "incentiveType": "percentage",
+      "incentiveValue": "15"
+    },
+    {
+      "id": "22",
+      "title": "First Coaching Session",
+      "incentiveType": "fixed",
+      "incentiveValue": "50"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tincentiveType\tincentiveValue\n10\tFree Nutrition Assessment\tservice\t\n11\tFirst Trail Run Free\tother\t\n12\t$20 Off Ski Lesson Package\tfixed\t20\n13\t10% Off Guided Cycling Tour\tpercentage\t10\n14\tFree Bike Tune-Up with Purchase\tservice\t\n15\t20% Off Sport Massage\tpercentage\t20\n16\tFree Trail Running Clinic\tother\t\n18\t15% off first indoor season\tpercentage\t15\n20\tNew Member Welcome\tpercentage\t15\n22\tFirst Coaching Session\tfixed\t50\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}
