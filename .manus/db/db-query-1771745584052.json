@@ -1,0 +1,124 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'businesses' ORDER BY ORDINAL_POSITION",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'businesses' ORDER BY ORDINAL_POSITION",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "name"
+    },
+    {
+      "COLUMN_NAME": "slug"
+    },
+    {
+      "COLUMN_NAME": "description"
+    },
+    {
+      "COLUMN_NAME": "shortDescription"
+    },
+    {
+      "COLUMN_NAME": "sportCategoryId"
+    },
+    {
+      "COLUMN_NAME": "businessTypeId"
+    },
+    {
+      "COLUMN_NAME": "city"
+    },
+    {
+      "COLUMN_NAME": "state"
+    },
+    {
+      "COLUMN_NAME": "country"
+    },
+    {
+      "COLUMN_NAME": "address"
+    },
+    {
+      "COLUMN_NAME": "latitude"
+    },
+    {
+      "COLUMN_NAME": "longitude"
+    },
+    {
+      "COLUMN_NAME": "phone"
+    },
+    {
+      "COLUMN_NAME": "email"
+    },
+    {
+      "COLUMN_NAME": "website"
+    },
+    {
+      "COLUMN_NAME": "instagram"
+    },
+    {
+      "COLUMN_NAME": "facebook"
+    },
+    {
+      "COLUMN_NAME": "isClaimed"
+    },
+    {
+      "COLUMN_NAME": "claimedByUserId"
+    },
+    {
+      "COLUMN_NAME": "claimedAt"
+    },
+    {
+      "COLUMN_NAME": "logoUrl"
+    },
+    {
+      "COLUMN_NAME": "coverImageUrl"
+    },
+    {
+      "COLUMN_NAME": "isActive"
+    },
+    {
+      "COLUMN_NAME": "isFeatured"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "updatedAt"
+    },
+    {
+      "COLUMN_NAME": "region"
+    },
+    {
+      "COLUMN_NAME": "hub"
+    },
+    {
+      "COLUMN_NAME": "googleRating"
+    },
+    {
+      "COLUMN_NAME": "googleReviewCount"
+    },
+    {
+      "COLUMN_NAME": "googleMapsUrl"
+    },
+    {
+      "COLUMN_NAME": "approvalStatus"
+    },
+    {
+      "COLUMN_NAME": "approvalNotes"
+    },
+    {
+      "COLUMN_NAME": "approvedAt"
+    },
+    {
+      "COLUMN_NAME": "isHidden"
+    },
+    {
+      "COLUMN_NAME": "isAdminHidden"
+    },
+    {
+      "COLUMN_NAME": "brandsCarried"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nname\nslug\ndescription\nshortDescription\nsportCategoryId\nbusinessTypeId\ncity\nstate\ncountry\naddress\nlatitude\nlongitude\nphone\nemail\nwebsite\ninstagram\nfacebook\nisClaimed\nclaimedByUserId\nclaimedAt\nlogoUrl\ncoverImageUrl\nisActive\nisFeatured\ncreatedAt\nupdatedAt\nregion\nhub\ngoogleRating\ngoogleReviewCount\ngoogleMapsUrl\napprovalStatus\napprovalNotes\napprovedAt\nisHidden\nisAdminHidden\nbrandsCarried\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

@@ -703,3 +703,5 @@
 ## BusinessProfile Hooks Error Fix
 - [x] Fix "Rendered more hooks than during the previous render" error on /business/the-doctrine-training
 - [x] Ensure all hooks are called unconditionally in BusinessProfile component (moved savedBusiness hooks above early returns)
+## Doctrine Logo Not Showing
+- [x] Debug and fix The Doctrine Training logo not showing on homepage carousel and Directory cards (was using white-on-transparent PNG, switched to dark version)

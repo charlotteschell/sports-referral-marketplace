@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id, name, slug, logoUrl, isFeatured, approvalStatus, isAdminHidden FROM businesses WHERE name LIKE '%Doctrine%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name, slug, logoUrl, isFeatured, approvalStatus, isAdminHidden FROM businesses WHERE name LIKE '%Doctrine%'",
+  "rows": [
+    {
+      "id": "55",
+      "name": "The Doctrine Training Ltd.",
+      "slug": "the-doctrine-training",
+      "logoUrl": "https://thedoctrine.ca/wp-content/uploads/2019/11/doctrine-logo-80-wt.png",
+      "isFeatured": "1",
+      "approvalStatus": "approved",
+      "isAdminHidden": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\tlogoUrl\tisFeatured\tapprovalStatus\tisAdminHidden\n55\tThe Doctrine Training Ltd.\tthe-doctrine-training\thttps://thedoctrine.ca/wp-content/uploads/2019/11/doctrine-logo-80-wt.png\t1\tapproved\t0\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}
