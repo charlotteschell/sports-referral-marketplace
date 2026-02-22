@@ -1,0 +1,122 @@
+{
+  "query": "SELECT id, name FROM sportCategories; SELECT id, name FROM businessTypes; SELECT id, name FROM businesses WHERE name LIKE '%Versa%' OR name LIKE '%versa%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name FROM sportCategories; SELECT id, name FROM businessTypes; SELECT id, name FROM businesses WHERE name LIKE '%Versa%' OR name LIKE '%versa%';",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Cycling"
+    },
+    {
+      "id": "2",
+      "name": "Running"
+    },
+    {
+      "id": "3",
+      "name": "Snowsports"
+    },
+    {
+      "id": "4",
+      "name": "Sport Vacations"
+    },
+    {
+      "id": "id",
+      "name": "name"
+    },
+    {
+      "id": "13",
+      "name": "Bike Fitting"
+    },
+    {
+      "id": "17",
+      "name": "Bike Retailer"
+    },
+    {
+      "id": "2",
+      "name": "Bike Shop"
+    },
+    {
+      "id": "1",
+      "name": "Coach"
+    },
+    {
+      "id": "60001",
+      "name": "Cycling Cafe"
+    },
+    {
+      "id": "6",
+      "name": "Cycling Club"
+    },
+    {
+      "id": "4",
+      "name": "Cycling Studio"
+    },
+    {
+      "id": "9",
+      "name": "Nutritionist"
+    },
+    {
+      "id": "10",
+      "name": "Personal Trainer"
+    },
+    {
+      "id": "7",
+      "name": "Physiotherapist"
+    },
+    {
+      "id": "14",
+      "name": "Race Organizer"
+    },
+    {
+      "id": "5",
+      "name": "Running Club"
+    },
+    {
+      "id": "3",
+      "name": "Running Store"
+    },
+    {
+      "id": "12",
+      "name": "Ski School"
+    },
+    {
+      "id": "11",
+      "name": "Ski Shop"
+    },
+    {
+      "id": "30001",
+      "name": "Sport Psychologist"
+    },
+    {
+      "id": "8",
+      "name": "Sports Massage"
+    },
+    {
+      "id": "60002",
+      "name": "Sports Restaurant"
+    },
+    {
+      "id": "16",
+      "name": "Supplement Retailer"
+    },
+    {
+      "id": "90001",
+      "name": "Training Camp"
+    },
+    {
+      "id": "15",
+      "name": "Vacation Provider"
+    },
+    {
+      "id": "id",
+      "name": "name"
+    },
+    {
+      "id": "150001",
+      "name": "Versa Movement Collective"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n1\tCycling\n2\tRunning\n3\tSnowsports\n4\tSport Vacations\nid\tname\n13\tBike Fitting\n17\tBike Retailer\n2\tBike Shop\n1\tCoach\n60001\tCycling Cafe\n6\tCycling Club\n4\tCycling Studio\n9\tNutritionist\n10\tPersonal Trainer\n7\tPhysiotherapist\n14\tRace Organizer\n5\tRunning Club\n3\tRunning Store\n12\tSki School\n11\tSki Shop\n30001\tSport Psychologist\n8\tSports Massage\n60002\tSports Restaurant\n16\tSupplement Retailer\n90001\tTraining Camp\n15\tVacation Provider\nid\tname\n150001\tVersa Movement Collective\n",
+  "stderr": "",
+  "execution_time_ms": 68
+}

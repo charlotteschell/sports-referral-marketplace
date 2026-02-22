@@ -1,0 +1,9 @@
+{
+  "query": "\n-- Add Vagabond Trails (150002) to sport categories: Running (2, already primary), Cycling (1), Sport Vacations (4)\nINSERT IGNORE INTO businessSportCategories (businessId, sportCategoryId) VALUES\n(150002, 2), (150002, 1), (150002, 4);\n\n-- Add Group23 (30082) to sport categories: Cycling (1, primary), Running (2), Snowsports (3)\nINSERT IGNORE INTO businessSportCategories (businessId, sportCategoryId) VALUES\n(30082, 1), (30082, 2), (30082, 3);\n\n-- Add VersaMC (150001) to sport categories if not already there\nINSERT IGNORE INTO businessSportCategories (businessId, sportCategoryId) VALUES\n(150001, 1), (150001, 2), (150001, 3);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute \n-- Add Vagabond Trails (150002) to sport categories: Running (2, already primary), Cycling (1), Sport Vacations (4)\nINSERT IGNORE INTO businessSportCategories (businessId, sportCategoryId) VALUES\n(150002, 2), (150002, 1), (150002, 4);\n\n-- Add Group23 (30082) to sport categories: Cycling (1, primary), Running (2), Snowsports (3)\nINSERT IGNORE INTO businessSportCategories (businessId, sportCategoryId) VALUES\n(30082, 1), (30082, 2), (30082, 3);\n\n-- Add VersaMC (150001) to sport categories if not already there\nINSERT IGNORE INTO businessSportCategories (businessId, sportCategoryId) VALUES\n(150001, 1), (150001, 2), (150001, 3);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 72
+}

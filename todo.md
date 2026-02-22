@@ -683,3 +683,9 @@
 ## VersaMC & Featured Businesses
 - [x] Add VersaMC (versamc.com) to the business directory (id=150001, featured)
 - [ ] Feature VersaMC and North Wind Cycling on homepage within first scroll
+
+## New Businesses & VersaMC Incentives
+- [x] Add sample incentives for Versa Movement Collective (15% Off First Physio, $25 Referral Credit)
+- [x] Research and add Vagabond Trails (vagabond-trails.com) to directory (id=150002, featured)
+- [x] Research and add Calgary COP Group 23 (group23.ca) to directory (id=30082)
+- [x] Feature Vagabond Trails in the homepage carousel

@@ -1,0 +1,218 @@
+{
+  "query": "SELECT * FROM sportCategories ORDER BY id; SELECT * FROM businessTypes ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT * FROM sportCategories ORDER BY id; SELECT * FROM businessTypes ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Cycling",
+      "slug": "cycling",
+      "description": "Road cycling, mountain biking, gravel riding, and all forms of cycling",
+      "icon": "Bike",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "2",
+      "name": "Running",
+      "slug": "running",
+      "description": "Road running, trail running, ultra running, and all forms of running",
+      "icon": "Mountain",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "3",
+      "name": "Snowsports",
+      "slug": "snowsports",
+      "description": "Skiing, snowboarding, nordic skiing, and winter sports",
+      "icon": "Snowflake",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "4",
+      "name": "Sport Vacations",
+      "slug": "sport-vacations",
+      "description": "Active sport vacations and training camps for cycling, running, and snowsports",
+      "icon": "🏖️",
+      "createdAt": "2026-02-21 19:08:34"
+    },
+    {
+      "id": "id",
+      "name": "name",
+      "slug": "slug",
+      "description": "description",
+      "icon": "icon",
+      "createdAt": "createdAt"
+    },
+    {
+      "id": "1",
+      "name": "Coach",
+      "slug": "coach",
+      "description": "Personal and group coaching for endurance athletes",
+      "icon": "Users",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "2",
+      "name": "Bike Shop",
+      "slug": "bike-shop",
+      "description": "Bicycle sales, service, and accessories",
+      "icon": "Wrench",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "3",
+      "name": "Running Store",
+      "slug": "running-store",
+      "description": "Running gear, shoes, and accessories",
+      "icon": "ShoppingBag",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "4",
+      "name": "Cycling Studio",
+      "slug": "cycling-studio",
+      "description": "Indoor cycling and spin studios",
+      "icon": "Dumbbell",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "5",
+      "name": "Running Club",
+      "slug": "running-club",
+      "description": "Organized running groups and clubs",
+      "icon": "Users",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "6",
+      "name": "Cycling Club",
+      "slug": "cycling-club",
+      "description": "Organized cycling groups and clubs",
+      "icon": "Users",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "7",
+      "name": "Physiotherapist",
+      "slug": "physiotherapist",
+      "description": "Sports physiotherapy and rehabilitation",
+      "icon": "Heart",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "8",
+      "name": "Sports Massage",
+      "slug": "sports-massage",
+      "description": "Sports massage therapy and recovery",
+      "icon": "Hand",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "9",
+      "name": "Nutritionist",
+      "slug": "nutritionist",
+      "description": "Sports nutrition and dietary consulting",
+      "icon": "Apple",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "10",
+      "name": "Personal Trainer",
+      "slug": "personal-trainer",
+      "description": "Personal fitness training and conditioning",
+      "icon": "Dumbbell",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "11",
+      "name": "Ski Shop",
+      "slug": "ski-shop",
+      "description": "Ski and snowboard equipment sales and service",
+      "icon": "Wrench",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "12",
+      "name": "Ski School",
+      "slug": "ski-school",
+      "description": "Ski and snowboard instruction",
+      "icon": "GraduationCap",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "13",
+      "name": "Bike Fitting",
+      "slug": "bike-fitting",
+      "description": "Professional bicycle fitting services",
+      "icon": "Ruler",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "14",
+      "name": "Race Organizer",
+      "slug": "race-organizer",
+      "description": "Endurance race and event organization",
+      "icon": "Flag",
+      "createdAt": "2026-02-21 18:24:07"
+    },
+    {
+      "id": "15",
+      "name": "Vacation Provider",
+      "slug": "vacation-provider",
+      "description": "Sport vacation packages, training camps, and active travel experiences",
+      "icon": "✈️",
+      "createdAt": "2026-02-21 19:08:34"
+    },
+    {
+      "id": "16",
+      "name": "Supplement Retailer",
+      "slug": "supplement-retailer",
+      "description": "Sports nutrition supplement retailers carrying brands like Feed, Ketone IQ, Tailwind, Scratch, Momentus, Pillar and more",
+      "icon": "💊",
+      "createdAt": "2026-02-21 23:22:02"
+    },
+    {
+      "id": "17",
+      "name": "Bike Retailer",
+      "slug": "bike-retailer",
+      "description": "Bicycle retailers and dealers carrying major bike brands and OEMs",
+      "icon": "🚲",
+      "createdAt": "2026-02-21 23:22:02"
+    },
+    {
+      "id": "30001",
+      "name": "Sport Psychologist",
+      "slug": "",
+      "description": "NULL",
+      "icon": "NULL",
+      "createdAt": "2026-02-21 23:49:32"
+    },
+    {
+      "id": "60001",
+      "name": "Cycling Cafe",
+      "slug": "cycling-cafe",
+      "description": "Cafes catering to cyclists with bike-friendly amenities",
+      "icon": "coffee",
+      "createdAt": "2026-02-22 01:49:41"
+    },
+    {
+      "id": "60002",
+      "name": "Sports Restaurant",
+      "slug": "sports-restaurant",
+      "description": "Health and sports-oriented restaurants for athletes",
+      "icon": "utensils",
+      "createdAt": "2026-02-22 01:49:41"
+    },
+    {
+      "id": "90001",
+      "name": "Training Camp",
+      "slug": "training-camp",
+      "description": "Organized training camps for endurance athletes including cycling, running, and snow sports",
+      "icon": "NULL",
+      "createdAt": "2026-02-22 02:30:07"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\tdescription\ticon\tcreatedAt\n1\tCycling\tcycling\tRoad cycling, mountain biking, gravel riding, and all forms of cycling\tBike\t2026-02-21 18:24:07\n2\tRunning\trunning\tRoad running, trail running, ultra running, and all forms of running\tMountain\t2026-02-21 18:24:07\n3\tSnowsports\tsnowsports\tSkiing, snowboarding, nordic skiing, and winter sports\tSnowflake\t2026-02-21 18:24:07\n4\tSport Vacations\tsport-vacations\tActive sport vacations and training camps for cycling, running, and snowsports\t🏖️\t2026-02-21 19:08:34\nid\tname\tslug\tdescription\ticon\tcreatedAt\n1\tCoach\tcoach\tPersonal and group coaching for endurance athletes\tUsers\t2026-02-21 18:24:07\n2\tBike Shop\tbike-shop\tBicycle sales, service, and accessories\tWrench\t2026-02-21 18:24:07\n3\tRunning Store\trunning-store\tRunning gear, shoes, and accessories\tShoppingBag\t2026-02-21 18:24:07\n4\tCycling Studio\tcycling-studio\tIndoor cycling and spin studios\tDumbbell\t2026-02-21 18:24:07\n5\tRunning Club\trunning-club\tOrganized running groups and clubs\tUsers\t2026-02-21 18:24:07\n6\tCycling Club\tcycling-club\tOrganized cycling groups and clubs\tUsers\t2026-02-21 18:24:07\n7\tPhysiotherapist\tphysiotherapist\tSports physiotherapy and rehabilitation\tHeart\t2026-02-21 18:24:07\n8\tSports Massage\tsports-massage\tSports massage therapy and recovery\tHand\t2026-02-21 18:24:07\n9\tNutritionist\tnutritionist\tSports nutrition and dietary consulting\tApple\t2026-02-21 18:24:07\n10\tPersonal Trainer\tpersonal-trainer\tPersonal fitness training and conditioning\tDumbbell\t2026-02-21 18:24:07\n11\tSki Shop\tski-shop\tSki and snowboard equipment sales and service\tWrench\t2026-02-21 18:24:07\n12\tSki School\tski-school\tSki and snowboard instruction\tGraduationCap\t2026-02-21 18:24:07\n13\tBike Fitting\tbike-fitting\tProfessional bicycle fitting services\tRuler\t2026-02-21 18:24:07\n14\tRace Organizer\trace-organizer\tEndurance race and event organization\tFlag\t2026-02-21 18:24:07\n15\tVacation Provider\tvacation-provider\tSport vacation packages, training camps, and active travel experiences\t✈️\t2026-02-21 19:08:34\n16\tSupplement Retailer\tsupplement-retailer\tSports nutrition supplement retailers carrying brands like Feed, Ketone IQ, Tailwind, Scratch, Momentus, Pillar and more\t💊\t2026-02-21 23:22:02\n17\tBike Retailer\tbike-retailer\tBicycle retailers and dealers carrying major bike brands and OEMs\t🚲\t2026-02-21 23:22:02\n30001\tSport Psychologist\t\tNULL\tNULL\t2026-02-21 23:49:32\n60001\tCycling Cafe\tcycling-cafe\tCafes catering to cyclists with bike-friendly amenities\tcoffee\t2026-02-22 01:49:41\n60002\tSports Restaurant\tsports-restaurant\tHealth and sports-oriented restaurants for athletes\tutensils\t2026-02-22 01:49:41\n90001\tTraining Camp\ttraining-camp\tOrganized training camps for endurance athletes including cycling, running, and snow sports\tNULL\t2026-02-22 02:30:07\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

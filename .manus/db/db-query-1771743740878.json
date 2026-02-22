@@ -1,0 +1,9 @@
+{
+  "query": "\n-- Check if there's a business_sport_categories junction table\nSHOW TABLES LIKE '%sport%category%';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute \n-- Check if there's a business_sport_categories junction table\nSHOW TABLES LIKE '%sport%category%';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 101
+}
