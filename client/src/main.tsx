@@ -37,17 +37,30 @@ queryClient.getMutationCache().subscribe(event => {
   }
 });
 
+const fetchWithRetry = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const maxRetries = 2;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const res = await globalThis.fetch(input, {
+      ...(init ?? {}),
+      credentials: "include",
+    });
+    // Retry on 502/503 (transient gateway errors that return HTML instead of JSON)
+    if ((res.status === 502 || res.status === 503) && attempt < maxRetries) {
+      await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+      continue;
+    }
+    return res;
+  }
+  // Fallback (should not reach here)
+  return globalThis.fetch(input, { ...(init ?? {}), credentials: "include" });
+};
+
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
-      fetch(input, init) {
-        return globalThis.fetch(input, {
-          ...(init ?? {}),
-          credentials: "include",
-        });
-      },
+      fetch: fetchWithRetry,
     }),
   ],
 });

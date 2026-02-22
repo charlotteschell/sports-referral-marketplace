@@ -705,3 +705,6 @@
 - [x] Ensure all hooks are called unconditionally in BusinessProfile component (moved savedBusiness hooks above early returns)
 ## Doctrine Logo Not Showing
 - [x] Debug and fix The Doctrine Training logo not showing on homepage carousel and Directory cards (was using white-on-transparent PNG, switched to dark version)
+## Homepage Stats & API Error Fix
+- [x] Fix tRPC API error: query returning HTML instead of JSON on homepage (was 502 transient error; added retry logic to tRPC client)
+- [x] Replace "4 Sport Categories" stat with athlete count (308 fake number) with demo tooltip

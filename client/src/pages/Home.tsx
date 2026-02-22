@@ -51,6 +51,47 @@ const regionHighlights = [
 // Launch date: Sunday March 1, 2026 at 12:00 AM MST (07:00 UTC)
 const LAUNCH_DATE = new Date('2026-03-01T07:00:00Z').getTime();
 
+function AthleteStatCard() {
+  const [showTip, setShowTip] = useState(false);
+  const tipRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showTip) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (tipRef.current && !tipRef.current.contains(e.target as Node)) {
+        setShowTip(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showTip]);
+
+  return (
+    <div className="relative" ref={tipRef}>
+      <p className="text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>308</p>
+      <p className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1" style={{ textTransform: "none" }}>Athletes Signed Up
+        <button
+          type="button"
+          onClick={() => setShowTip(!showTip)}
+          className="relative p-1 -m-1 rounded-full hover:bg-muted/30 active:bg-muted/50 transition-colors touch-manipulation"
+          aria-label="More info about athlete count"
+        >
+          <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-primary transition-colors" />
+        </button>
+      </p>
+      {showTip && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-lg bg-popover text-popover-foreground text-xs leading-relaxed shadow-lg border border-border z-50 animate-in fade-in-0 zoom-in-95 duration-150" style={{ textTransform: "none", letterSpacing: "normal" }}>
+          This number is for demonstration purposes — like the referral count, we've seeded it to show what the platform looks like in action. Real athlete signups will replace this once we launch.
+        </div>
+      )}
+    </div>
+  );
+}
+
 function InfoStatCard({ count }: { count: number }) {
   const [showTip, setShowTip] = useState(false);
   const tipRef = useRef<HTMLDivElement>(null);
@@ -249,10 +290,7 @@ export default function Home() {
               <p className="text-3xl font-bold text-primary" style={{ fontFamily: "var(--font-heading)" }}>{stats?.totalBusinesses || 0}+</p>
               <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Businesses (and counting)</p>
             </div>
-            <div>
-              <p className="text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>{stats?.sportCategories || 4}</p>
-              <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Sport Categories</p>
-            </div>
+            <AthleteStatCard />
             <div>
               <p className="text-3xl font-bold text-[oklch(0.40_0.05_250)]" style={{ fontFamily: "var(--font-heading)" }}>{stats?.claimedBusinesses || 0}</p>
               <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Verified Businesses</p>
