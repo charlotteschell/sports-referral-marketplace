@@ -507,7 +507,7 @@ export default function EditBusiness() {
                     <div><Label style={{ textTransform: "none" }}>Phone</Label><Input value={form.phone} onChange={(e) => updateField("phone", e.target.value)} /></div>
                     <div><Label style={{ textTransform: "none" }}>Email</Label><Input type="email" value={form.email} onChange={(e) => updateField("email", e.target.value)} /></div>
                   </div>
-                  <div><Label style={{ textTransform: "none" }}>Website</Label><Input value={form.website} onChange={(e) => updateField("website", e.target.value)} /></div>
+                  <div><Label style={{ textTransform: "none" }}>Website</Label><Input value={form.website} onChange={(e) => updateField("website", e.target.value)} placeholder="yourbusiness.com" /></div>
                   <div className="grid grid-cols-2 gap-4">
                     <div><Label style={{ textTransform: "none" }}>Instagram</Label><Input value={form.instagram} onChange={(e) => updateField("instagram", e.target.value)} /></div>
                     <div><Label style={{ textTransform: "none" }}>Facebook</Label><Input value={form.facebook} onChange={(e) => updateField("facebook", e.target.value)} /></div>

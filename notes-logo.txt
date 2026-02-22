@@ -1,0 +1,11 @@
+Current logo: Two curved arrows forming a circular recycling/referral loop around a mountain silhouette.
+Colors: Amber/gold (#D4A843 ish) on dark brown background.
+The mountain has a jagged peak with snow line detail.
+The circular arrows have pointed arrowheads.
+User wants: thinner circle and mountain outlines, fill more of the square space.
+
+I'll create an inline SVG component that recreates this design with:
+- Thinner stroke widths on the circular arrows
+- Mountain fills more of the inner circle space
+- Overall icon fills more of the bounding square
+Used in Header.tsx and Footer.tsx.

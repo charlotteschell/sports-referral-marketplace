@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Mountain, Bike, Snowflake, Compass } from "lucide-react";
+import SportConnectLogo from "@/components/SportConnectLogo";
 
 export default function Footer() {
   return (
@@ -9,7 +10,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
-              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663371988607/omxbSEHhGlQLbCoQ.png" alt="SportConnect" className="w-10 h-10 rounded-lg" style={{ filter: "drop-shadow(0 0 6px rgba(200,140,60,0.35))" }} />
+              <SportConnectLogo className="w-10 h-10" style={{ filter: "drop-shadow(0 0 6px rgba(200,140,60,0.35))" }} />
               <div className="flex flex-col">
                 <span className="text-lg font-bold text-white tracking-wide leading-tight" style={{ fontFamily: "var(--font-heading)" }}>
                   SPORTCONNECT

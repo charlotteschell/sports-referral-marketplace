@@ -6,6 +6,7 @@ import { Menu, X, Mountain, Shield, Building2, Bike } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { NotificationBell } from "@/components/NotificationBell";
+import SportConnectLogo from "@/components/SportConnectLogo";
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -76,7 +77,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/">
             <div className="flex items-center gap-2.5 cursor-pointer">
-              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663371988607/omxbSEHhGlQLbCoQ.png" alt="SportConnect" className="w-11 h-11 rounded-lg" style={{ filter: "drop-shadow(0 0 6px rgba(200,140,60,0.35))" }} />
+              <SportConnectLogo className="w-11 h-11" style={{ filter: "drop-shadow(0 0 6px rgba(200,140,60,0.35))" }} />
               <div className="flex flex-col">
                 <span className="text-xl font-bold text-white tracking-wide leading-tight" style={{ fontFamily: "var(--font-heading)" }}>
                   SPORTCONNECT

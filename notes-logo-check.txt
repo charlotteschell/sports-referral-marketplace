@@ -1,0 +1,10 @@
+New SVG logo is rendering in the header. It shows:
+- Dark brown rounded square background
+- Two curved arrows forming a referral loop
+- Mountain silhouette in the center
+- Amber/gold color scheme
+- The logo is visible and matches the original design concept
+
+The arrows and mountain are visible but could be refined further. The mountain shape and arrow curves look good at this size. The logo fills the square well with the rounded corners.
+
+Next: Need to also check if logo is used anywhere else (Home page hero, etc.)

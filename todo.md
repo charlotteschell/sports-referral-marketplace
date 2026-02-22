@@ -663,3 +663,9 @@
 - [x] Athlete notification preferences toggle (email notifications control) - already implemented in ProfileTab
 - [x] Role indicator badge in header next to user name (e.g. "Business", "Athlete", "Admin")
 - [x] Write tests for route protection and new features (123 tests passing)
+
+## Logo Refinement & URL Normalization
+- [x] Logo SVG: thinner circle and mountain outlines, fill more of the square (inline SVG component)
+- [x] Website URL fields: accept all formats (no www, with www, https://, bare domain)
+- [x] Normalize website URLs after submission (add https:// if missing)
+- [x] Update validation across all forms that accept website URLs (SubmitBusiness, AddBusiness, EditBusiness)

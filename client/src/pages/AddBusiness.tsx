@@ -451,7 +451,7 @@ export default function AddBusiness() {
                     <div><Label style={{ textTransform: "none" }}>Phone</Label><Input value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="+1 (555) 000-0000" /></div>
                     <div><Label style={{ textTransform: "none" }}>Email</Label><Input type="email" value={form.email} onChange={(e) => updateField("email", e.target.value)} placeholder="info@business.com" /></div>
                   </div>
-                  <div><Label style={{ textTransform: "none" }}>Website</Label><Input value={form.website} onChange={(e) => updateField("website", e.target.value)} placeholder="https://www.example.com" /></div>
+                  <div><Label style={{ textTransform: "none" }}>Website</Label><Input value={form.website} onChange={(e) => updateField("website", e.target.value)} placeholder="yourbusiness.com" /></div>
                   <div className="grid grid-cols-2 gap-4">
                     <div><Label style={{ textTransform: "none" }}>Instagram Handle</Label><Input value={form.instagram} onChange={(e) => updateField("instagram", e.target.value)} placeholder="username" /></div>
                     <div><Label style={{ textTransform: "none" }}>Facebook URL</Label><Input value={form.facebook} onChange={(e) => updateField("facebook", e.target.value)} placeholder="https://facebook.com/..." /></div>

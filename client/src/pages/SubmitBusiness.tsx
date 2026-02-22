@@ -532,14 +532,13 @@ export default function SubmitBusiness() {
                     </Label>
                     <Input
                       id="website"
-                      type="url"
-                      placeholder="https://www.yourbusiness.com"
+                      placeholder="yourbusiness.com"
                       value={website}
                       onChange={(e) => setWebsite(e.target.value)}
                       required
                     />
                     <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
-                      Required for business verification. Your email domain must match this website.
+                      Required for verification. Any format works — yourbusiness.com, www.yourbusiness.com, or https://yourbusiness.com.
                     </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

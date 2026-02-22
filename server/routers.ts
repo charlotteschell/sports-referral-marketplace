@@ -6,6 +6,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as db from "./db";
 import { notifyOwner } from "./_core/notification";
+import { normalizeWebsiteUrl } from "../shared/normalizeUrl";
 
 // Admin-only procedure helper
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -139,6 +140,8 @@ export const appRouter = router({
         brandsCarried: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        // Normalize website URL
+        if (input.website) input.website = normalizeWebsiteUrl(input.website);
         const slug = input.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         const uniqueSlug = `${slug}-${Date.now().toString(36)}`;
         const { sportCategoryIds, businessTypeIds, ...createData } = input;
@@ -222,6 +225,8 @@ export const appRouter = router({
         brandsCarried: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        // Normalize website URL
+        if (input.website) input.website = normalizeWebsiteUrl(input.website);
         const biz = await db.getBusinessById(input.id);
         if (!biz) throw new TRPCError({ code: "NOT_FOUND" });
         if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
@@ -427,9 +432,11 @@ export const appRouter = router({
         additionalNotes: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        // Normalize website URL
+        input.website = normalizeWebsiteUrl(input.website);
         // Validate email domain matches website domain
         try {
-          const websiteUrl = new URL(input.website.startsWith('http') ? input.website : `https://${input.website}`);
+          const websiteUrl = new URL(input.website);
           const websiteDomain = websiteUrl.hostname.replace(/^www\./, '');
           const emailDomain = input.contactEmail.split('@')[1]?.toLowerCase();
           if (emailDomain && websiteDomain && emailDomain !== websiteDomain) {
