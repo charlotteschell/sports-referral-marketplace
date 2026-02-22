@@ -1,0 +1,434 @@
+{
+  "query": "SELECT id, name, region, hub, businessTypeId, sportCategoryId FROM businesses WHERE region IN ('Colorado Front Range', 'Pacific Northwest', 'Catalonia') ORDER BY region, name LIMIT 70;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name, region, hub, businessTypeId, sportCategoryId FROM businesses WHERE region IN ('Colorado Front Range', 'Pacific Northwest', 'Catalonia') ORDER BY region, name LIMIT 70;",
+  "rows": [
+    {
+      "id": "60009",
+      "name": "Boulder Sports Massage & Injury Rehab",
+      "region": "Colorado Front Range",
+      "hub": "Boulder",
+      "businessTypeId": "9",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60011",
+      "name": "CTS - Clayton Feldman",
+      "region": "Colorado Front Range",
+      "hub": "Colorado Springs",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60002",
+      "name": "Colby Pearce",
+      "region": "Colorado Front Range",
+      "hub": "Boulder",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60012",
+      "name": "Colorado Springs Cycling Club",
+      "region": "Colorado Front Range",
+      "hub": "Colorado Springs",
+      "businessTypeId": "6",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60019",
+      "name": "CycleBar Fort Collins",
+      "region": "Colorado Front Range",
+      "hub": "Fort Collins",
+      "businessTypeId": "4",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60013",
+      "name": "Cycology Studio",
+      "region": "Colorado Front Range",
+      "hub": "Colorado Springs",
+      "businessTypeId": "4",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60014",
+      "name": "David Everson - Team RunRun",
+      "region": "Colorado Front Range",
+      "hub": "Colorado Springs",
+      "businessTypeId": "2",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60005",
+      "name": "Denver Trail Runners",
+      "region": "Colorado Front Range",
+      "hub": "Denver",
+      "businessTypeId": "5",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60016",
+      "name": "Dreama Walton - Team RunRun",
+      "region": "Colorado Front Range",
+      "hub": "Colorado Springs",
+      "businessTypeId": "2",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60006",
+      "name": "Eldora Mountain Ski & Snowboard Club",
+      "region": "Colorado Front Range",
+      "hub": "Boulder",
+      "businessTypeId": "12",
+      "sportCategoryId": "3"
+    },
+    {
+      "id": "60018",
+      "name": "Fort Collins Cycling Club",
+      "region": "Colorado Front Range",
+      "hub": "Fort Collins",
+      "businessTypeId": "6",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60021",
+      "name": "Fort Collins Running Club",
+      "region": "Colorado Front Range",
+      "hub": "Fort Collins",
+      "businessTypeId": "5",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60007",
+      "name": "Lifelong Endurance",
+      "region": "Colorado Front Range",
+      "hub": "Denver",
+      "businessTypeId": "3",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60023",
+      "name": "NEO Endurance Sports & Fitness",
+      "region": "Colorado Front Range",
+      "hub": "Colorado Springs",
+      "businessTypeId": "3",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60004",
+      "name": "Nicole Thome",
+      "region": "Colorado Front Range",
+      "hub": "Denver",
+      "businessTypeId": "2",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60015",
+      "name": "Pikes Peak Road Runners",
+      "region": "Colorado Front Range",
+      "hub": "Colorado Springs",
+      "businessTypeId": "5",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60008",
+      "name": "Racer's Edge Nutrition",
+      "region": "Colorado Front Range",
+      "hub": "Denver",
+      "businessTypeId": "11",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60003",
+      "name": "Rocky Mountain Cycling Club",
+      "region": "Colorado Front Range",
+      "hub": "Denver",
+      "businessTypeId": "6",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60022",
+      "name": "Ski Maxx",
+      "region": "Colorado Front Range",
+      "hub": "Colorado Springs",
+      "businessTypeId": "12",
+      "sportCategoryId": "3"
+    },
+    {
+      "id": "60010",
+      "name": "SloHi Bike Co.",
+      "region": "Colorado Front Range",
+      "hub": "Denver",
+      "businessTypeId": "7",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60017",
+      "name": "Source Endurance (Zack Allison)",
+      "region": "Colorado Front Range",
+      "hub": "Fort Collins",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60001",
+      "name": "The FAST Lab",
+      "region": "Colorado Front Range",
+      "hub": "Denver",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60020",
+      "name": "Tom Olson - Team RunRun",
+      "region": "Colorado Front Range",
+      "hub": "Fort Collins",
+      "businessTypeId": "2",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60056",
+      "name": "Athletic Endeavours",
+      "region": "Pacific Northwest",
+      "hub": "Whistler",
+      "businessTypeId": "3",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60058",
+      "name": "Back in Action Physiotherapy",
+      "region": "Pacific Northwest",
+      "hub": "Whistler",
+      "businessTypeId": "9",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60025",
+      "name": "Breakaway Coaching / The Red Js",
+      "region": "Pacific Northwest",
+      "hub": "Portland",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60035",
+      "name": "Central Oregon Wheelers",
+      "region": "Pacific Northwest",
+      "hub": "Bend",
+      "businessTypeId": "6",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60057",
+      "name": "Creekside Health",
+      "region": "Pacific Northwest",
+      "hub": "Whistler",
+      "businessTypeId": "11",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60062",
+      "name": "Elevated Endurance",
+      "region": "Pacific Northwest",
+      "hub": "Vancouver",
+      "businessTypeId": "3",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60039",
+      "name": "FGS Coaching",
+      "region": "Pacific Northwest",
+      "hub": "Seattle",
+      "businessTypeId": "2",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60061",
+      "name": "Grouse Mountain",
+      "region": "Pacific Northwest",
+      "hub": "Vancouver",
+      "businessTypeId": "12",
+      "sportCategoryId": "3"
+    },
+    {
+      "id": "60042",
+      "name": "Katelyn Steen",
+      "region": "Pacific Northwest",
+      "hub": "Bellingham",
+      "businessTypeId": "2",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60028",
+      "name": "Katie Cope - Team RunRun",
+      "region": "Pacific Northwest",
+      "hub": "Portland",
+      "businessTypeId": "2",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60033",
+      "name": "Lez Run",
+      "region": "Pacific Northwest",
+      "hub": "Portland",
+      "businessTypeId": "5",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60060",
+      "name": "Mile2Marathon Coaching",
+      "region": "Pacific Northwest",
+      "hub": "Vancouver",
+      "businessTypeId": "2",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60040",
+      "name": "Mohan Skiing & Boarding",
+      "region": "Pacific Northwest",
+      "hub": "Seattle",
+      "businessTypeId": "12",
+      "sportCategoryId": "3"
+    },
+    {
+      "id": "60054",
+      "name": "Motus Endurance",
+      "region": "Pacific Northwest",
+      "hub": "Whistler",
+      "businessTypeId": "2",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60037",
+      "name": "Métier",
+      "region": "Pacific Northwest",
+      "hub": "Seattle",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60034",
+      "name": "NorthFIT",
+      "region": "Pacific Northwest",
+      "hub": "Bend",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60026",
+      "name": "Portland Bicycling Club",
+      "region": "Pacific Northwest",
+      "hub": "Portland",
+      "businessTypeId": "6",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60030",
+      "name": "Portland Running Company x No Name Trail Club",
+      "region": "Pacific Northwest",
+      "hub": "Portland",
+      "businessTypeId": "5",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60041",
+      "name": "Radical Roots MTB",
+      "region": "Pacific Northwest",
+      "hub": "Bellingham",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60024",
+      "name": "Rathe Athlete Development",
+      "region": "Pacific Northwest",
+      "hub": "Portland",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60053",
+      "name": "RideHub",
+      "region": "Pacific Northwest",
+      "hub": "Whistler",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60029",
+      "name": "Rip City Runners",
+      "region": "Pacific Northwest",
+      "hub": "Portland",
+      "businessTypeId": "5",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60038",
+      "name": "Rolla Cycling",
+      "region": "Pacific Northwest",
+      "hub": "Seattle",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60027",
+      "name": "StarCycle",
+      "region": "Pacific Northwest",
+      "hub": "Portland",
+      "businessTypeId": "4",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60036",
+      "name": "StarCycle Bend",
+      "region": "Pacific Northwest",
+      "hub": "Bend",
+      "businessTypeId": "4",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60059",
+      "name": "TaG Cycling",
+      "region": "Pacific Northwest",
+      "hub": "Vancouver",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60031",
+      "name": "Thunder Thighs Track Club",
+      "region": "Pacific Northwest",
+      "hub": "Portland",
+      "businessTypeId": "5",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60032",
+      "name": "Trail Sisters",
+      "region": "Pacific Northwest",
+      "hub": "Portland",
+      "businessTypeId": "5",
+      "sportCategoryId": "2"
+    },
+    {
+      "id": "60052",
+      "name": "Whistler Blackcomb Mountain Bike Park",
+      "region": "Pacific Northwest",
+      "hub": "Whistler",
+      "businessTypeId": "1",
+      "sportCategoryId": "1"
+    },
+    {
+      "id": "60055",
+      "name": "Whistler Blackcomb Snow School",
+      "region": "Pacific Northwest",
+      "hub": "Whistler",
+      "businessTypeId": "12",
+      "sportCategoryId": "3"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tregion\thub\tbusinessTypeId\tsportCategoryId\n60009\tBoulder Sports Massage & Injury Rehab\tColorado Front Range\tBoulder\t9\t2\n60011\tCTS - Clayton Feldman\tColorado Front Range\tColorado Springs\t1\t1\n60002\tColby Pearce\tColorado Front Range\tBoulder\t1\t1\n60012\tColorado Springs Cycling Club\tColorado Front Range\tColorado Springs\t6\t1\n60019\tCycleBar Fort Collins\tColorado Front Range\tFort Collins\t4\t1\n60013\tCycology Studio\tColorado Front Range\tColorado Springs\t4\t1\n60014\tDavid Everson - Team RunRun\tColorado Front Range\tColorado Springs\t2\t2\n60005\tDenver Trail Runners\tColorado Front Range\tDenver\t5\t2\n60016\tDreama Walton - Team RunRun\tColorado Front Range\tColorado Springs\t2\t2\n60006\tEldora Mountain Ski & Snowboard Club\tColorado Front Range\tBoulder\t12\t3\n60018\tFort Collins Cycling Club\tColorado Front Range\tFort Collins\t6\t1\n60021\tFort Collins Running Club\tColorado Front Range\tFort Collins\t5\t2\n60007\tLifelong Endurance\tColorado Front Range\tDenver\t3\t2\n60023\tNEO Endurance Sports & Fitness\tColorado Front Range\tColorado Springs\t3\t1\n60004\tNicole Thome\tColorado Front Range\tDenver\t2\t2\n60015\tPikes Peak Road Runners\tColorado Front Range\tColorado Springs\t5\t2\n60008\tRacer's Edge Nutrition\tColorado Front Range\tDenver\t11\t1\n60003\tRocky Mountain Cycling Club\tColorado Front Range\tDenver\t6\t1\n60022\tSki Maxx\tColorado Front Range\tColorado Springs\t12\t3\n60010\tSloHi Bike Co.\tColorado Front Range\tDenver\t7\t1\n60017\tSource Endurance (Zack Allison)\tColorado Front Range\tFort Collins\t1\t1\n60001\tThe FAST Lab\tColorado Front Range\tDenver\t1\t1\n60020\tTom Olson - Team RunRun\tColorado Front Range\tFort Collins\t2\t2\n60056\tAthletic Endeavours\tPacific Northwest\tWhistler\t3\t1\n60058\tBack in Action Physiotherapy\tPacific Northwest\tWhistler\t9\t2\n60025\tBreakaway Coaching / The Red Js\tPacific Northwest\tPortland\t1\t1\n60035\tCentral Oregon Wheelers\tPacific Northwest\tBend\t6\t1\n60057\tCreekside Health\tPacific Northwest\tWhistler\t11\t2\n60062\tElevated Endurance\tPacific Northwest\tVancouver\t3\t2\n60039\tFGS Coaching\tPacific Northwest\tSeattle\t2\t2\n60061\tGrouse Mountain\tPacific Northwest\tVancouver\t12\t3\n60042\tKatelyn Steen\tPacific Northwest\tBellingham\t2\t2\n60028\tKatie Cope - Team RunRun\tPacific Northwest\tPortland\t2\t2\n60033\tLez Run\tPacific Northwest\tPortland\t5\t2\n60060\tMile2Marathon Coaching\tPacific Northwest\tVancouver\t2\t2\n60040\tMohan Skiing & Boarding\tPacific Northwest\tSeattle\t12\t3\n60054\tMotus Endurance\tPacific Northwest\tWhistler\t2\t2\n60037\tMétier\tPacific Northwest\tSeattle\t1\t1\n60034\tNorthFIT\tPacific Northwest\tBend\t1\t1\n60026\tPortland Bicycling Club\tPacific Northwest\tPortland\t6\t1\n60030\tPortland Running Company x No Name Trail Club\tPacific Northwest\tPortland\t5\t2\n60041\tRadical Roots MTB\tPacific Northwest\tBellingham\t1\t1\n60024\tRathe Athlete Development\tPacific Northwest\tPortland\t1\t1\n60053\tRideHub\tPacific Northwest\tWhistler\t1\t1\n60029\tRip City Runners\tPacific Northwest\tPortland\t5\t2\n60038\tRolla Cycling\tPacific Northwest\tSeattle\t1\t1\n60027\tStarCycle\tPacific Northwest\tPortland\t4\t1\n60036\tStarCycle Bend\tPacific Northwest\tBend\t4\t1\n60059\tTaG Cycling\tPacific Northwest\tVancouver\t1\t1\n60031\tThunder Thighs Track Club\tPacific Northwest\tPortland\t5\t2\n60032\tTrail Sisters\tPacific Northwest\tPortland\t5\t2\n60052\tWhistler Blackcomb Mountain Bike Park\tPacific Northwest\tWhistler\t1\t1\n60055\tWhistler Blackcomb Snow School\tPacific Northwest\tWhistler\t12\t3\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

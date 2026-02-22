@@ -973,6 +973,25 @@ export const appRouter = router({
       }),
   }),
 
+  // ─── Leaderboard ──────────────────────────────────────────
+  leaderboard: router({
+    rankings: publicProcedure
+      .input(z.object({
+        timeframe: z.enum(['all', 'month', 'year']).optional(),
+        limit: z.number().min(1).max(50).optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return db.getLeaderboard({
+          timeframe: input?.timeframe || 'all',
+          limit: input?.limit || 20,
+        });
+      }),
+
+    summary: publicProcedure.query(async () => {
+      return db.getLeaderboardSummary();
+    }),
+  }),
+
   // ─── Email Verification ────────────────────────────────────
   verification: router({
     sendCode: publicProcedure

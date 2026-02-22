@@ -1585,3 +1585,100 @@ export async function createBusinessType(data: { name: string; slug: string; des
     throw e;
   }
 }
+
+// ─── Leaderboard Queries ─────────────────────────────────────
+
+export async function getLeaderboard(opts: { limit?: number; timeframe?: 'all' | 'month' | 'year' } = {}) {
+  const db = await getDb();
+  if (!db) return [];
+  const limit = opts.limit || 20;
+  
+  let timeFilter = '';
+  if (opts.timeframe === 'month') {
+    timeFilter = `AND r.createdAt >= DATE_SUB(NOW(), INTERVAL 1 MONTH)`;
+  } else if (opts.timeframe === 'year') {
+    timeFilter = `AND r.createdAt >= DATE_SUB(NOW(), INTERVAL 1 YEAR)`;
+  }
+
+  // Top businesses by referrals sent that were honored
+  const [sentRows] = await db.execute(sql.raw(`
+    SELECT 
+      b.id, b.name, b.slug, b.logoUrl, b.city, b.region,
+      bt.name as businessTypeName,
+      COUNT(r.id) as totalSent,
+      SUM(CASE WHEN r.receiverHonored = 1 THEN 1 ELSE 0 END) as honored,
+      SUM(CASE WHEN r.senderCashedOut = 1 THEN 1 ELSE 0 END) as cashedOut,
+      COALESCE(SUM(CASE WHEN r.senderCashedOut = 1 THEN CAST(r.incentiveAmount AS DECIMAL(10,2)) ELSE 0 END), 0) as totalEarned
+    FROM businesses b
+    LEFT JOIN referrals r ON r.referringBusinessId = b.id ${timeFilter}
+    LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
+    WHERE b.isActive = 1
+    GROUP BY b.id
+    HAVING totalSent > 0
+    ORDER BY totalSent DESC, totalEarned DESC
+    LIMIT ${limit}
+  `));
+
+  // Top businesses by referrals received that they honored
+  const [receivedRows] = await db.execute(sql.raw(`
+    SELECT 
+      b.id, b.name, b.slug, b.logoUrl, b.city, b.region,
+      bt.name as businessTypeName,
+      COUNT(r.id) as totalReceived,
+      SUM(CASE WHEN r.receiverHonored = 1 THEN 1 ELSE 0 END) as honored,
+      COALESCE(SUM(CASE WHEN r.receiverHonored = 1 THEN CAST(r.incentiveAmount AS DECIMAL(10,2)) ELSE 0 END), 0) as totalPaidOut
+    FROM businesses b
+    LEFT JOIN referrals r ON r.receivingBusinessId = b.id ${timeFilter}
+    LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
+    WHERE b.isActive = 1
+    GROUP BY b.id
+    HAVING totalReceived > 0
+    ORDER BY honored DESC, totalReceived DESC
+    LIMIT ${limit}
+  `));
+
+  // Top partnership connectors (most emails exchanged)
+  const [connectorRows] = await db.execute(sql.raw(`
+    SELECT 
+      b.id, b.name, b.slug, b.logoUrl, b.city, b.region,
+      bt.name as businessTypeName,
+      (
+        SELECT COUNT(*) FROM partnershipEmails pe 
+        WHERE pe.senderBusinessId = b.id OR pe.receiverBusinessId = b.id
+      ) as totalEmails
+    FROM businesses b
+    LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
+    WHERE b.isActive = 1
+    HAVING totalEmails > 0
+    ORDER BY totalEmails DESC
+    LIMIT ${limit}
+  `));
+
+  return {
+    topReferrers: sentRows as unknown as any[],
+    topReceivers: receivedRows as unknown as any[],
+    topConnectors: connectorRows as unknown as any[],
+  };
+}
+
+export async function getLeaderboardSummary() {
+  const db = await getDb();
+  if (!db) return { totalReferrals: 0, totalHonored: 0, totalEarned: 0, totalBusinessesParticipating: 0 };
+
+  const [rows] = await db.execute(sql.raw(`
+    SELECT 
+      COUNT(*) as totalReferrals,
+      SUM(CASE WHEN receiverHonored = 1 THEN 1 ELSE 0 END) as totalHonored,
+      COALESCE(SUM(CASE WHEN senderCashedOut = 1 THEN CAST(incentiveAmount AS DECIMAL(10,2)) ELSE 0 END), 0) as totalEarned,
+      COUNT(DISTINCT referringBusinessId) + COUNT(DISTINCT receivingBusinessId) as totalBusinessesParticipating
+    FROM referrals
+  `));
+
+  const row = (rows as unknown as any[])[0] || {};
+  return {
+    totalReferrals: Number(row.totalReferrals) || 0,
+    totalHonored: Number(row.totalHonored) || 0,
+    totalEarned: Number(row.totalEarned) || 0,
+    totalBusinessesParticipating: Number(row.totalBusinessesParticipating) || 0,
+  };
+}

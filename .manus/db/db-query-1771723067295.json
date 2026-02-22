@@ -1,0 +1,304 @@
+{
+  "query": "SELECT b.id, b.name, b.region, b.hub, ro.title FROM referralOffers ro JOIN businesses b ON ro.businessId = b.id ORDER BY b.region;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT b.id, b.name, b.region, b.hub, ro.title FROM referralOffers ro JOIN businesses b ON ro.businessId = b.id ORDER BY b.region;",
+  "rows": [
+    {
+      "id": "26",
+      "name": "Chamonix Mountain Endurance Academy",
+      "region": "Alps",
+      "hub": "Chamonix",
+      "title": "Mountain Training Referral"
+    },
+    {
+      "id": "3",
+      "name": "Run the Alps",
+      "region": "Alps",
+      "hub": "Chamonix",
+      "title": "First Trail Run Free"
+    },
+    {
+      "id": "3",
+      "name": "Run the Alps",
+      "region": "Alps",
+      "hub": "Chamonix",
+      "title": "$25 Per Qualified Lead"
+    },
+    {
+      "id": "9",
+      "name": "Gear West",
+      "region": "Central US",
+      "hub": "Minneapolis",
+      "title": "Free Bike Tune-Up with Purchase"
+    },
+    {
+      "id": "28",
+      "name": "Eat Sleep Cycle",
+      "region": "Costa Brava",
+      "hub": "Girona",
+      "title": "Cycling Holiday Referral"
+    },
+    {
+      "id": "13",
+      "name": "Cortina Bike Tours",
+      "region": "Dolomites",
+      "hub": "Cortina d'Ampezzo",
+      "title": "Dolomites Tour Referral"
+    },
+    {
+      "id": "14",
+      "name": "Runcation Travel",
+      "region": "Dolomites",
+      "hub": "Bolzano",
+      "title": "Running Vacation Referral"
+    },
+    {
+      "id": "17",
+      "name": "Ski and Snowboard School Selva Gardena",
+      "region": "Dolomites",
+      "hub": "Val Gardena",
+      "title": "Ski School Referral"
+    },
+    {
+      "id": "53",
+      "name": "Alaró Cycling Club",
+      "region": "Mallorca",
+      "hub": "Alaró",
+      "title": "New Member Welcome"
+    },
+    {
+      "id": "22",
+      "name": "Sa Calobra Cycling Club",
+      "region": "Mallorca",
+      "hub": "Palma",
+      "title": "Club Ride Referral"
+    },
+    {
+      "id": "53",
+      "name": "Alaró Cycling Club",
+      "region": "Mallorca",
+      "hub": "Alaró",
+      "title": "Refer a Cyclist"
+    },
+    {
+      "id": "60",
+      "name": "CycloClaudia",
+      "region": "Mallorca",
+      "hub": "Alcudia",
+      "title": "First Ride Free"
+    },
+    {
+      "id": "60",
+      "name": "CycloClaudia",
+      "region": "Mallorca",
+      "hub": "Alcudia",
+      "title": "Cycling Guide Referral"
+    },
+    {
+      "id": "18",
+      "name": "LifeCycle Adventures",
+      "region": "Pyrenees",
+      "hub": "Luchon",
+      "title": "Cycling Adventure Referral"
+    },
+    {
+      "id": "56",
+      "name": "Score Nutrition",
+      "region": "Western Canada",
+      "hub": "Calgary",
+      "title": "Nutrition Consultation Referral"
+    },
+    {
+      "id": "52",
+      "name": "RARE Cycling Club",
+      "region": "Western Canada",
+      "hub": "",
+      "title": "10% membership commission "
+    },
+    {
+      "id": "61",
+      "name": "Inspire Health & Performance",
+      "region": "Western Canada",
+      "hub": "Calgary",
+      "title": "Physio Referral Program"
+    },
+    {
+      "id": "61",
+      "name": "Inspire Health & Performance",
+      "region": "Western Canada",
+      "hub": "Calgary",
+      "title": "New Patient Special"
+    },
+    {
+      "id": "52",
+      "name": "RARE Cycling Club",
+      "region": "Western Canada",
+      "hub": "",
+      "title": "15% off first indoor season"
+    },
+    {
+      "id": "56",
+      "name": "Score Nutrition",
+      "region": "Western Canada",
+      "hub": "Calgary",
+      "title": "First Consult Discount"
+    },
+    {
+      "id": "55",
+      "name": "The Doctrine Training Ltd.",
+      "region": "Western Canada",
+      "hub": "Calgary",
+      "title": "Training Partner Referral"
+    },
+    {
+      "id": "55",
+      "name": "The Doctrine Training Ltd.",
+      "region": "Western Canada",
+      "hub": "Calgary",
+      "title": "Free Assessment"
+    },
+    {
+      "id": "5",
+      "name": "Peak Performance PTS Physical Therapy",
+      "region": "Western Canada",
+      "hub": "Whistler",
+      "title": "Ski Lesson Referral Bonus"
+    },
+    {
+      "id": "5",
+      "name": "Peak Performance PTS Physical Therapy",
+      "region": "Western Canada",
+      "hub": "Whistler",
+      "title": "$20 Off Ski Lesson Package"
+    },
+    {
+      "id": "32",
+      "name": "Endurance Specific",
+      "region": "Western Canada",
+      "hub": "Whistler",
+      "title": "Coaching Referral"
+    },
+    {
+      "id": "34",
+      "name": "Strides Canmore",
+      "region": "Western Canada",
+      "hub": "Canmore",
+      "title": "Running Store Referral"
+    },
+    {
+      "id": "6",
+      "name": "On Pace Wellness",
+      "region": "Western US",
+      "hub": "Portland",
+      "title": "10% Off Guided Cycling Tour"
+    },
+    {
+      "id": "1",
+      "name": "APEX Coaching",
+      "region": "Western US",
+      "hub": "Boulder",
+      "title": "15% Off Your First Coaching Session"
+    },
+    {
+      "id": "7",
+      "name": "Rapha Massage",
+      "region": "Western US",
+      "hub": "Park City",
+      "title": "Running Club Collaboration"
+    },
+    {
+      "id": "11",
+      "name": "Jackson Hole Fitness Coaching",
+      "region": "Western US",
+      "hub": "Jackson",
+      "title": "Free Trail Running Clinic"
+    },
+    {
+      "id": "4",
+      "name": "Powder Guides Ski Adventures",
+      "region": "Western US",
+      "hub": "Denver",
+      "title": "Revenue Share on Trail Camps"
+    },
+    {
+      "id": "2",
+      "name": "Bighorn Mountain Biking",
+      "region": "Western US",
+      "hub": "Moab",
+      "title": "Cross-Referral Partnership"
+    },
+    {
+      "id": "40",
+      "name": "Vail Sports",
+      "region": "Western US",
+      "hub": "Vail",
+      "title": "Ski Equipment Referral"
+    },
+    {
+      "id": "58",
+      "name": "Anna Frost Coaching",
+      "region": "Western US",
+      "hub": "Silverton",
+      "title": "Trail Running Coaching Referral"
+    },
+    {
+      "id": "6",
+      "name": "On Pace Wellness",
+      "region": "Western US",
+      "hub": "Portland",
+      "title": "Cycling Tour Partner Program"
+    },
+    {
+      "id": "10",
+      "name": "FootZone Bend",
+      "region": "Western US",
+      "hub": "Bend",
+      "title": "20% Off Sport Massage"
+    },
+    {
+      "id": "58",
+      "name": "Anna Frost Coaching",
+      "region": "Western US",
+      "hub": "Silverton",
+      "title": "First Coaching Session"
+    },
+    {
+      "id": "50",
+      "name": "Trail House at Enchantment Resort",
+      "region": "Western US",
+      "hub": "Sedona",
+      "title": "Trail Experience Referral"
+    },
+    {
+      "id": "2",
+      "name": "Bighorn Mountain Biking",
+      "region": "Western US",
+      "hub": "Moab",
+      "title": "Free Nutrition Assessment"
+    },
+    {
+      "id": "1",
+      "name": "APEX Coaching",
+      "region": "Western US",
+      "hub": "Boulder",
+      "title": "10% Commission for Client Referrals"
+    },
+    {
+      "id": "8",
+      "name": "Love Cycling Studio",
+      "region": "Western US",
+      "hub": "Austin",
+      "title": "Physio Partnership Referral"
+    },
+    {
+      "id": "12",
+      "name": "Paragon Fit Studio",
+      "region": "Western US",
+      "hub": "San Francisco",
+      "title": "Fitness Referral"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tregion\thub\ttitle\n26\tChamonix Mountain Endurance Academy\tAlps\tChamonix\tMountain Training Referral\n3\tRun the Alps\tAlps\tChamonix\tFirst Trail Run Free\n3\tRun the Alps\tAlps\tChamonix\t$25 Per Qualified Lead\n9\tGear West\tCentral US\tMinneapolis\tFree Bike Tune-Up with Purchase\n28\tEat Sleep Cycle\tCosta Brava\tGirona\tCycling Holiday Referral\n13\tCortina Bike Tours\tDolomites\tCortina d'Ampezzo\tDolomites Tour Referral\n14\tRuncation Travel\tDolomites\tBolzano\tRunning Vacation Referral\n17\tSki and Snowboard School Selva Gardena\tDolomites\tVal Gardena\tSki School Referral\n53\tAlaró Cycling Club\tMallorca\tAlaró\tNew Member Welcome\n22\tSa Calobra Cycling Club\tMallorca\tPalma\tClub Ride Referral\n53\tAlaró Cycling Club\tMallorca\tAlaró\tRefer a Cyclist\n60\tCycloClaudia\tMallorca\tAlcudia\tFirst Ride Free\n60\tCycloClaudia\tMallorca\tAlcudia\tCycling Guide Referral\n18\tLifeCycle Adventures\tPyrenees\tLuchon\tCycling Adventure Referral\n56\tScore Nutrition\tWestern Canada\tCalgary\tNutrition Consultation Referral\n52\tRARE Cycling Club\tWestern Canada\t\t10% membership commission \n61\tInspire Health & Performance\tWestern Canada\tCalgary\tPhysio Referral Program\n61\tInspire Health & Performance\tWestern Canada\tCalgary\tNew Patient Special\n52\tRARE Cycling Club\tWestern Canada\t\t15% off first indoor season\n56\tScore Nutrition\tWestern Canada\tCalgary\tFirst Consult Discount\n55\tThe Doctrine Training Ltd.\tWestern Canada\tCalgary\tTraining Partner Referral\n55\tThe Doctrine Training Ltd.\tWestern Canada\tCalgary\tFree Assessment\n5\tPeak Performance PTS Physical Therapy\tWestern Canada\tWhistler\tSki Lesson Referral Bonus\n5\tPeak Performance PTS Physical Therapy\tWestern Canada\tWhistler\t$20 Off Ski Lesson Package\n32\tEndurance Specific\tWestern Canada\tWhistler\tCoaching Referral\n34\tStrides Canmore\tWestern Canada\tCanmore\tRunning Store Referral\n6\tOn Pace Wellness\tWestern US\tPortland\t10% Off Guided Cycling Tour\n1\tAPEX Coaching\tWestern US\tBoulder\t15% Off Your First Coaching Session\n7\tRapha Massage\tWestern US\tPark City\tRunning Club Collaboration\n11\tJackson Hole Fitness Coaching\tWestern US\tJackson\tFree Trail Running Clinic\n4\tPowder Guides Ski Adventures\tWestern US\tDenver\tRevenue Share on Trail Camps\n2\tBighorn Mountain Biking\tWestern US\tMoab\tCross-Referral Partnership\n40\tVail Sports\tWestern US\tVail\tSki Equipment Referral\n58\tAnna Frost Coaching\tWestern US\tSilverton\tTrail Running Coaching Referral\n6\tOn Pace Wellness\tWestern US\tPortland\tCycling Tour Partner Program\n10\tFootZone Bend\tWestern US\tBend\t20% Off Sport Massage\n58\tAnna Frost Coaching\tWestern US\tSilverton\tFirst Coaching Session\n50\tTrail House at Enchantment Resort\tWestern US\tSedona\tTrail Experience Referral\n2\tBighorn Mountain Biking\tWestern US\tMoab\tFree Nutrition Assessment\n1\tAPEX Coaching\tWestern US\tBoulder\t10% Commission for Client Referrals\n8\tLove Cycling Studio\tWestern US\tAustin\tPhysio Partnership Referral\n12\tParagon Fit Studio\tWestern US\tSan Francisco\tFitness Referral\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

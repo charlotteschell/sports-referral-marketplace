@@ -18,6 +18,7 @@ import SubmitBusiness from "./pages/SubmitBusiness";
 import AdminPanel from "./pages/AdminPanel";
 import About from "./pages/About";
 import SupportTicket from "./pages/SupportTicket";
+import Leaderboard from "./pages/Leaderboard";
 
 function Router() {
   return (
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/submit-business" component={SubmitBusiness} />
       <Route path="/about" component={About} />
       <Route path="/support" component={SupportTicket} />
+      <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/admin" component={AdminPanel} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

@@ -1,0 +1,46 @@
+{
+  "query": "SELECT COUNT(*) as total_offers FROM referralOffers;\nSELECT COUNT(*) as sample_offers FROM referralOffers WHERE isSample = 1;\nSELECT b.region, COUNT(ro.id) as offer_count FROM referralOffers ro JOIN businesses b ON ro.businessId = b.id GROUP BY b.region ORDER BY offer_count DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT COUNT(*) as total_offers FROM referralOffers;\nSELECT COUNT(*) as sample_offers FROM referralOffers WHERE isSample = 1;\nSELECT b.region, COUNT(ro.id) as offer_count FROM referralOffers ro JOIN businesses b ON ro.businessId = b.id GROUP BY b.region ORDER BY offer_count DESC;",
+  "rows": [
+    {
+      "total_offers": "42"
+    },
+    {
+      "total_offers": "sample_offers"
+    },
+    {
+      "total_offers": "40"
+    },
+    {
+      "total_offers": "region\toffer_count"
+    },
+    {
+      "total_offers": "Western US\t16"
+    },
+    {
+      "total_offers": "Western Canada\t12"
+    },
+    {
+      "total_offers": "Mallorca\t5"
+    },
+    {
+      "total_offers": "Alps\t3"
+    },
+    {
+      "total_offers": "Dolomites\t3"
+    },
+    {
+      "total_offers": "Central US\t1"
+    },
+    {
+      "total_offers": "Pyrenees\t1"
+    },
+    {
+      "total_offers": "Costa Brava\t1"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_offers\n42\nsample_offers\n40\nregion\toffer_count\nWestern US\t16\nWestern Canada\t12\nMallorca\t5\nAlps\t3\nDolomites\t3\nCentral US\t1\nPyrenees\t1\nCosta Brava\t1\n",
+  "stderr": "",
+  "execution_time_ms": 78
+}

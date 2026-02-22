@@ -1,0 +1,365 @@
+{
+  "query": "SELECT region, hub, COUNT(*) as count FROM businesses GROUP BY region, hub ORDER BY region, hub;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT region, hub, COUNT(*) as count FROM businesses GROUP BY region, hub ORDER BY region, hub;",
+  "rows": [
+    {
+      "region": "Alberta",
+      "hub": "Banff",
+      "count": "1"
+    },
+    {
+      "region": "Alberta",
+      "hub": "Calgary",
+      "count": "24"
+    },
+    {
+      "region": "Alberta",
+      "hub": "Canmore",
+      "count": "6"
+    },
+    {
+      "region": "Alberta",
+      "hub": "Okotoks",
+      "count": "1"
+    },
+    {
+      "region": "Alps",
+      "hub": "Chamonix",
+      "count": "2"
+    },
+    {
+      "region": "Alps",
+      "hub": "Zermatt",
+      "count": "1"
+    },
+    {
+      "region": "Central US",
+      "hub": "Minneapolis",
+      "count": "1"
+    },
+    {
+      "region": "Colorado Front Range",
+      "hub": "Boulder",
+      "count": "3"
+    },
+    {
+      "region": "Colorado Front Range",
+      "hub": "Colorado Springs",
+      "count": "8"
+    },
+    {
+      "region": "Colorado Front Range",
+      "hub": "Denver",
+      "count": "7"
+    },
+    {
+      "region": "Colorado Front Range",
+      "hub": "Fort Collins",
+      "count": "5"
+    },
+    {
+      "region": "Costa Brava",
+      "hub": "Girona",
+      "count": "1"
+    },
+    {
+      "region": "Dolomites",
+      "hub": "Bolzano",
+      "count": "1"
+    },
+    {
+      "region": "Dolomites",
+      "hub": "Bressanone",
+      "count": "1"
+    },
+    {
+      "region": "Dolomites",
+      "hub": "Cortina d'Ampezzo",
+      "count": "1"
+    },
+    {
+      "region": "Dolomites",
+      "hub": "Val Gardena",
+      "count": "2"
+    },
+    {
+      "region": "Eastern Canada",
+      "hub": "Mont-Tremblant",
+      "count": "1"
+    },
+    {
+      "region": "Eastern Canada",
+      "hub": "Ottawa",
+      "count": "1"
+    },
+    {
+      "region": "Eastern US",
+      "hub": "Boston",
+      "count": "1"
+    },
+    {
+      "region": "Eastern US",
+      "hub": "Stowe",
+      "count": "1"
+    },
+    {
+      "region": "French Riviera",
+      "hub": "Nice",
+      "count": "1"
+    },
+    {
+      "region": "Girona / Costa Brava",
+      "hub": "Girona",
+      "count": "9"
+    },
+    {
+      "region": "Mallorca",
+      "hub": "Alaró",
+      "count": "3"
+    },
+    {
+      "region": "Mallorca",
+      "hub": "Alcudia",
+      "count": "1"
+    },
+    {
+      "region": "Mallorca",
+      "hub": "Calvià",
+      "count": "1"
+    },
+    {
+      "region": "Mallorca",
+      "hub": "Deia",
+      "count": "1"
+    },
+    {
+      "region": "Mallorca",
+      "hub": "Palma",
+      "count": "14"
+    },
+    {
+      "region": "Mallorca",
+      "hub": "Palma de Mallorca",
+      "count": "2"
+    },
+    {
+      "region": "Mallorca",
+      "hub": "Palmanova",
+      "count": "2"
+    },
+    {
+      "region": "Mallorca",
+      "hub": "Port de Pollenca",
+      "count": "1"
+    },
+    {
+      "region": "Mallorca",
+      "hub": "Soller",
+      "count": "1"
+    },
+    {
+      "region": "Pacific Northwest",
+      "hub": "Bellingham",
+      "count": "2"
+    },
+    {
+      "region": "Pacific Northwest",
+      "hub": "Bend",
+      "count": "3"
+    },
+    {
+      "region": "Pacific Northwest",
+      "hub": "Portland",
+      "count": "10"
+    },
+    {
+      "region": "Pacific Northwest",
+      "hub": "Seattle",
+      "count": "4"
+    },
+    {
+      "region": "Pacific Northwest",
+      "hub": "Vancouver",
+      "count": "4"
+    },
+    {
+      "region": "Pacific Northwest",
+      "hub": "Whistler",
+      "count": "7"
+    },
+    {
+      "region": "Pyrenees",
+      "hub": "Andorra",
+      "count": "1"
+    },
+    {
+      "region": "Pyrenees",
+      "hub": "Cauterets",
+      "count": "1"
+    },
+    {
+      "region": "Pyrenees",
+      "hub": "Font-Romeu",
+      "count": "1"
+    },
+    {
+      "region": "Pyrenees",
+      "hub": "Luchon",
+      "count": "1"
+    },
+    {
+      "region": "Scandinavia",
+      "hub": "Lillehammer",
+      "count": "1"
+    },
+    {
+      "region": "Western Canada",
+      "hub": "",
+      "count": "1"
+    },
+    {
+      "region": "Western Canada",
+      "hub": "Banff",
+      "count": "1"
+    },
+    {
+      "region": "Western Canada",
+      "hub": "Calgary",
+      "count": "4"
+    },
+    {
+      "region": "Western Canada",
+      "hub": "Calgary Metropolitan Area",
+      "count": "1"
+    },
+    {
+      "region": "Western Canada",
+      "hub": "Canmore",
+      "count": "1"
+    },
+    {
+      "region": "Western Canada",
+      "hub": "Lake Louise",
+      "count": "1"
+    },
+    {
+      "region": "Western Canada",
+      "hub": "Squamish",
+      "count": "1"
+    },
+    {
+      "region": "Western Canada",
+      "hub": "Victoria",
+      "count": "1"
+    },
+    {
+      "region": "Western Canada",
+      "hub": "Whistler",
+      "count": "2"
+    },
+    {
+      "region": "Western US",
+      "hub": "Austin",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Bend",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Boulder",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Denver",
+      "count": "2"
+    },
+    {
+      "region": "Western US",
+      "hub": "Durango",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Hood River",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Jackson",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Lake Tahoe",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Leadville",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Marin County",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Moab",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Park City",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Portland",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "San Francisco",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Santa Cruz",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Seattle",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Sedona",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Silverton",
+      "count": "2"
+    },
+    {
+      "region": "Western US",
+      "hub": "Tucson",
+      "count": "1"
+    },
+    {
+      "region": "Western US",
+      "hub": "Vail",
+      "count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "region\thub\tcount\nAlberta\tBanff\t1\nAlberta\tCalgary\t24\nAlberta\tCanmore\t6\nAlberta\tOkotoks\t1\nAlps\tChamonix\t2\nAlps\tZermatt\t1\nCentral US\tMinneapolis\t1\nColorado Front Range\tBoulder\t3\nColorado Front Range\tColorado Springs\t8\nColorado Front Range\tDenver\t7\nColorado Front Range\tFort Collins\t5\nCosta Brava\tGirona\t1\nDolomites\tBolzano\t1\nDolomites\tBressanone\t1\nDolomites\tCortina d'Ampezzo\t1\nDolomites\tVal Gardena\t2\nEastern Canada\tMont-Tremblant\t1\nEastern Canada\tOttawa\t1\nEastern US\tBoston\t1\nEastern US\tStowe\t1\nFrench Riviera\tNice\t1\nGirona / Costa Brava\tGirona\t9\nMallorca\tAlaró\t3\nMallorca\tAlcudia\t1\nMallorca\tCalvià\t1\nMallorca\tDeia\t1\nMallorca\tPalma\t14\nMallorca\tPalma de Mallorca\t2\nMallorca\tPalmanova\t2\nMallorca\tPort de Pollenca\t1\nMallorca\tSoller\t1\nPacific Northwest\tBellingham\t2\nPacific Northwest\tBend\t3\nPacific Northwest\tPortland\t10\nPacific Northwest\tSeattle\t4\nPacific Northwest\tVancouver\t4\nPacific Northwest\tWhistler\t7\nPyrenees\tAndorra\t1\nPyrenees\tCauterets\t1\nPyrenees\tFont-Romeu\t1\nPyrenees\tLuchon\t1\nScandinavia\tLillehammer\t1\nWestern Canada\t\t1\nWestern Canada\tBanff\t1\nWestern Canada\tCalgary\t4\nWestern Canada\tCalgary Metropolitan Area\t1\nWestern Canada\tCanmore\t1\nWestern Canada\tLake Louise\t1\nWestern Canada\tSquamish\t1\nWestern Canada\tVictoria\t1\nWestern Canada\tWhistler\t2\nWestern US\tAustin\t1\nWestern US\tBend\t1\nWestern US\tBoulder\t1\nWestern US\tDenver\t2\nWestern US\tDurango\t1\nWestern US\tHood River\t1\nWestern US\tJackson\t1\nWestern US\tLake Tahoe\t1\nWestern US\tLeadville\t1\nWestern US\tMarin County\t1\nWestern US\tMoab\t1\nWestern US\tPark City\t1\nWestern US\tPortland\t1\nWestern US\tSan Francisco\t1\nWestern US\tSanta Cruz\t1\nWestern US\tSeattle\t1\nWestern US\tSedona\t1\nWestern US\tSilverton\t2\nWestern US\tTucson\t1\nWestern US\tVail\t1\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

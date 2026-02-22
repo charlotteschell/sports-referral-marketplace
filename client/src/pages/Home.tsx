@@ -38,12 +38,14 @@ const sportImages: Record<string, string> = {
 };
 
 const regionHighlights = [
+  { name: "Colorado Front Range", country: "USA", emoji: "🇺🇸", description: "Boulder, Denver, Fort Collins" },
+  { name: "Pacific Northwest", country: "USA", emoji: "🇺🇸", description: "Seattle, Portland, Bend" },
+  { name: "Girona & Catalonia", country: "Spain", emoji: "🇪🇸", description: "Pro cyclist training mecca" },
+  { name: "Mallorca", country: "Spain", emoji: "🇪🇸", description: "World-class cycling roads" },
+  { name: "Western Canada", country: "Canada", emoji: "🇨🇦", description: "Calgary, Canmore, Banff" },
   { name: "Dolomites", country: "Italy", emoji: "🇮🇹", description: "Legendary passes and alpine trails" },
   { name: "Pyrenees", country: "France/Spain", emoji: "🇫🇷", description: "Tour de France cols and GR routes" },
-  { name: "Mallorca", country: "Spain", emoji: "🇪🇸", description: "World-class cycling roads" },
   { name: "Alps", country: "France/Switzerland", emoji: "🇨🇭", description: "UTMB and ski touring paradise" },
-  { name: "Western Canada", country: "Canada", emoji: "🇨🇦", description: "Whistler, Squamish, Banff" },
-  { name: "Western US", country: "USA", emoji: "🇺🇸", description: "Colorado, Tahoe, Sedona" },
 ];
 
 export default function Home() {

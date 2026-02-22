@@ -39,12 +39,14 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-bold text-white mb-4">Top Regions</h4>
             <ul className="space-y-2 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              <li><Link href="/directory?region=Dolomites"><span className="hover:text-white transition-colors cursor-pointer">Dolomites</span></Link></li>
-              <li><Link href="/directory?region=Pyrenees"><span className="hover:text-white transition-colors cursor-pointer">Pyrenees</span></Link></li>
+              <li><Link href="/directory?region=Colorado+Front+Range"><span className="hover:text-white transition-colors cursor-pointer">Colorado Front Range</span></Link></li>
+              <li><Link href="/directory?region=Pacific+Northwest"><span className="hover:text-white transition-colors cursor-pointer">Pacific Northwest</span></Link></li>
+              <li><Link href="/directory?region=Catalonia"><span className="hover:text-white transition-colors cursor-pointer">Girona / Catalonia</span></Link></li>
               <li><Link href="/directory?region=Mallorca"><span className="hover:text-white transition-colors cursor-pointer">Mallorca</span></Link></li>
-              <li><Link href="/directory?region=Alps"><span className="hover:text-white transition-colors cursor-pointer">Alps</span></Link></li>
               <li><Link href="/directory?region=Western+Canada"><span className="hover:text-white transition-colors cursor-pointer">Western Canada</span></Link></li>
-              <li><Link href="/directory?region=Western+US"><span className="hover:text-white transition-colors cursor-pointer">Western US</span></Link></li>
+              <li><Link href="/directory?region=Dolomites"><span className="hover:text-white transition-colors cursor-pointer">Dolomites</span></Link></li>
+              <li><Link href="/directory?region=Alps"><span className="hover:text-white transition-colors cursor-pointer">Alps</span></Link></li>
+              <li><Link href="/directory?region=Pyrenees"><span className="hover:text-white transition-colors cursor-pointer">Pyrenees</span></Link></li>
             </ul>
           </div>
 

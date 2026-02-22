@@ -360,3 +360,22 @@
 ## Brands / OEMs for Retailers
 - [x] Add "brands carried" field to businesses for bike retailers and supplement retailers
 - [x] Display brands on directory cards and business profiles for retailer types
+
+## Referral Leaderboard Page
+- [x] Backend: leaderboard query (top businesses by referral volume and $ earned)
+- [x] Backend: leaderboard procedure in routers
+- [x] Frontend: Leaderboard page with rankings table
+- [x] Show top referring businesses by volume and earnings
+- [x] Add gamification elements (badges, rank position)
+- [x] Add navigation link to Leaderboard
+- [x] Route registration in App.tsx
+
+## Seed More Geographic Regions
+- [x] Research and seed Colorado Front Range businesses (Denver, Boulder, Colorado Springs, Fort Collins)
+- [x] Research and seed Pacific Northwest businesses (Portland, Seattle, Bend)
+- [x] Research and seed Girona, Spain businesses (cycling, running, physio, nutrition)
+- [x] Add new regions and hubs to the database
+- [x] Add sample referral offers for all new businesses (217 new offers, 259 total)
+- [x] Update footer and homepage region highlights with new regions
+- [x] Update platform stats to reflect 175 businesses
+- [x] All 84 tests still passing after seeding

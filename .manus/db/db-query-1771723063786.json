@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as total_offers, SUM(CASE WHEN isSample = 1 THEN 1 ELSE 0 END) as sample_offers FROM referralOffers;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT COUNT(*) as total_offers, SUM(CASE WHEN isSample = 1 THEN 1 ELSE 0 END) as sample_offers FROM referralOffers;",
+  "rows": [
+    {
+      "total_offers": "42",
+      "sample_offers": "40"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_offers\tsample_offers\n42\t40\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

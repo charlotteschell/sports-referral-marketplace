@@ -1,0 +1,46 @@
+{
+  "query": "SELECT country, COUNT(*) as count FROM businesses GROUP BY country ORDER BY count DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT country, COUNT(*) as count FROM businesses GROUP BY country ORDER BY count DESC;",
+  "rows": [
+    {
+      "country": "Canada",
+      "count": "58"
+    },
+    {
+      "country": "USA",
+      "count": "54"
+    },
+    {
+      "country": "Spain",
+      "count": "36"
+    },
+    {
+      "country": "US",
+      "count": "13"
+    },
+    {
+      "country": "France",
+      "count": "6"
+    },
+    {
+      "country": "Italy",
+      "count": "5"
+    },
+    {
+      "country": "Switzerland",
+      "count": "1"
+    },
+    {
+      "country": "Andorra",
+      "count": "1"
+    },
+    {
+      "country": "Norway",
+      "count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "country\tcount\nCanada\t58\nUSA\t54\nSpain\t36\nUS\t13\nFrance\t6\nItaly\t5\nSwitzerland\t1\nAndorra\t1\nNorway\t1\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

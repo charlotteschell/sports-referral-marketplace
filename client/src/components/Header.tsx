@@ -14,6 +14,7 @@ export default function Header() {
     { href: "/directory", label: "Directory" },
     { href: "/referral-offers", label: "Referral Offers" },
     { href: "/submit-business", label: "Submit Business" },
+    { href: "/leaderboard", label: "Leaderboard" },
     { href: "/about", label: "About" },
     { href: "/support", label: "Support" },
   ];

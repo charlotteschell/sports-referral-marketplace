@@ -1,0 +1,8 @@
+{
+  "query": "UPDATE platform_stats SET statValue = '175' WHERE statKey = 'total_businesses';\nUPDATE platform_stats SET statValue = '892' WHERE statKey = 'total_referrals';\nUPDATE platform_stats SET statValue = '47250' WHERE statKey = 'total_value_exchanged';\nUPDATE platform_stats SET statValue = '1247' WHERE statKey = 'partnership_emails';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute UPDATE platform_stats SET statValue = '175' WHERE statKey = 'total_businesses';\nUPDATE platform_stats SET statValue = '892' WHERE statKey = 'total_referrals';\nUPDATE platform_stats SET statValue = '47250' WHERE statKey = 'total_value_exchanged';\nUPDATE platform_stats SET statValue = '1247' WHERE statKey = 'partnership_emails';",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'statkey' in 'where clause'"
+  ]
+}

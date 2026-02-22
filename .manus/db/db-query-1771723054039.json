@@ -1,0 +1,74 @@
+{
+  "query": "SELECT region, COUNT(*) as count FROM businesses GROUP BY region ORDER BY count DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT region, COUNT(*) as count FROM businesses GROUP BY region ORDER BY count DESC;",
+  "rows": [
+    {
+      "region": "Alberta",
+      "count": "32"
+    },
+    {
+      "region": "Pacific Northwest",
+      "count": "30"
+    },
+    {
+      "region": "Mallorca",
+      "count": "26"
+    },
+    {
+      "region": "Colorado Front Range",
+      "count": "23"
+    },
+    {
+      "region": "Western US",
+      "count": "22"
+    },
+    {
+      "region": "Western Canada",
+      "count": "13"
+    },
+    {
+      "region": "Girona / Costa Brava",
+      "count": "9"
+    },
+    {
+      "region": "Dolomites",
+      "count": "5"
+    },
+    {
+      "region": "Pyrenees",
+      "count": "4"
+    },
+    {
+      "region": "Alps",
+      "count": "3"
+    },
+    {
+      "region": "Eastern US",
+      "count": "2"
+    },
+    {
+      "region": "Eastern Canada",
+      "count": "2"
+    },
+    {
+      "region": "French Riviera",
+      "count": "1"
+    },
+    {
+      "region": "Central US",
+      "count": "1"
+    },
+    {
+      "region": "Costa Brava",
+      "count": "1"
+    },
+    {
+      "region": "Scandinavia",
+      "count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "region\tcount\nAlberta\t32\nPacific Northwest\t30\nMallorca\t26\nColorado Front Range\t23\nWestern US\t22\nWestern Canada\t13\nGirona / Costa Brava\t9\nDolomites\t5\nPyrenees\t4\nAlps\t3\nEastern US\t2\nEastern Canada\t2\nFrench Riviera\t1\nCentral US\t1\nCosta Brava\t1\nScandinavia\t1\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

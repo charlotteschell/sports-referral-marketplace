@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE platformStats SET statValue = 175 WHERE statKey = 'total_businesses';\nUPDATE platformStats SET statValue = 892 WHERE statKey = 'total_referrals';\nUPDATE platformStats SET statValue = 47250 WHERE statKey = 'total_value_exchanged';\nUPDATE platformStats SET statValue = 1247 WHERE statKey = 'partnership_emails';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute UPDATE platformStats SET statValue = 175 WHERE statKey = 'total_businesses';\nUPDATE platformStats SET statValue = 892 WHERE statKey = 'total_referrals';\nUPDATE platformStats SET statValue = 47250 WHERE statKey = 'total_value_exchanged';\nUPDATE platformStats SET statValue = 1247 WHERE statKey = 'partnership_emails';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 67
+}
