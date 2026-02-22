@@ -669,3 +669,6 @@
 - [x] Website URL fields: accept all formats (no www, with www, https://, bare domain)
 - [x] Normalize website URLs after submission (add https:// if missing)
 - [x] Update validation across all forms that accept website URLs (SubmitBusiness, AddBusiness, EditBusiness)
+
+## Launch Clock Update
+- [x] Change launch countdown target to midnight March 1st (2026-03-01 00:00 MST)

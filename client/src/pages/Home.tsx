@@ -48,8 +48,8 @@ const regionHighlights = [
   { name: "Alps", country: "France/Switzerland", emoji: "🇨🇭", description: "UTMB and ski touring paradise" },
 ];
 
-// Launch date: Monday Feb 23, 2026 at 12:00 PM MST (19:00 UTC)
-const LAUNCH_DATE = new Date('2026-02-23T19:00:00Z').getTime();
+// Launch date: Sunday March 1, 2026 at 12:00 AM MST (07:00 UTC)
+const LAUNCH_DATE = new Date('2026-03-01T07:00:00Z').getTime();
 
 function LaunchTimer() {
   const [diff, setDiff] = useState(() => Date.now() - LAUNCH_DATE);
