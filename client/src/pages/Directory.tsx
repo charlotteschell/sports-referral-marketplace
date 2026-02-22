@@ -286,7 +286,7 @@ export default function Directory() {
               />
               <MultiSelectDropdown
                 label="Hub / Area"
-                options={(hubs || []).map(h => ({ value: h.hub, label: h.hub }))}
+                options={Array.from(new Map((hubs || []).map(h => [h.hub, { value: h.hub, label: h.hub }] as [string, { value: string; label: string }])).values())}
                 selected={hubFilters}
                 onChange={(v) => { setHubFilters(v); setPage(0); }}
                 onAddNew={() => setAddCategoryDialog({ type: 'hub' })}
@@ -331,7 +331,7 @@ export default function Directory() {
               />
               <MultiSelectDropdown
                 label="Hub / Area"
-                options={(hubs || []).map(h => ({ value: h.hub, label: h.hub }))}
+                options={Array.from(new Map((hubs || []).map(h => [h.hub, { value: h.hub, label: h.hub }] as [string, { value: string; label: string }])).values())}
                 selected={hubFilters}
                 onChange={(v) => { setHubFilters(v); setPage(0); }}
               />

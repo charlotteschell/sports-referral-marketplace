@@ -568,3 +568,6 @@
 - [x] Fix duplicate key warning in SubmitBusiness hub dropdown (deduplicate hubs)
 - [x] Add missing mock functions in business.test.ts (getBusinessSportCategories, setBusinessSportCategories, etc.)
 - [x] All 92 tests passing
+
+## Fix Duplicate Key Errors on /directory Page
+- [x] Fix duplicate key warnings for hub/city names (Boulder, Calgary, Whistler, etc.) in Directory.tsx filter dropdowns
