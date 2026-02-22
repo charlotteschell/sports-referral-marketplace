@@ -31,7 +31,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/">
             <div className="flex items-center gap-2 cursor-pointer">
-              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663371988607/nSqkrjVTngkYHxee.png" alt="SportConnect" className="w-9 h-9 rounded-lg" />
+              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663371988607/omxbSEHhGlQLbCoQ.png" alt="SportConnect" className="w-9 h-9 rounded-lg" />
               <div className="flex flex-col">
                 <span className="text-lg font-bold text-white tracking-wide leading-tight" style={{ fontFamily: "var(--font-heading)" }}>
                   SPORTCONNECT

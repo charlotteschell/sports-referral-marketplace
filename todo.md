@@ -628,3 +628,7 @@
 - [x] Replace logo in footer
 - [x] Replace favicon
 - [x] Replace any other logo instances across the site
+
+## Logo Update v2 - Combined Design
+- [x] Generate logo: mountain from image 1 (detailed multi-peak) + arrows from image 2 (clean two-arrow circular flywheel)
+- [x] Upload to CDN and replace across the site (header, footer, favicon)
