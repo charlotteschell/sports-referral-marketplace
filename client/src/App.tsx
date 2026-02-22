@@ -21,6 +21,7 @@ import SupportTicket from "./pages/SupportTicket";
 import Leaderboard from "./pages/Leaderboard";
 import Onboarding from "./pages/Onboarding";
 import AthleteDashboard from "./pages/AthleteDashboard";
+import BetaBanner from "./components/BetaBanner";
 
 function Router() {
   return (
@@ -54,6 +55,7 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
+          <BetaBanner />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

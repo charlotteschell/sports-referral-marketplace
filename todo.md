@@ -719,3 +719,8 @@
 ## Leaderboard Styling
 - [x] Debug and fix styling issues on the Leaderboard page (BusinessLogo font size bug: parseInt("w-6 h-6".replace(/\D/g,'')) gave 66*3=198px instead of 6*3=18px)
 - [x] Update Leaderboard top metrics to match new Scoreboard metrics from homepage (8 metrics, fixed snake_case key mapping in getPlatformStats)
+## Beta Welcome Banner
+- [x] Create BetaBanner component with popup modal for new visitors
+- [x] Collapse into persistent expandable top banner after dismissal
+- [x] Integrate banner on every page (above Header)
+- [x] Use localStorage to track first-visit vs returning visitor state
