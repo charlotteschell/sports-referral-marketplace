@@ -22,10 +22,10 @@ export default function Onboarding() {
     onSuccess: () => {
       utils.auth.me.invalidate();
       if (selected === "business_owner") {
-        toast.success("Welcome, business owner! Let's set up your profile.");
+        toast.success("You're in! Head to your dashboard to get started.");
         navigate("/dashboard");
       } else {
-        toast.success("Welcome to SportConnect! Explore deals and find great local businesses.");
+        toast.success("You're in! Check out what's near you.");
         navigate("/directory");
       }
     },
@@ -70,7 +70,7 @@ export default function Onboarding() {
               Welcome to SportConnect!
             </h1>
             <p className="text-white/70 text-lg max-w-xl mx-auto" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Tell us how you'd like to use the platform so we can personalize your experience.
+              Quick question before we get going — are you here as a business or as an athlete?
             </p>
           </div>
         </section>
@@ -107,7 +107,7 @@ export default function Onboarding() {
                   </div>
 
                   <p className="text-muted-foreground text-sm mb-5 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                    List your business, create referral offers, send and receive referrals from partner businesses, and grow your customer base through community collaboration.
+                    Claim or list your business, post referral offers, send and receive referrals from other businesses in the network, and track everything from your dashboard.
                   </p>
 
                   <div className="space-y-3">
@@ -163,13 +163,13 @@ export default function Onboarding() {
                   </div>
 
                   <p className="text-muted-foreground text-sm mb-5 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                    Discover local sports businesses, claim exclusive consumer offers and deals, find coaches, shops, and services in your area, and save money on the gear and services you love.
+                    Find coaches, shops, physios, and other sports businesses near you. Browse their profiles, check reviews, and grab deals when they're available.
                   </p>
 
                   <div className="space-y-3">
                     {[
                       { icon: <Gift className="w-4 h-4" />, text: "Claim exclusive consumer deals" },
-                      { icon: <Star className="w-4 h-4" />, text: "Discover top-rated local businesses" },
+                      { icon: <Star className="w-4 h-4" />, text: "Find well-reviewed local businesses" },
                       { icon: <Mountain className="w-4 h-4" />, text: "Find coaches, shops & services" },
                       { icon: <Heart className="w-4 h-4" />, text: "Support your local sports community" },
                     ].map((item, i) => (

@@ -46,7 +46,7 @@ export default function ReferralOffers() {
             </h1>
           </div>
           <p className="text-white/70 max-w-2xl text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-            Browse B2B referral incentives for businesses and consumer offers for enthusiasts. Whether you're a business partner or an individual, find the right offer for you.
+            B2B referral incentives for businesses and consumer deals for athletes. Pick the ones that make sense for you.
           </p>
         </div>
       </section>
@@ -61,7 +61,7 @@ export default function ReferralOffers() {
                 Community supporting community — all for free.
               </p>
               <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                SportConnect is a free platform built to help endurance sports businesses grow together. If you see your business listed here, <Link href="/directory" className="text-[oklch(0.55_0.15_45)] underline hover:text-[oklch(0.45_0.15_45)]">claim your listing</Link> to publish your own real B2B or consumer referral incentives — no cost, ever.
+                SportConnect is free. If you see your business listed here, <Link href="/directory" className="text-[oklch(0.55_0.15_45)] underline hover:text-[oklch(0.45_0.15_45)]">claim your listing</Link> and replace these sample offers with your real incentives. No cost, no catch.
               </p>
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function ReferralOffers() {
                 <h3 className="font-bold text-foreground">B2B Referral Offers</h3>
               </div>
               <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                For businesses looking to collaborate or send customers to each other. Earn commissions, trade services, or build strategic partnerships. Referred customers can still claim eligible consumer offers.
+                For businesses that send customers to each other. Earn commissions, trade services, or set up a partnership. Referred customers can still grab consumer offers too.
               </p>
             </div>
           )}
@@ -108,7 +108,7 @@ export default function ReferralOffers() {
                 <h3 className="font-bold text-foreground">Consumer Offers</h3>
               </div>
               <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                For individual consumers and enthusiasts. Browse discounts, free sessions, and special deals directly from verified sports businesses.
+                For athletes and enthusiasts. Discounts, free sessions, and deals straight from sports businesses near you.
               </p>
             </div>
           )}
@@ -252,7 +252,7 @@ export default function ReferralOffers() {
                 Own a Business in the Endurance Sports Community?
               </h3>
               <p className="text-white/70 max-w-xl mx-auto mb-5" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                SportConnect is 100% free — community supporting community. Claim your listing to publish your own real B2B and consumer referral incentives, connect with partner businesses, and grow together.
+                SportConnect is free. Claim your listing, post your own referral offers, and start getting customers from partner businesses. No subscription, no hidden fees.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link href="/directory">

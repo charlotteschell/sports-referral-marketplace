@@ -395,9 +395,13 @@ export default function Directory() {
                               {sportIcons[item.sportCategory?.slug || ""] || <Star className="w-6 h-6" />}
                             </div>
                           )}
-                          {item.business.isClaimed ? (
+                          {item.business.isClaimed && item.business.claimedByUserId ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
                               <Shield className="w-3 h-3" /> Verified
+                            </span>
+                          ) : item.business.isClaimed && !item.business.claimedByUserId ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-500/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
+                              <Shield className="w-3 h-3" /> Listed
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-500/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
@@ -507,13 +511,12 @@ export default function Directory() {
                         </div>
                       )}
 
-                      {/* Action buttons row */}
-                      <div className="mt-3 pt-3 border-t border-border flex items-center gap-2">
+                      {/* Action buttons row - side by side, prominent */}
+                      <div className="mt-4 pt-3 border-t border-border flex items-center gap-2">
                         {/* Send Referral button */}
                         <Button
-                          variant="outline"
                           size="sm"
-                          className="flex-1 text-xs bg-transparent"
+                          className="flex-1 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
                           style={{ textTransform: "none" }}
                           onClick={(e) => {
                             e.preventDefault();
@@ -526,16 +529,16 @@ export default function Directory() {
                             setReferralDialog({ businessId: item.business.id, businessName: item.business.name });
                           }}
                         >
-                          <Send className="w-3 h-3 mr-1" /> Send Referral
+                          <Send className="w-3.5 h-3.5 mr-1.5" /> Send Referral
                         </Button>
 
-
-                      </div>
-
-                      {/* Claim CTA for unclaimed */}
-                      {!item.business.isClaimed && (
-                        <div className="mt-2">
-                          <button
+                        {/* Claim button - shown for unclaimed or demo-listed (no real owner), View Profile for truly claimed */}
+                        {(!item.business.isClaimed || (item.business.isClaimed && !item.business.claimedByUserId)) ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 text-xs font-semibold border-amber-500/40 text-amber-600 hover:bg-amber-500/10 bg-amber-500/5"
+                            style={{ textTransform: "none" }}
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -545,14 +548,22 @@ export default function Directory() {
                                 window.location.href = getLoginUrl();
                               }
                             }}
-                            className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-all border border-amber-500/20"
-                            style={{ textTransform: "none" }}
                           >
-                            <UserPlus className="w-3 h-3" />
-                            Is this yours? Claim it
-                          </button>
-                        </div>
-                      )}
+                            <UserPlus className="w-3.5 h-3.5 mr-1.5" /> Claim Business
+                          </Button>
+                        ) : (
+                          <Link href={`/business/${item.business.slug}`} className="flex-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full text-xs font-semibold bg-transparent"
+                              style={{ textTransform: "none" }}
+                            >
+                              <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> View Profile
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 ))}

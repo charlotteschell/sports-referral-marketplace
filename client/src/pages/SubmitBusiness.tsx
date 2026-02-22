@@ -224,9 +224,9 @@ export default function SubmitBusiness() {
               </div>
             </div>
             <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl">
-              Whether you're a coach, bike shop, sport psychologist, vacation provider, or any business serving
-              cyclists, runners, and snowsports enthusiasts — submit your business to be listed in
-              the SportConnect directory and start receiving referrals.
+              Coach, bike shop, physio, vacation provider, or any business that serves
+              cyclists, runners, or snow sports athletes — submit your business to get listed in
+              the directory and start getting referrals from other businesses.
               <span className="block mt-3 text-sm text-amber-500 font-medium">All submissions are subject to admin approval. A website is required for verification. Your email must match your business domain.</span>
             </p>
           </div>

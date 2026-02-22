@@ -466,3 +466,38 @@
 - [x] Add to directory with correct details: 3519 18th St SW, Marda Loop, 820+ Google reviews, 4.9 rating
 - [x] Added B2B offer (10% commission on bike fits) and consumer offer (15% off first bike fit)
 - [x] Marked as featured business
+
+## Directory Card Button Improvements
+- [x] Make "Send a Referral" and "Claim This Business" buttons side by side on directory cards
+- [x] Make both buttons more prominent: Send Referral is primary filled, Claim is amber outline
+- [x] For claimed businesses, show "View Profile" button instead of Claim
+
+## Navigation Signup/Signin Buttons
+- [x] Next to "List Your Business", added "I'm an Enthusiast" button (with Mountain icon) that routes to onboarding
+- [x] "Sign In" button shown for existing members (was already there, now more prominent in the 3-button layout)
+- [x] Mobile menu also updated with all three options: Sign In, I'm an Enthusiast, List Your Business
+
+## Info Button on Referrals Sent Stat
+- [x] Add info button next to "Referrals Sent" on the homepage
+- [x] Shows hover tooltip explaining sample data was seeded by builders, will be replaced with real referrals## Add Training Camps Business Type
+- [x] Added "Training Camp" as a new business type category## Fix Duplicate Hubs/Areas
+- [x] Merged Calgary Metropolitan Area -> Calgary, Palma de Mallorca -> Palma
+- [x] Fixed RARE Cycling Club empty hub -> Calgary
+- [x] No more duplicate hubs remain
+
+## Demo-Verified Businesses Should Still Be Claimable
+- [x] Distinguish between demo-verified (seeded data) and truly claimed (real owner) businesses
+- [x] Demo-verified businesses show "Listed" badge (blue) instead of "Verified" (green)
+- [x] Real business owners can still claim demo-listed businesses (Claim button shown)
+- [x] "Verified" badge only shown when a real user has claimed the business (claimedByUserId not null)
+
+## Rewrite Website Copy to Remove AI Patterns
+- [x] Audit all user-facing copy on Home, About, Directory, Leaderboard, Dashboard, Onboarding, etc.
+- [x] Rewrote Home.tsx: 18 copy edits (hero, stats, how it works, sports, hubs, business types, offers, featured, SEO)
+- [x] Rewrote ReferralOffers.tsx: 5 copy edits (hero, banner, B2B/consumer explainers, bottom CTA)
+- [x] Rewrote Onboarding.tsx: 6 copy edits (toasts, hero, card descriptions, feature lists)
+- [x] Rewrote About.tsx: 3 copy edits (story, values, pricing note)
+- [x] Rewrote SubmitBusiness.tsx: 1 copy edit (hero description)
+- [x] Rewrote Leaderboard.tsx: 2 copy edits (empty state, bottom CTA)
+- [x] Rewrote Footer.tsx: 1 copy edit (tagline)
+- [x] Saved copywriting guidelines as a reusable skill for future tasks

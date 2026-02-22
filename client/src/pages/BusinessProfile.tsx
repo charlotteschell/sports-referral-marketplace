@@ -247,6 +247,8 @@ export default function BusinessProfile() {
   const isOwner = isAuthenticated && user?.id === business.claimedByUserId;
   const isAdmin = user?.role === 'admin';
   const isClaimed = business.isClaimed;
+  const isReallyVerified = isClaimed && !!business.claimedByUserId;
+  const isDemoListed = isClaimed && !business.claimedByUserId;
   const canSeePrivateInfo = isOwner || isAdmin;
 
   const b2bOffers = offers?.filter(o => o.offerType === "b2b") || [];
@@ -295,9 +297,13 @@ export default function BusinessProfile() {
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-3 mb-2">
                 <h1 className="text-3xl md:text-4xl font-bold">{business.name}</h1>
-                {isClaimed ? (
+                {isReallyVerified ? (
                   <Badge className="bg-primary/20 text-primary border-primary/30" style={{ textTransform: "none" }}>
                     <Shield className="w-3 h-3 mr-1" /> Verified
+                  </Badge>
+                ) : isDemoListed ? (
+                  <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30" style={{ textTransform: "none" }}>
+                    <Shield className="w-3 h-3 mr-1" /> Listed
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="border-white/30 text-white/60" style={{ textTransform: "none" }}>
@@ -395,7 +401,7 @@ export default function BusinessProfile() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 shrink-0">
-              {!isClaimed && isAuthenticated && claimStep === 'idle' && (
+              {(!isReallyVerified) && isAuthenticated && claimStep === 'idle' && (
                 <Button
                   onClick={() => setClaimStep('email')}
                   className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white"
@@ -405,7 +411,7 @@ export default function BusinessProfile() {
                   Claim Business
                 </Button>
               )}
-              {!isClaimed && !isAuthenticated && (
+              {(!isReallyVerified) && !isAuthenticated && (
                 <a href={getLoginUrl()}>
                   <Button className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white" style={{ textTransform: "none" }}>
                     <Handshake className="w-4 h-4 mr-2" /> Sign In to Claim
@@ -449,7 +455,7 @@ export default function BusinessProfile() {
       </section>
 
       {/* Email Verification Flow for Claiming */}
-      {claimStep !== 'idle' && !isClaimed && isAuthenticated && (
+      {claimStep !== 'idle' && !isReallyVerified && isAuthenticated && (
         <section className="bg-amber-50 dark:bg-amber-950/20 border-b border-amber-200 dark:border-amber-800">
           <div className="container py-6">
             <div className="max-w-lg mx-auto">
@@ -711,7 +717,7 @@ export default function BusinessProfile() {
               )}
 
               {/* Unclaimed notice */}
-              {!isClaimed && (
+              {!isReallyVerified && !isDemoListed && (
                 <Card className="border-dashed border-2 border-muted">
                   <CardContent className="p-8 text-center">
                     <Shield className="w-10 h-10 text-muted-foreground mx-auto mb-3" />

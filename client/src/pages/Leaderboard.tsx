@@ -167,7 +167,7 @@ export default function Leaderboard() {
               <Trophy className="w-12 h-12 text-white/20 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-white mb-2">No rankings yet</h3>
               <p className="text-white/50 mb-6">
-                The leaderboard is waiting for its first champion. Start sending referrals to claim the top spot!
+                No referrals tracked yet. Once businesses start sending referrals, rankings will show up here.
               </p>
               <Link href="/directory">
                 <Button className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white">
@@ -278,7 +278,7 @@ export default function Leaderboard() {
               <h3 className="text-xl font-bold text-white mb-2">Want to climb the ranks?</h3>
               <p className="text-white/50 mb-6 max-w-md mx-auto">
                 Claim your business, start sending referrals, and honor the ones you receive. 
-                The community rewards businesses that play the game.
+                The businesses that refer the most and follow through show up at the top.
               </p>
               <div className="flex gap-3 justify-center flex-wrap">
                 <Link href="/directory">

@@ -8,7 +8,7 @@ import { Link } from "wouter";
 import {
   Bike, Mountain, Snowflake, Users, ArrowRight, Handshake,
   TrendingUp, Search, Shield, MapPin, ChevronRight, ChevronLeft, Star,
-  Compass, Globe, Palmtree, Gift, Tag, Clock, Timer
+  Compass, Globe, Palmtree, Gift, Tag, Clock, Timer, Info
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -159,10 +159,10 @@ export default function Home() {
               One Network.
             </h1>
             <p className="text-lg md:text-xl text-white/80 mb-4 max-w-2xl leading-relaxed" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
-              Whether you're a <strong className="text-white">coach, bike shop owner, or sport psychologist</strong> or an <strong className="text-white">enthusiast hunting for the best local pros</strong>, SportConnect is where the endurance sports community actually hangs out.
+              Coaches, bike shops, physios, sport psychologists — if you serve <strong className="text-white">cyclists, runners, or snow sports athletes</strong>, this is your network. And if you're an <strong className="text-white">athlete looking for the right local pros</strong>, you're in the right place too.
             </p>
             <p className="text-base md:text-lg text-white/60 mb-4 max-w-2xl" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
-              Businesses send each other customers and earn incentives. Enthusiasts find the best local pros and score exclusive deals. Everybody wins.
+              Businesses refer customers to each other and earn incentives. Athletes find trusted local pros and grab real deals. Simple as that.
             </p>
             <p className="text-sm text-white/50 mb-8 max-w-2xl" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
               Cycling &bull; Road Running &bull; Trail Running &bull; Ultra Running &bull; Skiing &bull; Snowboarding &bull; Nordic Skiing &bull; Sport Vacations
@@ -216,9 +216,17 @@ export default function Home() {
               <p className="text-3xl font-bold text-primary" style={{ fontFamily: "var(--font-heading)" }}>{stats?.regions || 0}</p>
               <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Regions Covered</p>
             </div>
-            <div className="col-span-2 md:col-span-1">
+            <div className="col-span-2 md:col-span-1 relative group/info">
               <p className="text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>{stats?.totalReferrals || 0}</p>
-              <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Referrals Sent</p>
+              <p className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1" style={{ textTransform: "none" }}>
+                Referrals Sent
+                <span className="relative">
+                  <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-primary cursor-help transition-colors" />
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-lg bg-popover text-popover-foreground text-xs leading-relaxed shadow-lg border border-border opacity-0 group-hover/info:opacity-100 pointer-events-none group-hover/info:pointer-events-auto transition-opacity z-50" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                    The builders of the site seeded sample referrals to help demonstrate the platform's capabilities. This number will be updated with real referrals once they start coming in.
+                  </span>
+                </span>
+              </p>
             </div>
           </div>
         </div>
@@ -230,7 +238,7 @@ export default function Home() {
           <div className="container">
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: "var(--font-heading)" }}>Community Activity</h2>
-              <p className="text-white/60 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>Real-time snapshot of our growing endurance sports network</p>
+              <p className="text-white/60 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>What's happening across the network right now</p>
             </div>
             {/* Launch Countdown Timer */}
             <LaunchTimer />
@@ -270,12 +278,12 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How It Works</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Three steps. Zero complexity. Maximum stoke.
+              Three steps. That's it.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: <Search className="w-8 h-8" />, title: "Discover", desc: "Browse coaches, shops, sport psychologists, clubs, and vacation providers across cycling, running, snowsports, and more. Whether you own a business or just love the sport, the directory has you covered." },
+              { icon: <Search className="w-8 h-8" />, title: "Discover", desc: "Browse coaches, shops, physios, clubs, and vacation providers across cycling, running, and snow sports. Own a business or just love the sport — the directory works for both." },
               { icon: <Handshake className="w-8 h-8" />, title: "Connect & Refer", desc: "Claim your profile, post referral offers (B2B or consumer), and start sending customers to your partners. Enthusiasts can grab exclusive deals directly. It's a win-win." },
               { icon: <TrendingUp className="w-8 h-8" />, title: "Grow Together", desc: "Track every referral, build partnerships locally and across borders, and watch your network grow from the Dolomites to the Canadian Rockies." },
             ].map((step, i) => (
@@ -303,7 +311,7 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Endurance Sports</h2>
             <p className="text-white/70 max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              From mountain peaks to open roads, we serve every discipline. Pros and weekend warriors alike. And yes, sport vacations count too.
+              Road, trail, snow, or all three. We cover the sports and the businesses behind them. And yes, sport vacations absolutely count.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -345,7 +353,7 @@ export default function Home() {
               Endurance Sports Hubs
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              The world's best endurance sports destinations, all in one place. From the Dolomites to the Canadian Rockies, these are the hubs where athletes train, race, and vacation.
+              The places where athletes actually train, race, and take sport vacations. From the Dolomites to the Canadian Rockies, these hubs are on the map.
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -368,7 +376,7 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Every Type of Sports Business</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Coaches, shops, sport psychologists, clubs, vacation providers, and more. Basically everyone who keeps athletes performing at their best (and recovering from their worst).
+              Coaches, shops, physios, clubs, cafes, vacation providers — basically everyone who keeps athletes going (and recovering when things go sideways).
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
@@ -404,7 +412,7 @@ export default function Home() {
                   <span style={{ textTransform: "none" }}>Featured</span>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Featured Businesses</h2>
-                <p className="text-muted-foreground max-w-xl" style={{ textTransform: "none", letterSpacing: "normal" }}>Curated selection of top endurance sports businesses from around the world. Claim your listing to get featured.</p>
+                <p className="text-muted-foreground max-w-xl" style={{ textTransform: "none", letterSpacing: "normal" }}>Some of the businesses already on the platform. Claim your listing to show up here.</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="icon" onClick={() => scrollCarousel('left')} className="bg-transparent hidden md:flex">
@@ -438,9 +446,13 @@ export default function Home() {
                           </div>
                         )}
                         <div className="flex flex-col items-end gap-1">
-                          {item.business.isClaimed ? (
+                          {item.business.isClaimed && item.business.claimedByUserId ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
                               <Shield className="w-3 h-3" /> Verified
+                            </span>
+                          ) : item.business.isClaimed && !item.business.claimedByUserId ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-500/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
+                              <Shield className="w-3 h-3" /> Listed
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-500/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
@@ -529,7 +541,7 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Two Types of Referral Offers</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Businesses post offers for other businesses and for individual consumers. More reach, more revenue, more stoke.
+              Businesses post offers for other businesses and for individual athletes. Two types of offers, one platform.
             </p>
           </div>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -539,7 +551,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-foreground mb-3">B2B Offers</h3>
               <p className="text-muted-foreground leading-relaxed mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                For businesses that want to collaborate and send customers to each other. Earn commissions, trade services, or build strategic partnerships. The referred customers can still claim any eligible consumer offers too.
+                For businesses that want to send customers to each other. Earn commissions, trade services, or set up a partnership that works for both sides. Referred customers can still grab any consumer offers too.
               </p>
               <ul className="space-y-2" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 {["Commission per referral", "Service trade agreements", "Cross-promotion partnerships", "Volume-based incentives"].map((item) => (
@@ -556,7 +568,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-foreground mb-3">Consumer Offers</h3>
               <p className="text-muted-foreground leading-relaxed mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                For individual consumers looking for services. Enthusiasts can browse and claim these offers directly: discounts, free sessions, package deals, and more.
+                For athletes and enthusiasts looking for services. Browse and claim offers directly — discounts, free sessions, package deals, that kind of thing.
               </p>
               <ul className="space-y-2" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 {["Percentage discounts", "Free trial sessions", "Package deal pricing", "First-time customer specials"].map((item) => (
@@ -589,7 +601,7 @@ export default function Home() {
               </div>
               <h3 className="text-2xl md:text-3xl font-bold mb-4">For Sports Professionals</h3>
               <p className="text-primary-foreground/80 mb-6 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Claim your business, post referral offers, and start receiving qualified customers from trusted partners across borders. From Mallorca to Colorado, your next client could be one referral away.
+                Claim your business, post referral offers, and start getting customers from partner businesses. From Mallorca to Colorado, your next client might come from a referral across the hall or across the ocean.
               </p>
               <ul className="space-y-2 mb-8" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 {["Claim and manage your business profile", "Post B2B and consumer referral offers", "Track referrals sent and received", "Connect with businesses across regions"].map((item) => (
@@ -620,10 +632,10 @@ export default function Home() {
               </div>
               <h3 className="text-2xl md:text-3xl font-bold mb-4">For Sports Enthusiasts</h3>
               <p className="text-white/80 mb-6 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Find the best local coaches, shops, sport psychologists, vacation providers, and clubs for cycling, running, snowsports, and more. Discover trusted professionals and claim exclusive deals.
+                Find coaches, shops, physios, vacation providers, and clubs near you. Browse their profiles, check their reviews, and grab deals when they're available.
               </p>
               <ul className="space-y-2 mb-8" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                {["Search by sport, region, hub, and business type", "Find verified businesses worldwide", "Browse and claim consumer offers", "Plan your next sport vacation"].map((item) => (
+                {["Search by sport, region, and business type", "Find businesses with real reviews", "Grab deals from local pros", "Plan your next sport trip"].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-sm text-white/90">
                     <div className="w-1.5 h-1.5 rounded-full bg-white" />
                     {item}

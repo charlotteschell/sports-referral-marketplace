@@ -20,7 +20,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-sm leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              The referral marketplace for endurance sports businesses and enthusiasts. Grow together, refer together, ride together.
+              A referral network for the businesses behind cycling, running, and snow sports. Send customers to each other, earn incentives, and grow together.
             </p>
           </div>
 

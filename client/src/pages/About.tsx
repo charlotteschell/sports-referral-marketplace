@@ -43,7 +43,7 @@ export default function About() {
                 SportConnect started with a simple observation: the small businesses that serve our sporting communities (coaches, bike shops, nutritionists, sport psychologists, running clubs, cycling studios) almost never collaborate. They serve the same passionate athletes but operate in silos.
               </p>
               <p className="text-muted-foreground mb-4 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                When a cycling coach refers a client to a trusted sports nutritionist, or a bike shop recommends a great sport psychologist, everyone wins. The businesses grow, and the athletes get better care.
+                When a cycling coach refers a client to a sports nutritionist they trust, or a bike shop points someone toward a good sport psychologist, both businesses grow. And the athlete gets better care.
               </p>
               <p className="text-muted-foreground leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 So we built a referral marketplace to make it easy for sports SMBs to find each other, collaborate, and grow together through mutual referrals. That's it. No venture capital pitch deck. Just a bunch of athletes who wanted to fix something.
@@ -95,7 +95,7 @@ export default function About() {
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-3">Community First</h3>
               <p className="text-muted-foreground leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                We exist to help local sports businesses collaborate and thrive together. When one business grows, the whole community benefits. Rising tides lift all boats (and bikes, and running shoes).
+                Local sports businesses do better when they work together. A referral from a trusted partner is worth more than any ad. Rising tides lift all boats (and bikes, and running shoes).
               </p>
             </div>
             <div className="bg-background rounded-xl p-8 shadow-sm border border-border/50">
@@ -145,7 +145,7 @@ export default function About() {
                   <span className="font-semibold text-foreground">Currently Free</span>
                 </div>
                 <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                  No subscription fees, no commissions, no hidden costs. Just a community of sports enthusiasts helping each other grow. If you want to buy us a coffee, we won't say no.
+                  No subscription fees, no commissions, no hidden costs. If you want to buy us a coffee though, we won't say no.
                 </p>
               </div>
             </div>
