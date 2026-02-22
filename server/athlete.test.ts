@@ -123,6 +123,15 @@ vi.mock("./db", () => ({
   getSavedBusinessIds: vi.fn().mockResolvedValue([5, 12]),
   // Leaderboard mocks
   getLeaderboard: vi.fn().mockResolvedValue({ topReferrers: [], topReceivers: [], mostReliable: [], topConnectors: [] }),
+  getRecommendedBusinesses: vi.fn().mockResolvedValue([]),
+  getUserNotifications: vi.fn().mockResolvedValue([]),
+  markNotificationRead: vi.fn().mockResolvedValue(undefined),
+  markAllNotificationsRead: vi.fn().mockResolvedValue(undefined),
+  getUnreadNotificationCount: vi.fn().mockResolvedValue(0),
+  getUsersWhoSavedBusiness: vi.fn().mockResolvedValue([]),
+  createNotification: vi.fn().mockResolvedValue(1),
+  updateUserProfile: vi.fn().mockResolvedValue(undefined),
+  updateUserNotificationPreference: vi.fn().mockResolvedValue(undefined),
 }));
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
@@ -135,6 +144,9 @@ function createAuthContext(userId = 1, role: "user" | "admin" = "user"): TrpcCon
     name: `Test User ${userId}`,
     loginMethod: "manus",
     role,
+    accountType: "consumer" as const,
+    onboardingComplete: true,
+    notificationPreference: "both",
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),

@@ -1504,6 +1504,25 @@ export async function markOnboardingComplete(userId: number) {
   await db.update(users).set({ onboardingComplete: true }).where(eq(users.id, userId));
 }
 
+// ─── User Profile Settings ──────────────────────────────────
+export async function updateUserNotificationPreference(userId: number, preference: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ notificationPreference: preference }).where(eq(users.id, userId));
+}
+
+export async function updateUserProfile(userId: number, data: { name?: string; email?: string; notificationPreference?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updateData: Record<string, any> = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.notificationPreference !== undefined) updateData.notificationPreference = data.notificationPreference;
+  if (Object.keys(updateData).length > 0) {
+    await db.update(users).set(updateData).where(eq(users.id, userId));
+  }
+}
+
 // ─── Logo Upload ────────────────────────────────────────────
 export async function updateBusinessLogo(businessId: number, logoUrl: string) {
   const db = await getDb();

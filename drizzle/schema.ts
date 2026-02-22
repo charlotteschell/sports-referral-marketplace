@@ -13,6 +13,7 @@ export const users = mysqlTable("users", {
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   accountType: mysqlEnum("accountType", ["consumer", "business_owner"]).default("consumer").notNull(),
   onboardingComplete: boolean("onboardingComplete").default(false).notNull(),
+  notificationPreference: varchar("notificationPreference", { length: 20 }).default("both").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

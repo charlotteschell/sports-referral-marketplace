@@ -23,10 +23,11 @@ import {
   Shield, MapPin, Pencil, ArrowRight, Bike, Mountain, Snowflake, Star,
   Loader2, BarChart3, Users, Percent, Clock, CheckCircle2,
   XCircle, AlertTriangle, Trash2, Unlink, ExternalLink,
-  Palmtree, Activity, ArrowUpRight, ArrowDownRight, Eye, EyeOff
+  Palmtree, Activity, ArrowUpRight, ArrowDownRight, Eye, EyeOff,
+  Settings, Bell, BellRing, BellOff, Mail, Save, X as XIcon, User
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger
@@ -34,6 +35,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const sportIcons: Record<string, React.ReactNode> = {
   cycling: <Bike className="w-4 h-4" />,
@@ -55,6 +58,48 @@ export default function Dashboard() {
   const { user, loading } = useAuth({ redirectOnUnauthenticated: true });
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
+
+  // Route guard: athletes/consumers should use /athlete-dashboard, not business dashboard
+  useEffect(() => {
+    if (!loading && user && user.accountType === 'consumer' && user.role !== 'admin') {
+      navigate('/athlete-dashboard');
+    }
+  }, [loading, user, navigate]);
+
+  // Settings panel state
+  type NotifPref = "in_app_only" | "email_only" | "both" | "none";
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsForm, setSettingsForm] = useState<{
+    name: string;
+    email: string;
+    notificationPreference: NotifPref;
+  }>({
+    name: "",
+    email: "",
+    notificationPreference: "both",
+  });
+
+  const { data: userProfile } = trpc.userProfile.get.useQuery(undefined, { enabled: !!user });
+  const updateProfile = trpc.userProfile.update.useMutation({
+    onSuccess: () => {
+      toast.success("Settings saved successfully!");
+      utils.userProfile.get.invalidate();
+      utils.auth.me.invalidate();
+      setShowSettings(false);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  // Populate settings form when opening
+  useEffect(() => {
+    if (showSettings && userProfile) {
+      setSettingsForm({
+        name: userProfile.name || "",
+        email: userProfile.email || "",
+        notificationPreference: (userProfile.notificationPreference || "both") as NotifPref,
+      });
+    }
+  }, [showSettings, userProfile]);
 
   const { data: myBusinesses, isLoading: bizLoading } = trpc.business.myBusinesses.useQuery(
     undefined,
@@ -208,6 +253,14 @@ export default function Dashboard() {
                   <Building2 className="w-4 h-4 mr-2" /> Browse Directory
                 </Button>
               </Link>
+              <Button
+                variant="outline"
+                className="bg-transparent border-white/30 text-white hover:bg-white/10"
+                style={{ textTransform: "none" }}
+                onClick={() => setShowSettings(true)}
+              >
+                <Settings className="w-4 h-4 mr-2" /> Settings
+              </Button>
             </div>
           </div>
         </div>
@@ -1022,6 +1075,106 @@ export default function Dashboard() {
 
         </div>
       </section>
+
+      {/* Settings Dialog */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="w-5 h-5" /> Profile & Settings
+            </DialogTitle>
+            <DialogDescription>
+              Update your profile information and notification preferences.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Profile Info */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Profile Information</h3>
+              <div className="space-y-2">
+                <Label htmlFor="settings-name">Display Name</Label>
+                <Input
+                  id="settings-name"
+                  value={settingsForm.name}
+                  onChange={(e) => setSettingsForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Your name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="settings-email">Email Address</Label>
+                <Input
+                  id="settings-email"
+                  type="email"
+                  value={settingsForm.email}
+                  onChange={(e) => setSettingsForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="you@example.com"
+                />
+              </div>
+            </div>
+
+            {/* Notification Preferences */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Notification Preferences</h3>
+              <p className="text-sm text-muted-foreground">Choose how you'd like to receive notifications about referrals, offers, and updates.</p>
+              <div className="space-y-3">
+                {[
+                  { value: "both", label: "Email & In-App", desc: "Get notified via email and in the app", icon: <BellRing className="w-4 h-4" /> },
+                  { value: "email_only", label: "Email Only", desc: "Only receive email notifications", icon: <Mail className="w-4 h-4" /> },
+                  { value: "in_app_only", label: "In-App Only", desc: "Only see notifications in the app", icon: <Bell className="w-4 h-4" /> },
+                  { value: "none", label: "None", desc: "Don't send me any notifications", icon: <BellOff className="w-4 h-4" /> },
+                ].map((option) => (
+                  <label
+                    key={option.value}
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      settingsForm.notificationPreference === option.value
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/30"
+                    }`}
+                    onClick={() => setSettingsForm(prev => ({ ...prev, notificationPreference: option.value as NotifPref }))}
+                  >
+                    <div className={`p-1.5 rounded-md ${
+                      settingsForm.notificationPreference === option.value
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                    }`}>
+                      {option.icon}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{option.label}</div>
+                      <div className="text-xs text-muted-foreground">{option.desc}</div>
+                    </div>
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      settingsForm.notificationPreference === option.value
+                        ? "border-primary bg-primary"
+                        : "border-muted-foreground/30"
+                    }`}>
+                      {settingsForm.notificationPreference === option.value && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSettings(false)} style={{ textTransform: "none" }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => updateProfile.mutate(settingsForm)}
+              disabled={updateProfile.isPending}
+              style={{ textTransform: "none" }}
+            >
+              {updateProfile.isPending ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+              ) : (
+                <><Save className="w-4 h-4 mr-2" /> Save Changes</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

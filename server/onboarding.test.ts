@@ -109,6 +109,8 @@ vi.mock("./db", () => ({
   getUnreadNotificationCount: vi.fn().mockResolvedValue(0),
   getUsersWhoSavedBusiness: vi.fn().mockResolvedValue([]),
   createNotification: vi.fn().mockResolvedValue(1),
+  updateUserProfile: vi.fn().mockResolvedValue(undefined),
+  updateUserNotificationPreference: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Mock notification module
@@ -135,6 +137,7 @@ function createAuthContext(
     role: "user",
     accountType: "consumer",
     onboardingComplete: false,
+    notificationPreference: "both",
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),
@@ -293,5 +296,89 @@ describe("auth.me returns user type fields", () => {
     const caller = appRouter.createCaller(ctx);
     const result = await caller.auth.me();
     expect(result).toBeNull();
+  });
+});
+
+// ─── User Profile Settings Tests ──────────────────────────────
+
+describe("userProfile.get", () => {
+  it("returns user profile for authenticated user", async () => {
+    const ctx = createAuthContext({
+      name: "Business Owner",
+      email: "owner@test.com",
+      accountType: "business_owner",
+      role: "user",
+      notificationPreference: "email_only",
+    });
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.userProfile.get();
+    expect(result).toEqual({
+      name: "Business Owner",
+      email: "owner@test.com",
+      accountType: "business_owner",
+      role: "user",
+      notificationPreference: "email_only",
+    });
+  });
+
+  it("defaults notificationPreference to 'both' if not set", async () => {
+    const ctx = createAuthContext({
+      notificationPreference: "",
+    });
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.userProfile.get();
+    expect(result.notificationPreference).toBe("both");
+  });
+
+  it("rejects unauthenticated users", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.userProfile.get()).rejects.toThrow();
+  });
+});
+
+describe("userProfile.update", () => {
+  it("updates user name and email", async () => {
+    const db = await import("./db");
+    const ctx = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.userProfile.update({
+      name: "New Name",
+      email: "new@test.com",
+    });
+    expect(result).toEqual({ success: true });
+    expect(db.updateUserProfile).toHaveBeenCalledWith(1, {
+      name: "New Name",
+      email: "new@test.com",
+    });
+  });
+
+  it("updates notification preference", async () => {
+    const db = await import("./db");
+    const ctx = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.userProfile.update({
+      notificationPreference: "in_app_only",
+    });
+    expect(result).toEqual({ success: true });
+    expect(db.updateUserProfile).toHaveBeenCalledWith(1, {
+      notificationPreference: "in_app_only",
+    });
+  });
+
+  it("rejects invalid notification preference", async () => {
+    const ctx = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.userProfile.update({
+        notificationPreference: "invalid" as any,
+      })
+    ).rejects.toThrow();
+  });
+
+  it("rejects unauthenticated users", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.userProfile.update({ name: "Test" })).rejects.toThrow();
   });
 });

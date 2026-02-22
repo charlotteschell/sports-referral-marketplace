@@ -655,3 +655,11 @@
 
 ## Business Owner Nav Fix
 - [x] Remove "Athlete View" link from header for business_owner accounts (they should only see Biz Dashboard)
+
+## Route Protection, Profile Settings & Role Badge
+- [x] Route guard: business owners redirected from /athlete-dashboard to /dashboard
+- [x] Route guard: athletes/consumers redirected from /dashboard to /athlete-dashboard
+- [x] Business owner profile settings page (contact info, notification preferences)
+- [x] Athlete notification preferences toggle (email notifications control) - already implemented in ProfileTab
+- [x] Role indicator badge in header next to user name (e.g. "Business", "Athlete", "Admin")
+- [x] Write tests for route protection and new features (123 tests passing)

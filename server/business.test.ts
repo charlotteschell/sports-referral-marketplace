@@ -223,6 +223,10 @@ vi.mock("./db", () => ({
     };
     return null;
   }),
+  getUsersWhoSavedBusiness: vi.fn().mockResolvedValue([]),
+  createNotification: vi.fn().mockResolvedValue(1),
+  updateUserProfile: vi.fn().mockResolvedValue(undefined),
+  updateUserNotificationPreference: vi.fn().mockResolvedValue(undefined),
 }));
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
@@ -243,6 +247,9 @@ function createAuthContext(userId = 1, role: "user" | "admin" = "user"): TrpcCon
     name: `Test User ${userId}`,
     loginMethod: "manus",
     role,
+    accountType: "business_owner" as const,
+    onboardingComplete: true,
+    notificationPreference: "both",
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),

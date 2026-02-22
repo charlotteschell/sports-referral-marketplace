@@ -987,9 +987,30 @@ export const appRouter = router({
         }
         return { success: true };
       }),
+  }),  // ─── User Profile Settings ───────────────────────────────────────────
+  userProfile: router({
+    get: protectedProcedure.query(async ({ ctx }) => {
+      return {
+        name: ctx.user.name,
+        email: ctx.user.email,
+        accountType: ctx.user.accountType,
+        role: ctx.user.role,
+        notificationPreference: ctx.user.notificationPreference || 'both',
+      };
+    }),
+    update: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1).optional(),
+        email: z.string().email().optional(),
+        notificationPreference: z.enum(['in_app_only', 'email_only', 'both', 'none']).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await db.updateUserProfile(ctx.user.id, input);
+        return { success: true };
+      }),
   }),
 
-  // ─── Onboarding ──────────────────────────────────────────────────
+  // ─── Onboarding ────────────────────────────────────────────────────────
   onboarding: router({
     complete: protectedProcedure.mutation(async ({ ctx }) => {
       await db.markOnboardingComplete(ctx.user.id);

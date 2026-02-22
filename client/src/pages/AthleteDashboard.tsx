@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,7 +24,15 @@ type TabId = "offers" | "saved" | "notifications" | "profile";
 
 export default function AthleteDashboard() {
   const { user, loading } = useAuth({ redirectOnUnauthenticated: true });
+  const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<TabId>("offers");
+
+  // Route guard: business owners should use /dashboard, not athlete dashboard
+  useEffect(() => {
+    if (!loading && user && user.accountType === 'business_owner' && user.role !== 'admin') {
+      navigate('/dashboard');
+    }
+  }, [loading, user, navigate]);
 
   // Data queries
   const { data: claims, isLoading: claimsLoading } = trpc.consumerClaim.myClaims.useQuery(
