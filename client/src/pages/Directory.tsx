@@ -529,25 +529,7 @@ export default function Directory() {
                           <Send className="w-3 h-3 mr-1" /> Send Referral
                         </Button>
 
-                        {/* Email button */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 text-xs bg-transparent"
-                          style={{ textTransform: "none" }}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (!isAuthenticated) {
-                              toast.info("Please log in or create an account to send an email.");
-                              window.location.href = getLoginUrl();
-                              return;
-                            }
-                            setEmailDialog({ businessId: item.business.id, businessName: item.business.name });
-                          }}
-                        >
-                          <Mail className="w-3 h-3 mr-1" /> Email
-                        </Button>
+
                       </div>
 
                       {/* Claim CTA for unclaimed */}

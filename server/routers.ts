@@ -195,6 +195,7 @@ export const appRouter = router({
         facebook: z.string().optional(),
         logoUrl: z.string().optional(),
         coverImageUrl: z.string().optional(),
+        brandsCarried: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const biz = await db.getBusinessById(input.id);
@@ -376,12 +377,31 @@ export const appRouter = router({
         contactName: z.string().min(1).max(255),
         contactEmail: z.string().min(1).max(320),
         contactPhone: z.string().optional(),
-        website: z.string().optional(),
+        website: z.string().min(1, 'Website is required for verification'),
         instagram: z.string().optional(),
         facebook: z.string().optional(),
         additionalNotes: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        // Validate email domain matches website domain
+        try {
+          const websiteUrl = new URL(input.website.startsWith('http') ? input.website : `https://${input.website}`);
+          const websiteDomain = websiteUrl.hostname.replace(/^www\./, '');
+          const emailDomain = input.contactEmail.split('@')[1]?.toLowerCase();
+          if (emailDomain && websiteDomain && emailDomain !== websiteDomain) {
+            // Allow common email providers as fallback but warn
+            const commonProviders = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'protonmail.com'];
+            if (!commonProviders.includes(emailDomain)) {
+              throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: `Email domain (${emailDomain}) does not match website domain (${websiteDomain}). Please use your business email.`,
+              });
+            }
+          }
+        } catch (e) {
+          if (e instanceof TRPCError) throw e;
+          // If URL parsing fails, continue anyway
+        }
         const id = await db.createBusinessSubmission({
           ...input,
           submittedByUserId: ctx.user?.id ?? null,
@@ -419,6 +439,8 @@ export const appRouter = router({
           const s = submission.submission;
           const slug = s.businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
           const uniqueSlug = `${slug}-${Date.now().toString(36)}`;
+          // Auto-claim if submitted by a logged-in user (business owner)
+          const wasSubmittedByUser = !!s.submittedByUserId;
           await db.createBusiness({
             name: s.businessName,
             slug: uniqueSlug,
@@ -436,7 +458,9 @@ export const appRouter = router({
             website: s.website,
             instagram: s.instagram,
             facebook: s.facebook,
-            isClaimed: false,
+            isClaimed: wasSubmittedByUser,
+            claimedByUserId: wasSubmittedByUser ? s.submittedByUserId : null,
+            claimedAt: wasSubmittedByUser ? new Date() : null,
             isActive: true,
             approvalStatus: 'approved',
           });

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Link } from "wouter";
 import {
   Bike, Mountain, Snowflake, Users, ArrowRight, Handshake,
   TrendingUp, Search, Shield, MapPin, ChevronRight, ChevronLeft, Star,
-  Compass, Globe, Palmtree, Gift, Tag
+  Compass, Globe, Palmtree, Gift, Tag, Clock, Timer
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -47,6 +47,59 @@ const regionHighlights = [
   { name: "Pyrenees", country: "France/Spain", emoji: "🇫🇷", description: "Tour de France cols and GR routes" },
   { name: "Alps", country: "France/Switzerland", emoji: "🇨🇭", description: "UTMB and ski touring paradise" },
 ];
+
+// Launch date: Feb 21, 2026
+const LAUNCH_DATE = new Date('2026-02-21T00:00:00Z').getTime();
+
+function LaunchTimer() {
+  const [elapsed, setElapsed] = useState(() => Date.now() - LAUNCH_DATE);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsed(Date.now() - LAUNCH_DATE);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const seconds = Math.floor(elapsed / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  const displayHours = hours % 24;
+  const displayMinutes = minutes % 60;
+  const displaySeconds = seconds % 60;
+
+  return (
+    <div className="flex flex-col items-center mb-2">
+      <div className="flex items-center gap-2 mb-2">
+        <Clock className="w-4 h-4 text-[oklch(0.55_0.15_45)]" />
+        <span className="text-xs text-white/50 uppercase tracking-wider" style={{ textTransform: "none", letterSpacing: "0.1em" }}>Time since launch</span>
+      </div>
+      <div className="flex items-center gap-1 md:gap-3">
+        {[
+          { value: days, label: "days" },
+          { value: displayHours, label: "hrs" },
+          { value: displayMinutes, label: "min" },
+          { value: displaySeconds, label: "sec" },
+        ].map((unit, i) => (
+          <div key={unit.label} className="flex items-center gap-1 md:gap-3">
+            <div className="bg-white/10 border border-white/15 rounded-lg px-3 py-2 min-w-[56px] text-center">
+              <span className="text-xl md:text-2xl font-bold text-white font-mono" style={{ fontFamily: "var(--font-heading)" }}>
+                {String(unit.value).padStart(2, '0')}
+              </span>
+              <p className="text-[10px] text-white/40 mt-0.5" style={{ textTransform: "none" }}>{unit.label}</p>
+            </div>
+            {i < 3 && <span className="text-white/30 text-xl font-bold hidden md:block">:</span>}
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-white/40 mt-2 italic" style={{ textTransform: "none", letterSpacing: "normal" }}>
+        See how much we can help each other grow
+      </p>
+    </div>
+  );
+}
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
@@ -179,7 +232,9 @@ export default function Home() {
               <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: "var(--font-heading)" }}>Community Activity</h2>
               <p className="text-white/60 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>Real-time snapshot of our growing endurance sports network</p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {/* Launch Countdown Timer */}
+            <LaunchTimer />
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-6">
               <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
                 <p className="text-2xl md:text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>{platformStats.totalReferrals}</p>
                 <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Total Referrals</p>

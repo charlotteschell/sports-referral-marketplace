@@ -252,8 +252,16 @@ export default function BusinessProfile() {
   const b2bOffers = offers?.filter(o => o.offerType === "b2b") || [];
   const consumerOffers = offers?.filter(o => o.offerType === "consumer") || [];
 
-  // Google Maps URL for reviews
-  const googleMapsUrl = (business as any).googleMapsUrl || null;
+  // Google Maps URL for reviews - generate search URL as fallback
+  const googleMapsUrl = useMemo(() => {
+    if ((business as any).googleMapsUrl) return (business as any).googleMapsUrl;
+    // Generate a Google Maps search URL from business name + city
+    if (business.name && business.city) {
+      const query = encodeURIComponent(`${business.name} ${business.city}${business.country ? ` ${business.country}` : ''}`);
+      return `https://www.google.com/maps/search/?api=1&query=${query}`;
+    }
+    return null;
+  }, [business]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -387,25 +395,6 @@ export default function BusinessProfile() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 shrink-0">
-              {/* Email Button */}
-              {isClaimed && (
-                isAuthenticated ? (
-                  <Button
-                    onClick={() => setEmailDialogOpen(true)}
-                    variant="outline"
-                    className="border-white/30 text-white hover:bg-white/10 bg-transparent"
-                    style={{ textTransform: "none" }}
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" /> Email Business
-                  </Button>
-                ) : (
-                  <a href={getLoginUrl()}>
-                    <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 bg-transparent" style={{ textTransform: "none" }}>
-                      <MessageSquare className="w-4 h-4 mr-2" /> Sign In to Email
-                    </Button>
-                  </a>
-                )
-              )}
               {!isClaimed && isAuthenticated && claimStep === 'idle' && (
                 <Button
                   onClick={() => setClaimStep('email')}
@@ -831,36 +820,38 @@ export default function BusinessProfile() {
                 </Card>
               )}
 
-              {/* Google Reviews Card */}
-              {business.googleRating && (
+              {/* Google Reviews / Google Maps Card */}
+              {(business.googleRating || googleMapsUrl) && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
                       <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
-                      Google Reviews
+                      {business.googleRating ? 'Google Reviews' : 'Find on Google'}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="text-3xl font-bold text-foreground">{business.googleRating}</span>
-                      <div>
-                        <div className="flex items-center gap-0.5">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${
-                                i < Math.round(parseFloat(business.googleRating || "0"))
-                                  ? "text-yellow-400 fill-yellow-400"
-                                  : "text-muted-foreground/30"
-                              }`}
-                            />
-                          ))}
+                    {business.googleRating && (
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-3xl font-bold text-foreground">{business.googleRating}</span>
+                        <div>
+                          <div className="flex items-center gap-0.5">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < Math.round(parseFloat(business.googleRating || "0"))
+                                    ? "text-yellow-400 fill-yellow-400"
+                                    : "text-muted-foreground/30"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          {business.googleReviewCount && business.googleReviewCount > 0 && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{business.googleReviewCount.toLocaleString()} reviews</p>
+                          )}
                         </div>
-                        {business.googleReviewCount && business.googleReviewCount > 0 && (
-                          <p className="text-xs text-muted-foreground mt-0.5">{business.googleReviewCount.toLocaleString()} reviews</p>
-                        )}
                       </div>
-                    </div>
+                    )}
                     {googleMapsUrl && (
                       <a
                         href={googleMapsUrl}
@@ -917,6 +908,34 @@ export default function BusinessProfile() {
                         Send Referral
                       </Button>
                     </Link>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Direct Contact CTA */}
+              {isClaimed && !isOwner && (
+                <Card className="border-2 border-dashed border-[oklch(0.55_0.15_45)]/30 bg-[oklch(0.55_0.15_45)]/5">
+                  <CardContent className="p-6 text-center">
+                    <Mail className="w-8 h-8 mx-auto mb-3 text-[oklch(0.55_0.15_45)]" />
+                    <h4 className="font-bold mb-2 text-foreground">Have a Better Idea?</h4>
+                    <p className="text-sm text-muted-foreground mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                      Don't see a referral program you like, or have a better partnership idea? Get in touch with {business.name} directly.
+                    </p>
+                    {isAuthenticated ? (
+                      <Button
+                        onClick={() => setEmailDialogOpen(true)}
+                        className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white w-full"
+                        style={{ textTransform: "none" }}
+                      >
+                        <Mail className="w-4 h-4 mr-2" /> Send a Message
+                      </Button>
+                    ) : (
+                      <a href={getLoginUrl()} className="block">
+                        <Button className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white w-full" style={{ textTransform: "none" }}>
+                          <Mail className="w-4 h-4 mr-2" /> Sign In to Get in Touch
+                        </Button>
+                      </a>
+                    )}
                   </CardContent>
                 </Card>
               )}

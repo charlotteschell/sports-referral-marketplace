@@ -364,6 +364,31 @@ export async function claimBusiness(businessId: number, userId: number) {
     claimedAt: new Date(),
     approvalStatus: 'pending', // Requires admin approval
   }).where(eq(businesses.id, businessId));
+  // Clear all sample data associated with this business
+  await clearSampleDataForBusiness(businessId);
+}
+
+/**
+ * Remove all sample/seed data associated with a business when it gets claimed.
+ * This ensures real owners start with a clean slate.
+ */
+export async function clearSampleDataForBusiness(businessId: number) {
+  const db = await getDb();
+  if (!db) return;
+
+  // 1. Delete sample referral offers for this business
+  await db.delete(referralOffers)
+    .where(and(eq(referralOffers.businessId, businessId), eq(referralOffers.isSample, true)));
+
+  // 2. Delete sample referrals where this business was the sender or receiver
+  await db.delete(referrals)
+    .where(eq(referrals.referringBusinessId, businessId));
+  await db.delete(referrals)
+    .where(eq(referrals.receivingBusinessId, businessId));
+
+  // 3. Delete consumer claims for this business
+  await db.delete(consumerClaims)
+    .where(eq(consumerClaims.businessId, businessId));
 }
 
 export async function getFeaturedBusinesses(limit = 6) {
@@ -421,6 +446,10 @@ export async function approveOrRejectBusiness(
     updateData.claimedAt = null;
   }
   await db.update(businesses).set(updateData).where(eq(businesses.id, businessId));
+  // When approving a claimed business, clear sample data so the real owner starts fresh
+  if (status === 'approved') {
+    await clearSampleDataForBusiness(businessId);
+  }
 }
 
 // ─── Admin: All businesses (including hidden) ─────────────────

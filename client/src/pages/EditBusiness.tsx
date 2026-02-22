@@ -7,13 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { ArrowLeft, Pencil, Loader2, Camera, X, Tag } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+
+// Business types that should show the brands field
+const RETAILER_TYPE_NAMES = ["Bike Retailer", "Bike Shop", "Running Store", "Ski Shop", "Supplement Retailer"];
 
 export default function EditBusiness() {
   const { user, loading: authLoading } = useAuth({ redirectOnUnauthenticated: true });
@@ -22,6 +26,8 @@ export default function EditBusiness() {
 
   const { data: sportCategories } = trpc.categories.sportCategories.useQuery();
   const { data: businessTypes } = trpc.categories.businessTypes.useQuery();
+  const { data: regions } = trpc.categories.regions.useQuery();
+  const { data: hubs } = trpc.categories.hubs.useQuery();
 
   const businessId = parseInt(params.id || "0");
   const { data: bizData, isLoading: bizLoading } = trpc.business.getById.useQuery(
@@ -29,6 +35,7 @@ export default function EditBusiness() {
     { enabled: businessId > 0 }
   );
 
+  const [formInitialized, setFormInitialized] = useState(false);
   const [form, setForm] = useState({
     name: "",
     shortDescription: "",
@@ -46,17 +53,61 @@ export default function EditBusiness() {
     website: "",
     instagram: "",
     facebook: "",
+    brandsCarried: "",
   });
 
+  // Logo upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const utils = trpc.useUtils();
+
+  const uploadLogo = trpc.logoUpload.upload.useMutation({
+    onSuccess: () => {
+      toast.success("Logo updated!");
+      setUploading(false);
+      utils.business.getById.invalidate({ id: businessId });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to upload logo");
+      setUploading(false);
+    },
+  });
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large. Max 5MB.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(',')[1] || '';
+        uploadLogo.mutate({
+          businessId,
+          logoData: base64,
+          contentType: file.type,
+        });
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setUploading(false);
+      toast.error("Failed to read file");
+    }
+  };
+
+  // Initialize form from business data - only once when data loads
   useEffect(() => {
-    if (bizData?.business) {
+    if (bizData?.business && !formInitialized) {
       const b = bizData.business;
       setForm({
         name: b.name || "",
         shortDescription: b.shortDescription || "",
         description: b.description || "",
-        sportCategoryId: String(b.sportCategoryId),
-        businessTypeId: String(b.businessTypeId),
+        sportCategoryId: b.sportCategoryId ? String(b.sportCategoryId) : "",
+        businessTypeId: b.businessTypeId ? String(b.businessTypeId) : "",
         city: b.city || "",
         state: b.state || "",
         country: b.country || "",
@@ -68,9 +119,11 @@ export default function EditBusiness() {
         website: b.website || "",
         instagram: b.instagram || "",
         facebook: b.facebook || "",
+        brandsCarried: (b as any).brandsCarried || "",
       });
+      setFormInitialized(true);
     }
-  }, [bizData]);
+  }, [bizData, formInitialized]);
 
   const updateMutation = trpc.business.update.useMutation({
     onSuccess: () => {
@@ -87,13 +140,52 @@ export default function EditBusiness() {
     updateMutation.mutate({
       id: businessId,
       ...form,
-      sportCategoryId: parseInt(form.sportCategoryId),
-      businessTypeId: parseInt(form.businessTypeId),
+      sportCategoryId: form.sportCategoryId ? parseInt(form.sportCategoryId) : undefined,
+      businessTypeId: form.businessTypeId ? parseInt(form.businessTypeId) : undefined,
     });
   };
 
   const updateField = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Check if selected business type is a retailer (should show brands)
+  const isRetailerType = useMemo(() => {
+    if (!form.businessTypeId || !businessTypes) return false;
+    const selectedType = businessTypes.find(bt => bt.id === parseInt(form.businessTypeId));
+    return selectedType ? RETAILER_TYPE_NAMES.includes(selectedType.name) : false;
+  }, [form.businessTypeId, businessTypes]);
+
+  // Filter hubs by selected region
+  const filteredHubs = useMemo(() => {
+    if (!hubs) return [];
+    if (!form.region) return hubs;
+    return hubs.filter((h: any) => h.region === form.region);
+  }, [hubs, form.region]);
+
+  // Brands management
+  const brandsList = useMemo(() => {
+    if (!form.brandsCarried) return [];
+    return form.brandsCarried.split(",").map(b => b.trim()).filter(Boolean);
+  }, [form.brandsCarried]);
+
+  const [newBrand, setNewBrand] = useState("");
+
+  const addBrand = () => {
+    const brand = newBrand.trim();
+    if (!brand) return;
+    if (brandsList.includes(brand)) {
+      toast.info("Brand already added");
+      return;
+    }
+    const updated = [...brandsList, brand].join(", ");
+    updateField("brandsCarried", updated);
+    setNewBrand("");
+  };
+
+  const removeBrand = (brand: string) => {
+    const updated = brandsList.filter(b => b !== brand).join(", ");
+    updateField("brandsCarried", updated);
   };
 
   if (authLoading || bizLoading) {
@@ -137,6 +229,50 @@ export default function EditBusiness() {
 
       <section className="py-8">
         <div className="container max-w-2xl mx-auto">
+          {/* Logo Upload Section */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="w-5 h-5" /> Business Logo
+              </CardTitle>
+              <CardDescription style={{ textTransform: "none" }}>
+                Upload or update your business logo. Max 5MB. Supported formats: JPG, PNG, WebP, SVG.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-6">
+                <div className="w-20 h-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30 shrink-0">
+                  {bizData?.business.logoUrl ? (
+                    <img src={bizData.business.logoUrl} alt="Logo" className="w-full h-full object-cover rounded-xl" />
+                  ) : (
+                    <Camera className="w-8 h-8 text-muted-foreground/40" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    style={{ textTransform: "none" }}
+                  >
+                    {uploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</> : <><Camera className="w-4 h-4 mr-2" /> Choose File</>}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoUpload}
+                  />
+                  <p className="text-xs text-muted-foreground mt-2" style={{ textTransform: "none" }}>
+                    Your logo appears on directory cards and your business profile.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -183,6 +319,51 @@ export default function EditBusiness() {
                       </Select>
                     </div>
                   </div>
+
+                  {/* Brands field - shown for retailer types */}
+                  {isRetailerType && (
+                    <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/20">
+                      <Label className="flex items-center gap-2" style={{ textTransform: "none" }}>
+                        <Tag className="w-4 h-4" /> Brands Carried
+                      </Label>
+                      <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                        Add the brands you stock or represent. This helps customers and partners find you.
+                      </p>
+                      {brandsList.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {brandsList.map((brand) => (
+                            <Badge key={brand} variant="secondary" className="text-xs gap-1 pr-1" style={{ textTransform: "none" }}>
+                              {brand}
+                              <button
+                                type="button"
+                                onClick={() => removeBrand(brand)}
+                                className="ml-0.5 hover:bg-destructive/20 rounded-full p-0.5"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="e.g., Specialized, Trek, Shimano..."
+                          value={newBrand}
+                          onChange={(e) => setNewBrand(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addBrand();
+                            }
+                          }}
+                          className="flex-1"
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={addBrand} style={{ textTransform: "none" }}>
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -194,8 +375,35 @@ export default function EditBusiness() {
                   </div>
                   <div><Label style={{ textTransform: "none" }}>Address</Label><Input value={form.address} onChange={(e) => updateField("address", e.target.value)} /></div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><Label style={{ textTransform: "none" }}>Region</Label><Input value={form.region} onChange={(e) => updateField("region", e.target.value)} placeholder="e.g., Dolomites, Western Canada" /></div>
-                    <div><Label style={{ textTransform: "none" }}>Hub / Area</Label><Input value={form.hub} onChange={(e) => updateField("hub", e.target.value)} placeholder="e.g., Cortina d'Ampezzo, Whistler" /></div>
+                    <div>
+                      <Label style={{ textTransform: "none" }}>Region</Label>
+                      <Select value={form.region} onValueChange={(v) => {
+                        updateField("region", v);
+                        // Reset hub when region changes if hub doesn't belong to new region
+                        if (form.hub && hubs) {
+                          const hubInRegion = hubs.find((h: any) => h.hub === form.hub && h.region === v);
+                          if (!hubInRegion) updateField("hub", "");
+                        }
+                      }}>
+                        <SelectTrigger><SelectValue placeholder="Select region" /></SelectTrigger>
+                        <SelectContent>
+                          {regions?.map((r: string) => (
+                            <SelectItem key={r} value={r}>{r}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label style={{ textTransform: "none" }}>Hub / Area</Label>
+                      <Select value={form.hub} onValueChange={(v) => updateField("hub", v)}>
+                        <SelectTrigger><SelectValue placeholder="Select hub" /></SelectTrigger>
+                        <SelectContent>
+                          {filteredHubs.map((h: any) => (
+                            <SelectItem key={h.hub} value={h.hub}>{h.hub}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 

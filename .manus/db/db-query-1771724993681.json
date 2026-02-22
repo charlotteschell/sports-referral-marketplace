@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, name FROM businessTypes ORDER BY id DESC LIMIT 5;\nSELECT id, name FROM sportCategories ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name FROM businessTypes ORDER BY id DESC LIMIT 5;\nSELECT id, name FROM sportCategories ORDER BY id;",
+  "rows": [
+    {
+      "id": "60002",
+      "name": "Sports Restaurant"
+    },
+    {
+      "id": "60001",
+      "name": "Cycling Cafe"
+    },
+    {
+      "id": "30001",
+      "name": "Sport Psychologist"
+    },
+    {
+      "id": "17",
+      "name": "Bike Retailer"
+    },
+    {
+      "id": "16",
+      "name": "Supplement Retailer"
+    },
+    {
+      "id": "id",
+      "name": "name"
+    },
+    {
+      "id": "1",
+      "name": "Cycling"
+    },
+    {
+      "id": "2",
+      "name": "Running"
+    },
+    {
+      "id": "3",
+      "name": "Snowsports"
+    },
+    {
+      "id": "4",
+      "name": "Sport Vacations"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n60002\tSports Restaurant\n60001\tCycling Cafe\n30001\tSport Psychologist\n17\tBike Retailer\n16\tSupplement Retailer\nid\tname\n1\tCycling\n2\tRunning\n3\tSnowsports\n4\tSport Vacations\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

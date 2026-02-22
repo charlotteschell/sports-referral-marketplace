@@ -1,0 +1,15 @@
+{
+  "query": "SELECT \n  COUNT(*) as total,\n  SUM(CASE WHEN googleMapsUrl IS NOT NULL AND googleMapsUrl != '' THEN 1 ELSE 0 END) as hasUrl,\n  SUM(CASE WHEN googleRating IS NOT NULL AND (googleMapsUrl IS NULL OR googleMapsUrl = '') THEN 1 ELSE 0 END) as hasRatingNoUrl\nFROM businesses WHERE isActive = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT \n  COUNT(*) as total,\n  SUM(CASE WHEN googleMapsUrl IS NOT NULL AND googleMapsUrl != '' THEN 1 ELSE 0 END) as hasUrl,\n  SUM(CASE WHEN googleRating IS NOT NULL AND (googleMapsUrl IS NULL OR googleMapsUrl = '') THEN 1 ELSE 0 END) as hasRatingNoUrl\nFROM businesses WHERE isActive = 1;",
+  "rows": [
+    {
+      "total": "197",
+      "hasUrl": "13",
+      "hasRatingNoUrl": "62"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\thasUrl\thasRatingNoUrl\n197\t13\t62\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

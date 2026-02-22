@@ -1,0 +1,260 @@
+{
+  "query": "SELECT id, name, region FROM businesses WHERE isActive = 1 ORDER BY RAND() LIMIT 50;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name, region FROM businesses WHERE isActive = 1 ORDER BY RAND() LIMIT 50;",
+  "rows": [
+    {
+      "id": "61",
+      "name": "Inspire Health & Performance",
+      "region": "Western Canada"
+    },
+    {
+      "id": "62",
+      "name": "RARE Trail Running Club",
+      "region": "Western Canada"
+    },
+    {
+      "id": "30069",
+      "name": "Ridley's Cycle - Kensington",
+      "region": "Alberta"
+    },
+    {
+      "id": "60022",
+      "name": "Ski Maxx",
+      "region": "Colorado Front Range"
+    },
+    {
+      "id": "27",
+      "name": "Zermatters",
+      "region": "Alps"
+    },
+    {
+      "id": "60021",
+      "name": "Fort Collins Running Club",
+      "region": "Colorado Front Range"
+    },
+    {
+      "id": "60010",
+      "name": "SloHi Bike Co.",
+      "region": "Colorado Front Range"
+    },
+    {
+      "id": "60023",
+      "name": "NEO Endurance Sports & Fitness",
+      "region": "Colorado Front Range"
+    },
+    {
+      "id": "30088",
+      "name": "Chateau Mountain Sports",
+      "region": "Alberta"
+    },
+    {
+      "id": "52",
+      "name": "RARE Cycling Club",
+      "region": "Western Canada"
+    },
+    {
+      "id": "30074",
+      "name": "B&P Cycle and Sports",
+      "region": "Alberta"
+    },
+    {
+      "id": "57",
+      "name": "Trail Run Adventures",
+      "region": "Western US"
+    },
+    {
+      "id": "60008",
+      "name": "Racer's Edge Nutrition",
+      "region": "Colorado Front Range"
+    },
+    {
+      "id": "60020",
+      "name": "Tom Olson - Team RunRun",
+      "region": "Colorado Front Range"
+    },
+    {
+      "id": "30075",
+      "name": "Calgary Roadrunners",
+      "region": "Alberta"
+    },
+    {
+      "id": "60013",
+      "name": "Cycology Studio",
+      "region": "Colorado Front Range"
+    },
+    {
+      "id": "60029",
+      "name": "Rip City Runners",
+      "region": "Pacific Northwest"
+    },
+    {
+      "id": "44",
+      "name": "Tahoe Endurance",
+      "region": "Western US"
+    },
+    {
+      "id": "30085",
+      "name": "Calgary Cycle - Bow Trail",
+      "region": "Alberta"
+    },
+    {
+      "id": "30080",
+      "name": "NateFit",
+      "region": "Alberta"
+    },
+    {
+      "id": "30079",
+      "name": "Evoke Endurance",
+      "region": "Alberta"
+    },
+    {
+      "id": "30097",
+      "name": "Running Mallorca",
+      "region": "Mallorca"
+    },
+    {
+      "id": "35",
+      "name": "Banff Sport Medicine",
+      "region": "Western Canada"
+    },
+    {
+      "id": "60055",
+      "name": "Whistler Blackcomb Snow School",
+      "region": "Pacific Northwest"
+    },
+    {
+      "id": "60039",
+      "name": "FGS Coaching",
+      "region": "Pacific Northwest"
+    },
+    {
+      "id": "60004",
+      "name": "Nicole Thome",
+      "region": "Colorado Front Range"
+    },
+    {
+      "id": "46",
+      "name": "Fleet Feet Seattle",
+      "region": "Western US"
+    },
+    {
+      "id": "60040",
+      "name": "Mohan Skiing & Boarding",
+      "region": "Pacific Northwest"
+    },
+    {
+      "id": "30046",
+      "name": "BaseCamp",
+      "region": "Mallorca"
+    },
+    {
+      "id": "2",
+      "name": "Bighorn Mountain Biking",
+      "region": "Western US"
+    },
+    {
+      "id": "49",
+      "name": "Boston Run Coaching",
+      "region": "Eastern US"
+    },
+    {
+      "id": "60056",
+      "name": "Athletic Endeavours",
+      "region": "Pacific Northwest"
+    },
+    {
+      "id": "60051",
+      "name": "Sportcat",
+      "region": "Girona / Costa Brava"
+    },
+    {
+      "id": "40",
+      "name": "Vail Sports",
+      "region": "Western US"
+    },
+    {
+      "id": "60045",
+      "name": "Bikecat",
+      "region": "Girona / Costa Brava"
+    },
+    {
+      "id": "60005",
+      "name": "Denver Trail Runners",
+      "region": "Colorado Front Range"
+    },
+    {
+      "id": "60038",
+      "name": "Rolla Cycling",
+      "region": "Pacific Northwest"
+    },
+    {
+      "id": "30076",
+      "name": "Mile2Marathon",
+      "region": "Alberta"
+    },
+    {
+      "id": "30052",
+      "name": "Velo Mallorca",
+      "region": "Mallorca"
+    },
+    {
+      "id": "38",
+      "name": "Running Room",
+      "region": "Eastern Canada"
+    },
+    {
+      "id": "60024",
+      "name": "Rathe Athlete Development",
+      "region": "Pacific Northwest"
+    },
+    {
+      "id": "19",
+      "name": "Acumpanyat Expériences",
+      "region": "Pyrenees"
+    },
+    {
+      "id": "30098",
+      "name": "ShiftGrit Psychology & Counselling",
+      "region": "Alberta"
+    },
+    {
+      "id": "30087",
+      "name": "Vertical Addiction",
+      "region": "Alberta"
+    },
+    {
+      "id": "30083",
+      "name": "Strides Running Store - Marda Loop",
+      "region": "Alberta"
+    },
+    {
+      "id": "60030",
+      "name": "Portland Running Company x No Name Trail Club",
+      "region": "Pacific Northwest"
+    },
+    {
+      "id": "30081",
+      "name": "University of Calgary Sport Medicine Centre",
+      "region": "Alberta"
+    },
+    {
+      "id": "60026",
+      "name": "Portland Bicycling Club",
+      "region": "Pacific Northwest"
+    },
+    {
+      "id": "60035",
+      "name": "Central Oregon Wheelers",
+      "region": "Pacific Northwest"
+    },
+    {
+      "id": "60014",
+      "name": "David Everson - Team RunRun",
+      "region": "Colorado Front Range"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tregion\n61\tInspire Health & Performance\tWestern Canada\n62\tRARE Trail Running Club\tWestern Canada\n30069\tRidley's Cycle - Kensington\tAlberta\n60022\tSki Maxx\tColorado Front Range\n27\tZermatters\tAlps\n60021\tFort Collins Running Club\tColorado Front Range\n60010\tSloHi Bike Co.\tColorado Front Range\n60023\tNEO Endurance Sports & Fitness\tColorado Front Range\n30088\tChateau Mountain Sports\tAlberta\n52\tRARE Cycling Club\tWestern Canada\n30074\tB&P Cycle and Sports\tAlberta\n57\tTrail Run Adventures\tWestern US\n60008\tRacer's Edge Nutrition\tColorado Front Range\n60020\tTom Olson - Team RunRun\tColorado Front Range\n30075\tCalgary Roadrunners\tAlberta\n60013\tCycology Studio\tColorado Front Range\n60029\tRip City Runners\tPacific Northwest\n44\tTahoe Endurance\tWestern US\n30085\tCalgary Cycle - Bow Trail\tAlberta\n30080\tNateFit\tAlberta\n30079\tEvoke Endurance\tAlberta\n30097\tRunning Mallorca\tMallorca\n35\tBanff Sport Medicine\tWestern Canada\n60055\tWhistler Blackcomb Snow School\tPacific Northwest\n60039\tFGS Coaching\tPacific Northwest\n60004\tNicole Thome\tColorado Front Range\n46\tFleet Feet Seattle\tWestern US\n60040\tMohan Skiing & Boarding\tPacific Northwest\n30046\tBaseCamp\tMallorca\n2\tBighorn Mountain Biking\tWestern US\n49\tBoston Run Coaching\tEastern US\n60056\tAthletic Endeavours\tPacific Northwest\n60051\tSportcat\tGirona / Costa Brava\n40\tVail Sports\tWestern US\n60045\tBikecat\tGirona / Costa Brava\n60005\tDenver Trail Runners\tColorado Front Range\n60038\tRolla Cycling\tPacific Northwest\n30076\tMile2Marathon\tAlberta\n30052\tVelo Mallorca\tMallorca\n38\tRunning Room\tEastern Canada\n60024\tRathe Athlete Development\tPacific Northwest\n19\tAcumpanyat Expériences\tPyrenees\n30098\tShiftGrit Psychology & Counselling\tAlberta\n30087\tVertical Addiction\tAlberta\n30083\tStrides Running Store - Marda Loop\tAlberta\n60030\tPortland Running Company x No Name Trail Club\tPacific Northwest\n30081\tUniversity of Calgary Sport Medicine Centre\tAlberta\n60026\tPortland Bicycling Club\tPacific Northwest\n60035\tCentral Oregon Wheelers\tPacific Northwest\n60014\tDavid Everson - Team RunRun\tColorado Front Range\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

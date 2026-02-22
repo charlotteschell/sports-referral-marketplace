@@ -514,6 +514,7 @@ describe("submission", () => {
       businessTypeId: 2,
       contactName: "Alice",
       contactEmail: "alice@shop.com",
+      website: "https://shop.com",
       city: "Whistler",
       country: "Canada",
       region: "Western Canada",
@@ -529,7 +530,8 @@ describe("submission", () => {
       sportCategoryId: 2,
       businessTypeId: 1,
       contactName: "Bob",
-      contactEmail: "bob@coaching.com",
+      contactEmail: "bob@procoaching.com",
+      website: "https://procoaching.com",
     });
     expect(result.id).toBe(1);
   });
@@ -985,5 +987,154 @@ describe("searchMulti", () => {
     const caller = appRouter.createCaller(createPublicContext());
     const result = await caller.searchMulti.search({});
     expect(result).toBeDefined();
+  });
+});
+
+// ─── Clear Sample Data on Claim Tests ─────────────────────────────────────
+describe("business.claim clears sample data", () => {
+  it("calls claimBusiness which clears sample data for the claimed business", async () => {
+    const { claimBusiness } = await import("./db");
+    const caller = appRouter.createCaller(createAuthContext());
+    await caller.business.claim({ businessId: 2, verificationEmail: "test@unclaimed-biz.com" });
+    // claimBusiness is mocked, but we verify it was called with the right args
+    expect(claimBusiness).toHaveBeenCalledWith(2, 1);
+  });
+});
+
+// ─── Submission Review Auto-Claim Tests ───────────────────────────────────
+describe("submission.review auto-claim", () => {
+  it("creates business with claimedByUserId when submission has submittedByUserId", async () => {
+    const { createBusiness, getBusinessSubmissionById } = await import("./db");
+    // Override mock to include submittedByUserId
+    (getBusinessSubmissionById as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      submission: {
+        id: 1,
+        businessName: "Owner Submitted Biz",
+        businessDescription: "A business submitted by owner",
+        sportCategoryId: 1,
+        businessTypeId: 1,
+        contactName: "Jane",
+        contactEmail: "jane@test.com",
+        contactPhone: "555-1234",
+        website: "https://test.com",
+        instagram: null,
+        facebook: null,
+        city: "Chamonix",
+        state: null,
+        country: "France",
+        region: "Alps",
+        hub: "Chamonix",
+        status: "pending",
+        submittedByUserId: 42,
+      },
+      sportCategory: { id: 1, name: "Cycling", slug: "cycling" },
+      businessType: { id: 1, name: "Coach", slug: "coach" },
+    });
+
+    const caller = appRouter.createCaller(createAuthContext(1, "admin"));
+    const result = await caller.submission.review({ id: 1, status: "approved" });
+    expect(result.success).toBe(true);
+    // Verify createBusiness was called with claimedByUserId set
+    expect(createBusiness).toHaveBeenCalledWith(
+      expect.objectContaining({
+        claimedByUserId: 42,
+        isClaimed: true,
+      })
+    );
+  });
+
+  it("creates business without claim when no submittedByUserId", async () => {
+    const { createBusiness, getBusinessSubmissionById } = await import("./db");
+    // Override mock to NOT include submittedByUserId
+    (getBusinessSubmissionById as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      submission: {
+        id: 1,
+        businessName: "Public Submitted Biz",
+        businessDescription: "A business submitted publicly",
+        sportCategoryId: 1,
+        businessTypeId: 1,
+        contactName: "Bob",
+        contactEmail: "bob@test.com",
+        contactPhone: null,
+        website: "https://test.com",
+        instagram: null,
+        facebook: null,
+        city: "Boulder",
+        state: "CO",
+        country: "USA",
+        region: "Western US",
+        hub: "Boulder",
+        status: "pending",
+        submittedByUserId: null,
+      },
+      sportCategory: { id: 1, name: "Cycling", slug: "cycling" },
+      businessType: { id: 1, name: "Coach", slug: "coach" },
+    });
+
+    const caller = appRouter.createCaller(createAuthContext(1, "admin"));
+    const result = await caller.submission.review({ id: 1, status: "approved" });
+    expect(result.success).toBe(true);
+    // Verify createBusiness was called with null claimedByUserId
+    expect(createBusiness).toHaveBeenCalledWith(
+      expect.objectContaining({
+        claimedByUserId: null,
+        isClaimed: false,
+      })
+    );
+  });
+});
+
+// ─── Domain Email Validation Tests ────────────────────────────────────────
+describe("submission.submit domain email validation", () => {
+  it("accepts submission when email domain matches website domain", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.submission.submit({
+      businessName: "Domain Match Biz",
+      sportCategoryId: 1,
+      businessTypeId: 1,
+      contactName: "Alice",
+      contactEmail: "alice@mybusiness.com",
+      website: "https://mybusiness.com",
+      city: "Denver",
+      country: "USA",
+    });
+    expect(result.id).toBe(1);
+  });
+
+  it("accepts submission with common email providers (gmail, yahoo, etc.)", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.submission.submit({
+      businessName: "Gmail User Biz",
+      sportCategoryId: 1,
+      businessTypeId: 1,
+      contactName: "Bob",
+      contactEmail: "bob@gmail.com",
+      website: "https://mybusiness.com",
+      city: "Seattle",
+      country: "USA",
+    });
+    expect(result.id).toBe(1);
+  });
+});
+
+// ─── Account Type Consumer/Business Owner Tests ───────────────────────────
+describe("accountType flow", () => {
+  it("sets account type to consumer", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.accountType.set({ accountType: "consumer" });
+    expect(result.success).toBe(true);
+  });
+
+  it("sets account type to business_owner", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.accountType.set({ accountType: "business_owner" });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid account type", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    await expect(
+      caller.accountType.set({ accountType: "invalid" as any })
+    ).rejects.toThrow();
   });
 });

@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, name, slug FROM businessTypes WHERE slug IN ('cycling-cafe', 'sports-restaurant');\nSELECT id, name, slug FROM sportCategories;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name, slug FROM businessTypes WHERE slug IN ('cycling-cafe', 'sports-restaurant');\nSELECT id, name, slug FROM sportCategories;",
+  "rows": [
+    {
+      "id": "60001",
+      "name": "Cycling Cafe",
+      "slug": "cycling-cafe"
+    },
+    {
+      "id": "60002",
+      "name": "Sports Restaurant",
+      "slug": "sports-restaurant"
+    },
+    {
+      "id": "id",
+      "name": "name",
+      "slug": "slug"
+    },
+    {
+      "id": "1",
+      "name": "Cycling",
+      "slug": "cycling"
+    },
+    {
+      "id": "2",
+      "name": "Running",
+      "slug": "running"
+    },
+    {
+      "id": "3",
+      "name": "Snowsports",
+      "slug": "snowsports"
+    },
+    {
+      "id": "4",
+      "name": "Sport Vacations",
+      "slug": "sport-vacations"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\n60001\tCycling Cafe\tcycling-cafe\n60002\tSports Restaurant\tsports-restaurant\nid\tname\tslug\n1\tCycling\tcycling\n2\tRunning\trunning\n3\tSnowsports\tsnowsports\n4\tSport Vacations\tsport-vacations\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

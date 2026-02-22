@@ -1,0 +1,13 @@
+{
+  "query": "SELECT DISTINCT referringUserId FROM referrals ORDER BY referringUserId LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT DISTINCT referringUserId FROM referrals ORDER BY referringUserId LIMIT 5;",
+  "rows": [
+    {
+      "referringUserId": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "referringUserId\n1\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

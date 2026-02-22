@@ -890,131 +890,103 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Consumer Claims & Savings */}
+          {/* B2B Referral Partnerships */}
           <Card className="mb-8">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
-                <Gift className="w-5 h-5 text-primary" />
-                My Claimed Offers
+                <Send className="w-5 h-5 text-primary" />
+                B2B Referral Partnerships
               </CardTitle>
               <CardDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Track offers you've claimed as a consumer and verify if businesses honored them
+                Track referrals you've sent as a business partner and monitor their status
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Consumer Analytics Summary */}
-              {consumerAnalytics && (consumerAnalytics.totalClaims > 0) && (
+              {/* B2B Referral Summary */}
+              {analytics && (analytics.totalReferralsSent > 0) && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                   <div className="p-3 rounded-lg bg-primary/5 text-center">
-                    <p className="text-2xl font-bold text-primary">{consumerAnalytics.totalClaims}</p>
-                    <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Total Claims</p>
+                    <p className="text-2xl font-bold text-primary">{analytics.totalReferralsSent}</p>
+                    <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Referrals Sent</p>
                   </div>
                   <div className="p-3 rounded-lg bg-green-50 text-center">
-                    <p className="text-2xl font-bold text-green-600">{consumerAnalytics.redeemed}</p>
-                    <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Redeemed</p>
+                    <p className="text-2xl font-bold text-green-600">{statusBreakdown.converted || 0}</p>
+                    <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Converted</p>
                   </div>
                   <div className="p-3 rounded-lg bg-emerald-50 text-center">
-                    <p className="text-2xl font-bold text-emerald-600">${consumerAnalytics.totalSaved}</p>
-                    <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Total Saved</p>
+                    <p className="text-2xl font-bold text-emerald-600">${analytics.conversionRate || 0}</p>
+                    <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Conversion %</p>
                   </div>
                   <div className="p-3 rounded-lg bg-amber-50 text-center">
-                    <p className="text-2xl font-bold text-amber-600">{consumerAnalytics.pending}</p>
+                    <p className="text-2xl font-bold text-amber-600">{statusBreakdown.pending || 0}</p>
                     <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Pending</p>
                   </div>
                 </div>
               )}
 
-              {claimsLoading ? (
+              {sentLoading ? (
                 <div className="space-y-3">
                   {[1, 2].map(i => <div key={i} className="animate-pulse p-3 border rounded-lg"><div className="h-4 bg-muted rounded w-3/4 mb-2" /><div className="h-3 bg-muted rounded w-1/2" /></div>)}
                 </div>
-              ) : !myClaims?.length ? (
+              ) : !sentReferrals?.length ? (
                 <div className="text-center py-8">
-                  <Gift className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <Send className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                   <p className="text-muted-foreground mb-3" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                    You haven't claimed any consumer offers yet.
+                    You haven't sent any B2B referrals yet. Start growing your network by referring customers to partner businesses.
                   </p>
-                  <Link href="/referral-offers">
+                  <Link href="/dashboard/send-referral">
                     <Button className="bg-primary text-primary-foreground" size="sm" style={{ textTransform: "none" }}>
-                      <Gift className="w-4 h-4 mr-2" /> Browse Consumer Offers
+                      <Send className="w-4 h-4 mr-2" /> Send Your First Referral
                     </Button>
                   </Link>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {myClaims.map((item) => (
-                    <div key={item.claim.id} className="p-4 border rounded-lg hover:bg-muted/30 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                          <Gift className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium" style={{ textTransform: "none" }}>
-                            {item.offer.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
-                            from <Link href={`/business/${item.business.slug}`}><span className="text-primary cursor-pointer hover:underline">{item.business.name}</span></Link>
-                            {' · '}{item.claim.createdAt ? new Date(item.claim.createdAt).toLocaleDateString() : ''}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {item.claim.claimCode && (
-                            <Badge variant="outline" className="font-mono text-xs" style={{ textTransform: "none" }}>
-                              {item.claim.claimCode}
+                  {sentReferrals.map((ref: any) => {
+                    const status = statusConfig[ref.referral.status] || statusConfig.pending;
+                    return (
+                      <div key={ref.referral.id} className="p-4 border rounded-lg hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                            <ArrowUpRight className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium" style={{ textTransform: "none" }}>
+                              Referral to <Link href={`/business/${ref.toBusiness?.slug || ''}`}><span className="text-primary cursor-pointer hover:underline">{ref.toBusiness?.name || 'Unknown'}</span></Link>
+                            </p>
+                            <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                              {ref.referral.customerName || 'Customer'}
+                              {ref.referral.incentiveAmount ? ` · $${ref.referral.incentiveAmount} incentive` : ''}
+                              {' · '}{ref.referral.createdAt ? new Date(ref.referral.createdAt).toLocaleDateString() : ''}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge className={`text-xs border ${status.color}`} style={{ textTransform: "none" }}>
+                              {status.icon}
+                              <span className="ml-1">{status.label}</span>
                             </Badge>
-                          )}
-                          {item.claim.isHonored ? (
-                            <Badge className="bg-green-100 text-green-800 text-xs" style={{ textTransform: "none" }}>
-                              <CheckCircle2 className="w-3 h-3 mr-1" /> Verified{item.claim.amountSaved ? ` · Saved $${item.claim.amountSaved}` : ''}
-                            </Badge>
-                          ) : item.claim.isDisputed ? (
-                            <Badge className="bg-red-100 text-red-800 text-xs" style={{ textTransform: "none" }}>
-                              <AlertTriangle className="w-3 h-3 mr-1" /> Disputed
-                            </Badge>
-                          ) : (
-                            <div className="flex gap-1">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button size="sm" className="bg-green-600 text-white h-7 text-xs hover:bg-green-700" style={{ textTransform: "none" }}>
-                                    <CheckCircle2 className="w-3 h-3 mr-1" /> Verify Honored
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Verify Offer Was Honored</DialogTitle>
-                                    <DialogDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
-                                      Confirm that {item.business.name} honored the offer "{item.offer.title}".
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <div>
-                                      <Label style={{ textTransform: "none" }}>Amount saved ($)</Label>
-                                      <Input type="number" placeholder="e.g. 15.00" value={verifyAmount} onChange={e => setVerifyAmount(e.target.value)} />
-                                    </div>
-                                    <div>
-                                      <Label style={{ textTransform: "none" }}>Notes (optional)</Label>
-                                      <Textarea placeholder="How was your experience?" value={verifyNotes} onChange={e => setVerifyNotes(e.target.value)} />
-                                    </div>
-                                  </div>
-                                  <DialogFooter>
-                                    <Button className="bg-green-600 text-white hover:bg-green-700" style={{ textTransform: "none" }}
-                                      onClick={() => { verifyClaimMutation.mutate({ claimId: item.claim.id, honored: true, amountSaved: verifyAmount, notes: verifyNotes }); setVerifyAmount(''); setVerifyNotes(''); }}
-                                      disabled={verifyClaimMutation.isPending}>
-                                      Confirm Honored
-                                    </Button>
-                                  </DialogFooter>
-                                </DialogContent>
-                              </Dialog>
-                              <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700 h-7 text-xs" style={{ textTransform: "none" }}
-                                onClick={() => verifyClaimMutation.mutate({ claimId: item.claim.id, honored: false, notes: 'Business did not honor the offer' })}>
-                                Not Honored
-                              </Button>
-                            </div>
-                          )}
+                            {ref.referral.status === 'pending' && (
+                              <select
+                                className="text-xs border rounded px-2 py-1 bg-background"
+                                defaultValue=""
+                                onChange={(e) => {
+                                  if (e.target.value) {
+                                    updateStatusMutation.mutate({ id: ref.referral.id, status: e.target.value as any });
+                                    e.target.value = '';
+                                  }
+                                }}
+                              >
+                                <option value="" disabled>Update...</option>
+                                <option value="contacted">Contacted</option>
+                                <option value="converted">Converted</option>
+                                <option value="declined">Declined</option>
+                              </select>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

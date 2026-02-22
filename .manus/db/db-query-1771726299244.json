@@ -1,0 +1,150 @@
+{
+  "query": "SELECT referringUserId, referringBusinessId, receivingBusinessId, status, COUNT(*) as cnt FROM referrals GROUP BY referringUserId, referringBusinessId, receivingBusinessId, status LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT referringUserId, referringBusinessId, receivingBusinessId, status, COUNT(*) as cnt FROM referrals GROUP BY referringUserId, referringBusinessId, receivingBusinessId, status LIMIT 20;",
+  "rows": [
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "60035",
+      "receivingBusinessId": "60008",
+      "status": "pending",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "60015",
+      "receivingBusinessId": "30",
+      "status": "converted",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "60059",
+      "receivingBusinessId": "30052",
+      "status": "expired",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "62",
+      "receivingBusinessId": "30048",
+      "status": "converted",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "30077",
+      "receivingBusinessId": "12",
+      "status": "contacted",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "13",
+      "receivingBusinessId": "60029",
+      "status": "pending",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "41",
+      "receivingBusinessId": "60043",
+      "status": "declined",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "48",
+      "receivingBusinessId": "31",
+      "status": "expired",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "30046",
+      "receivingBusinessId": "30074",
+      "status": "declined",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "60021",
+      "receivingBusinessId": "30065",
+      "status": "expired",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "30083",
+      "receivingBusinessId": "60009",
+      "status": "expired",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "60052",
+      "receivingBusinessId": "60005",
+      "status": "converted",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "30",
+      "receivingBusinessId": "17",
+      "status": "pending",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "49",
+      "receivingBusinessId": "60038",
+      "status": "declined",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "17",
+      "receivingBusinessId": "60060",
+      "status": "declined",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "39",
+      "receivingBusinessId": "30082",
+      "status": "converted",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "14",
+      "receivingBusinessId": "60015",
+      "status": "declined",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "60031",
+      "receivingBusinessId": "60056",
+      "status": "declined",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "31",
+      "receivingBusinessId": "30067",
+      "status": "declined",
+      "cnt": "1"
+    },
+    {
+      "referringUserId": "1",
+      "referringBusinessId": "52",
+      "receivingBusinessId": "60029",
+      "status": "converted",
+      "cnt": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "referringUserId\treferringBusinessId\treceivingBusinessId\tstatus\tcnt\n1\t60035\t60008\tpending\t1\n1\t60015\t30\tconverted\t1\n1\t60059\t30052\texpired\t1\n1\t62\t30048\tconverted\t1\n1\t30077\t12\tcontacted\t1\n1\t13\t60029\tpending\t1\n1\t41\t60043\tdeclined\t1\n1\t48\t31\texpired\t1\n1\t30046\t30074\tdeclined\t1\n1\t60021\t30065\texpired\t1\n1\t30083\t60009\texpired\t1\n1\t60052\t60005\tconverted\t1\n1\t30\t17\tpending\t1\n1\t49\t60038\tdeclined\t1\n1\t17\t60060\tdeclined\t1\n1\t39\t30082\tconverted\t1\n1\t14\t60015\tdeclined\t1\n1\t60031\t60056\tdeclined\t1\n1\t31\t30067\tdeclined\t1\n1\t52\t60029\tconverted\t1\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

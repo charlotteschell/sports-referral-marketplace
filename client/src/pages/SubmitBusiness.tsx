@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,16 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Mountain, CheckCircle, ArrowLeft, Send, Building2, MapPin, User, Globe, MessageSquare } from "lucide-react";
+import { Mountain, CheckCircle, ArrowLeft, Send, Building2, MapPin, User, Globe, MessageSquare, Tag, X } from "lucide-react";
 
-const REGIONS = [
-  "Western Canada", "Eastern Canada", "Western US", "Eastern US",
-  "Dolomites", "Pyrenees", "Mallorca", "Alps", "Scandinavia", "UK & Ireland"
-];
+// Business types that should show the brands field
+const RETAILER_TYPE_NAMES = ["Bike Retailer", "Bike Shop", "Running Store", "Ski Shop", "Supplement Retailer"];
 
 export default function SubmitBusiness() {
   const [submitted, setSubmitted] = useState(false);
@@ -37,9 +36,48 @@ export default function SubmitBusiness() {
   const [instagram, setInstagram] = useState("");
   const [facebook, setFacebook] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
+  const [brandsCarried, setBrandsCarried] = useState("");
+  const [newBrand, setNewBrand] = useState("");
 
   const { data: sportCategories } = trpc.categories.sportCategories.useQuery();
   const { data: businessTypes } = trpc.categories.businessTypes.useQuery();
+  const { data: regions } = trpc.categories.regions.useQuery();
+  const { data: hubs } = trpc.categories.hubs.useQuery();
+
+  // Check if selected business type is a retailer
+  const isRetailerType = useMemo(() => {
+    if (!businessTypeId || !businessTypes) return false;
+    const selectedType = businessTypes.find(bt => bt.id === businessTypeId);
+    return selectedType ? RETAILER_TYPE_NAMES.includes(selectedType.name) : false;
+  }, [businessTypeId, businessTypes]);
+
+  // Filter hubs by selected region
+  const filteredHubs = useMemo(() => {
+    if (!hubs) return [];
+    if (!region) return hubs;
+    return hubs.filter((h: any) => h.region === region);
+  }, [hubs, region]);
+
+  // Brands management
+  const brandsList = useMemo(() => {
+    if (!brandsCarried) return [];
+    return brandsCarried.split(",").map(b => b.trim()).filter(Boolean);
+  }, [brandsCarried]);
+
+  const addBrand = () => {
+    const brand = newBrand.trim();
+    if (!brand) return;
+    if (brandsList.includes(brand)) {
+      toast.info("Brand already added");
+      return;
+    }
+    setBrandsCarried([...brandsList, brand].join(", "));
+    setNewBrand("");
+  };
+
+  const removeBrand = (brand: string) => {
+    setBrandsCarried(brandsList.filter(b => b !== brand).join(", "));
+  };
 
   const submitMutation = trpc.submission.submit.useMutation({
     onSuccess: () => {
@@ -66,6 +104,10 @@ export default function SubmitBusiness() {
       toast.error("Please select a business type");
       return;
     }
+    if (!website.trim()) {
+      toast.error("Website is required for verification");
+      return;
+    }
     if (!contactName.trim()) {
       toast.error("Contact name is required");
       return;
@@ -84,11 +126,11 @@ export default function SubmitBusiness() {
       state: state.trim() || undefined,
       country: country.trim() || undefined,
       region: region || undefined,
-      hub: hub.trim() || undefined,
+      hub: hub || undefined,
       contactName: contactName.trim(),
       contactEmail: contactEmail.trim(),
       contactPhone: contactPhone.trim() || undefined,
-      website: website.trim() || undefined,
+      website: website.trim(),
       instagram: instagram.trim() || undefined,
       facebook: facebook.trim() || undefined,
       additionalNotes: additionalNotes.trim() || undefined,
@@ -140,6 +182,7 @@ export default function SubmitBusiness() {
                     setInstagram("");
                     setFacebook("");
                     setAdditionalNotes("");
+                    setBrandsCarried("");
                   }}
                   className="gap-2 bg-primary text-primary-foreground"
                 >
@@ -184,7 +227,7 @@ export default function SubmitBusiness() {
               Whether you're a coach, bike shop, sport psychologist, vacation provider, or any business serving
               cyclists, runners, and snowsports enthusiasts — submit your business to be listed in
               the SportConnect directory and start receiving referrals.
-              <span className="block mt-3 text-sm text-amber-500 font-medium">All submissions are subject to admin approval. You'll receive an email confirmation once submitted, and another when approved.</span>
+              <span className="block mt-3 text-sm text-amber-500 font-medium">All submissions are subject to admin approval. A website is required for verification. Your email must match your business domain.</span>
             </p>
           </div>
         </section>
@@ -263,6 +306,51 @@ export default function SubmitBusiness() {
                     </div>
                   </div>
 
+                  {/* Brands field - shown for retailer types */}
+                  {isRetailerType && (
+                    <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/20">
+                      <Label className="flex items-center gap-2 font-medium" style={{ textTransform: "none" }}>
+                        <Tag className="w-4 h-4" /> Brands Carried
+                      </Label>
+                      <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                        Add the brands you stock or represent. This helps customers and partners find you.
+                      </p>
+                      {brandsList.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {brandsList.map((brand) => (
+                            <Badge key={brand} variant="secondary" className="text-xs gap-1 pr-1" style={{ textTransform: "none" }}>
+                              {brand}
+                              <button
+                                type="button"
+                                onClick={() => removeBrand(brand)}
+                                className="ml-0.5 hover:bg-destructive/20 rounded-full p-0.5"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="e.g., Specialized, Trek, Shimano..."
+                          value={newBrand}
+                          onChange={(e) => setNewBrand(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addBrand();
+                            }
+                          }}
+                          className="flex-1"
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={addBrand} style={{ textTransform: "none" }}>
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label htmlFor="businessDescription" className="font-medium">
                       Business Description
@@ -323,25 +411,32 @@ export default function SubmitBusiness() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label className="font-medium">Region</Label>
-                      <Select value={region} onValueChange={setRegion}>
+                      <Select value={region} onValueChange={(v) => {
+                        setRegion(v);
+                        setHub(""); // Reset hub when region changes
+                      }}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select region" />
                         </SelectTrigger>
                         <SelectContent>
-                          {REGIONS.map((r) => (
+                          {regions?.map((r: string) => (
                             <SelectItem key={r} value={r}>{r}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="hub" className="font-medium">Hub / Area</Label>
-                      <Input
-                        id="hub"
-                        placeholder="e.g., Boulder, Whistler, Cortina"
-                        value={hub}
-                        onChange={(e) => setHub(e.target.value)}
-                      />
+                      <Label className="font-medium">Hub / Area</Label>
+                      <Select value={hub} onValueChange={setHub}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select hub" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {filteredHubs.map((h: any) => (
+                            <SelectItem key={h.hub} value={h.hub}>{h.hub}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </CardContent>
@@ -384,6 +479,9 @@ export default function SubmitBusiness() {
                         onChange={(e) => setContactEmail(e.target.value)}
                         required
                       />
+                      <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                        Must match your business website domain for verification.
+                      </p>
                     </div>
                   </div>
 
@@ -413,14 +511,20 @@ export default function SubmitBusiness() {
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="website" className="font-medium">Website</Label>
+                    <Label htmlFor="website" className="font-medium">
+                      Website <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="website"
                       type="url"
                       placeholder="https://www.yourbusiness.com"
                       value={website}
                       onChange={(e) => setWebsite(e.target.value)}
+                      required
                     />
+                    <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                      Required for business verification. Your email domain must match this website.
+                    </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">

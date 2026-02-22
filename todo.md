@@ -379,3 +379,84 @@
 - [x] Update footer and homepage region highlights with new regions
 - [x] Update platform stats to reflect 175 businesses
 - [x] All 84 tests still passing after seeding
+
+## Sample Referral Activity Data for Leaderboard
+- [x] Seed realistic referral records between businesses for leaderboard rankings
+- [x] Include honored, pending, and disputed referrals with dollar amounts
+- [x] Leaderboard should show real rankings with business names and stats
+
+## Launch Countdown Timer
+- [x] Add a clock/timer next to community activity stats showing time since launch
+- [x] Gamify with messaging like "see how much we can help each other grow"
+
+## New Categories: Cycling Cafes & Sports Restaurants
+- [x] Add "Cycling Cafe" business type
+- [x] Add "Sports Restaurant" business type
+- [x] Research and seed real cycling cafes and sports-oriented restaurants in existing regions
+- [x] Seed businesses from Colorado Front Range, Pacific Northwest, Girona, Mallorca, Calgary area (22 new businesses, 197 total)
+
+## Email Button UX Changes
+- [x] Remove email button from directory cards
+- [x] Display email button only on main business profile page
+- [x] Make email button more prominent on profile page with "Have a Better Idea?" CTA card
+- [x] Add messaging: "Don't see a referral program you like or have a better partnership idea? Get in touch directly."
+
+## Auto-Claim on Admin Approval
+- [x] When a business owner submits a new business, auto-claim it to their account once admin approves
+- [x] Link the submitter's user account to the business on approval
+
+## Domain Email Verification
+- [x] Email domain validated against website domain (allows common email providers as fallback)
+- [x] Website URL is now required when submitting a business
+- [x] Validate email domain matches website domain during submission
+
+## Profile Edit Data Retention Fix
+- [x] Fix bug: previously filled fields (sport category, business type) now retained with formInitialized flag
+- [x] All fields retain their current values when opening the edit form
+- [x] Pre-populate all form fields with existing business data
+
+## Logo Upload Improvements
+- [x] Allow business owners to easily upload logo when editing their profile (dedicated card at top of edit form)
+- [x] Update directory cards to reflect logo changes instantly after upload (cache invalidation)
+
+## Dashboard B2B Referral Tracking Fix
+- [x] Fix bottom section of business dashboard: now shows B2B referrals sent with status tracking
+- [x] Label updated to "B2B Referral Partnerships" with "Track referrals you've sent as a business partner"
+- [x] Shows referral status (pending/contacted/converted/declined) with inline status update dropdown
+- [x] Show referrals sent to other businesses with status tracking
+
+## Signup Flow: Business Owner vs Sports Enthusiast
+- [x] On first signup, prompt user to choose: business owner or sports enthusiast (Onboarding page)
+- [x] Create distinct user flows for each account type
+- [x] Business owners redirected to dashboard after onboarding
+- [x] Sports enthusiasts redirected to directory after onboarding
+- [x] Route added at /onboarding, wired in App.tsx
+
+## Edit Business Form Improvements
+- [x] Hub/Area field is now a dropdown populated from database, filtered by region
+- [ ] Allow businesses to select multiple sport categories (future enhancement)
+- [ ] Allow businesses to select multiple business types (future enhancement)
+- [x] When bike retailer or supplement retailer is selected, show brands field immediately
+- [x] Pre-populate all form fields with existing business data (fixed data retention bug with formInitialized flag)
+- [x] Logo upload is easy with dedicated card at top of edit form, reflects changes instantly via cache invalidation
+
+## Email Button on Profile - Owner View
+- [x] Hide "Email Business" / "Have a Better Idea?" CTA when the business owner is viewing their own claimed business profile (already uses !isOwner condition)
+
+## Add Business Form Improvements
+- [x] When adding a business, if bike retailer or supplement retailer is selected, show brands field immediately
+- [x] Hub/Area is now a dropdown in the submit business form, populated from API, filtered by region
+
+## Google Maps / Google My Business Links
+- [x] If business has Google reviews or a Google Maps/My Business page, link to it on their profile page
+- [x] Make the Google Reviews card clickable to open their Google Maps listing
+- [x] Auto-generate Google Maps search URL as fallback for businesses without explicit googleMapsUrl
+- [x] Show 'Find on Google' card even for businesses without ratings but with a city
+
+## Clear Sample Data on Business Claim
+- [x] When a business is claimed by a real owner, remove all sample/seed referral data associated with that business
+- [x] Remove sample referrals (both sent and received) for the claimed business
+- [x] Remove sample consumer claims for the claimed business
+- [x] Remove sample referral offers (isSample=true) for the claimed business
+- [x] Cleanup runs on both: claimBusiness() and approveOrRejectBusiness(approved)
+- [x] Leaderboard and analytics auto-recalculate since data is deleted from source tables

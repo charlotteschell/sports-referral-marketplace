@@ -19,6 +19,7 @@ import AdminPanel from "./pages/AdminPanel";
 import About from "./pages/About";
 import SupportTicket from "./pages/SupportTicket";
 import Leaderboard from "./pages/Leaderboard";
+import Onboarding from "./pages/Onboarding";
 
 function Router() {
   return (
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/support" component={SupportTicket} />
       <Route path="/leaderboard" component={Leaderboard} />
+      <Route path="/onboarding" component={Onboarding} />
       <Route path="/admin" component={AdminPanel} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
