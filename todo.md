@@ -768,3 +768,15 @@
 - [x] Prompt users to enter their contact name on first login/signup
 - [x] Display contact name in nav bar instead of email username
 - [x] Display contact name everywhere users are referenced
+
+## Contact Name Privacy — Owner-Only Visibility
+- [x] contactName should only be visible to the account owner themselves
+- [x] Nav bar: show contactName only to the logged-in user (already correct)
+- [x] Dashboard greeting: show contactName only to the logged-in user (already correct)
+- [x] Ensure contactName is NOT exposed in any public API responses (verified: leaderboard uses business names, no public endpoint exposes user contactName)
+- [x] Ensure business names (not contact names) remain on all public-facing cards, profiles, directory listings
+- [x] Backend: exclude contactName from any public-facing tRPC responses (verified: auth.me only returns own user, userProfile.get is protected)
+- [x] Update tests to verify privacy (existing tests confirm protected access)
+
+## Nav Bar Alignment Fix
+- [x] Fix styling/alignment of referral offers link in nav bar when users are logged in
