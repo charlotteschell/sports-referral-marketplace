@@ -159,6 +159,22 @@ vi.mock("./db", () => ({
     { id: 1, name: "Admin User", email: "admin@test.com", contactName: "Admin", role: "admin", accountType: "business_owner", isDeleted: false, deletedBy: null, createdAt: new Date(), lastSignedIn: new Date() },
     { id: 2, name: "Regular User", email: "user@test.com", contactName: "Regular", role: "user", accountType: "consumer", isDeleted: false, deletedBy: null, createdAt: new Date(), lastSignedIn: new Date() },
   ]),
+  // Admin test profiles
+  createAdminTestProfile: vi.fn().mockResolvedValue(1),
+  getAdminTestProfiles: vi.fn().mockResolvedValue([
+    { id: 1, adminUserId: 1, profileName: "Pro Cyclist", displayName: "Alex", sportIds: [1], city: "Boulder", state: "CO", country: "USA", region: "Rocky Mountain", hub: null, goals: "Test cycling flows", interests: null, createdAt: new Date(), updatedAt: new Date() },
+  ]),
+  getAdminTestProfileById: vi.fn().mockImplementation(async (id: number) => {
+    if (id === 1) return { id: 1, adminUserId: 1, profileName: "Pro Cyclist", displayName: "Alex", sportIds: [1], city: "Boulder", state: "CO", country: "USA", region: "Rocky Mountain", hub: null, goals: "Test cycling flows", interests: null, createdAt: new Date(), updatedAt: new Date() };
+    return null;
+  }),
+  deleteAdminTestProfile: vi.fn().mockResolvedValue(true),
+  updateAdminTestProfile: vi.fn().mockResolvedValue(true),
+}));
+
+// Mock the storage module
+vi.mock("./storage", () => ({
+  storagePut: vi.fn().mockResolvedValue({ url: "https://s3.example.com/test-file.png", key: "uploads/support-ticket/1/abc123.png" }),
 }));
 
 // Mock the notification core module
@@ -417,5 +433,165 @@ describe("email module", () => {
   it("email module exports sendNotificationEmail function", async () => {
     const email = await import("./email");
     expect(typeof email.sendNotificationEmail).toBe("function");
+  });
+});
+
+// ─── Admin Test Profiles Tests ──────────────────────────────────────
+
+describe("admin test profiles", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("admin can create a test profile", async () => {
+    const db = await import("./db");
+    const caller = appRouter.createCaller(createAdminContext());
+    const result = await caller.admin.createTestProfile({
+      profileName: "Trail Runner - Aspen",
+      displayName: "Sam Runner",
+      sportIds: [2],
+      city: "Aspen",
+      state: "CO",
+      country: "USA",
+      region: "Rocky Mountain",
+    });
+    expect(result).toHaveProperty("profileId", 1);
+    expect(result).toHaveProperty("success", true);
+    expect(db.createAdminTestProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        adminUserId: 1,
+        profileName: "Trail Runner - Aspen",
+        displayName: "Sam Runner",
+      })
+    );
+  });
+
+  it("admin can list their test profiles", async () => {
+    const caller = appRouter.createCaller(createAdminContext());
+    const result = await caller.admin.listTestProfiles();
+    expect(Array.isArray(result)).toBe(true);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toHaveProperty("profileName", "Pro Cyclist");
+  });
+
+  it("admin can get a specific test profile", async () => {
+    const caller = appRouter.createCaller(createAdminContext());
+    const result = await caller.admin.getTestProfile({ id: 1 });
+    expect(result).toHaveProperty("profileName", "Pro Cyclist");
+    expect(result).toHaveProperty("displayName", "Alex");
+  });
+
+  it("admin can delete a test profile", async () => {
+    const db = await import("./db");
+    const caller = appRouter.createCaller(createAdminContext());
+    const result = await caller.admin.deleteTestProfile({ id: 1 });
+    expect(result).toEqual({ success: true });
+    expect(db.deleteAdminTestProfile).toHaveBeenCalledWith(1, 1);
+  });
+
+  it("admin can update a test profile", async () => {
+    const db = await import("./db");
+    const caller = appRouter.createCaller(createAdminContext());
+    const result = await caller.admin.updateTestProfile({
+      id: 1,
+      profileName: "Updated Cyclist",
+    });
+    expect(result).toEqual({ success: true });
+    expect(db.updateAdminTestProfile).toHaveBeenCalledWith(1, 1, expect.objectContaining({ profileName: "Updated Cyclist" }));
+  });
+
+  it("non-admin cannot create test profiles", async () => {
+    const caller = appRouter.createCaller(createAuthContext(2, "user"));
+    await expect(
+      caller.admin.createTestProfile({ profileName: "Hacker Profile" })
+    ).rejects.toThrow();
+  });
+
+  it("non-admin cannot list test profiles", async () => {
+    const caller = appRouter.createCaller(createAuthContext(2, "user"));
+    await expect(caller.admin.listTestProfiles()).rejects.toThrow();
+  });
+
+  it("non-admin cannot delete test profiles", async () => {
+    const caller = appRouter.createCaller(createAuthContext(2, "user"));
+    await expect(caller.admin.deleteTestProfile({ id: 1 })).rejects.toThrow();
+  });
+});
+
+// ─── File Upload Tests ──────────────────────────────────────
+
+describe("file upload", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("authenticated user can upload an image", async () => {
+    const storage = await import("./storage");
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.upload.image({
+      fileName: "screenshot.png",
+      fileBase64: btoa("fake-image-data"),
+      mimeType: "image/png",
+      fileSize: 1024,
+      purpose: "support-ticket",
+    });
+    expect(result).toHaveProperty("success", true);
+    expect(result).toHaveProperty("url");
+    expect(storage.storagePut).toHaveBeenCalled();
+  });
+
+  it("rejects unsupported file types", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    await expect(
+      caller.upload.image({
+        fileName: "malware.exe",
+        fileBase64: btoa("fake-data"),
+        mimeType: "application/x-msdownload",
+        fileSize: 1024,
+      })
+    ).rejects.toThrow(/not allowed/);
+  });
+
+  it("rejects files exceeding size limit", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    await expect(
+      caller.upload.image({
+        fileName: "huge.png",
+        fileBase64: btoa("fake-data"),
+        mimeType: "image/png",
+        fileSize: 11 * 1024 * 1024, // 11MB
+      })
+    ).rejects.toThrow();
+  });
+
+  it("allows PDF uploads for support tickets", async () => {
+    const storage = await import("./storage");
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.upload.image({
+      fileName: "document.pdf",
+      fileBase64: btoa("fake-pdf-data"),
+      mimeType: "application/pdf",
+      fileSize: 2048,
+      purpose: "support-ticket",
+    });
+    expect(result).toHaveProperty("success", true);
+    expect(storage.storagePut).toHaveBeenCalled();
+  });
+
+  it("unauthenticated user cannot upload", async () => {
+    const ctx: TrpcContext = {
+      user: null,
+      req: { protocol: "https", headers: {} } as TrpcContext["req"],
+      res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+    };
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.upload.image({
+        fileName: "test.png",
+        fileBase64: btoa("fake"),
+        mimeType: "image/png",
+        fileSize: 100,
+      })
+    ).rejects.toThrow();
   });
 });

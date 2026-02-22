@@ -19,6 +19,8 @@ import {
   athleteProfiles, InsertAthleteProfile,
   savedBusinesses,
   userNotifications, InsertUserNotification,
+  adminTestProfiles, InsertAdminTestProfile,
+  supportTicketAttachments, InsertSupportTicketAttachment,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -2385,4 +2387,65 @@ export async function getVerifiedScorecardStats(businessId: number) {
       ? Math.round(((sentVerifiedIncentive + receivedVerifiedIncentive) / (totalSent + totalReceived)) * 100)
       : 0,
   };
+}
+
+
+// ─── Admin Test Profiles ─────────────────────────────────
+
+export async function createAdminTestProfile(data: InsertAdminTestProfile) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.insert(adminTestProfiles).values(data);
+  return result.insertId;
+}
+
+export async function getAdminTestProfiles(adminUserId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(adminTestProfiles)
+    .where(eq(adminTestProfiles.adminUserId, adminUserId))
+    .orderBy(desc(adminTestProfiles.createdAt));
+}
+
+export async function getAdminTestProfileById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(adminTestProfiles)
+    .where(eq(adminTestProfiles.id, id))
+    .limit(1);
+  return rows[0] || null;
+}
+
+export async function deleteAdminTestProfile(id: number, adminUserId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  const [result] = await db.delete(adminTestProfiles)
+    .where(and(eq(adminTestProfiles.id, id), eq(adminTestProfiles.adminUserId, adminUserId)));
+  return (result as any).affectedRows > 0;
+}
+
+export async function updateAdminTestProfile(id: number, adminUserId: number, data: Partial<InsertAdminTestProfile>) {
+  const db = await getDb();
+  if (!db) return false;
+  const [result] = await db.update(adminTestProfiles)
+    .set(data)
+    .where(and(eq(adminTestProfiles.id, id), eq(adminTestProfiles.adminUserId, adminUserId)));
+  return (result as any).affectedRows > 0;
+}
+
+// ─── Support Ticket Attachments ─────────────────────────────────
+
+export async function createSupportTicketAttachment(data: InsertSupportTicketAttachment) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.insert(supportTicketAttachments).values(data);
+  return result.insertId;
+}
+
+export async function getAttachmentsForTicket(ticketId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(supportTicketAttachments)
+    .where(eq(supportTicketAttachments.ticketId, ticketId))
+    .orderBy(supportTicketAttachments.createdAt);
 }

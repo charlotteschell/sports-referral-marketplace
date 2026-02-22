@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   LifeBuoy, Bug, Lightbulb, HelpCircle, Upload, Clock,
-  CheckCircle2, Rocket, ArrowLeft, ImagePlus
+  CheckCircle2, Rocket, ArrowLeft, ImagePlus, X, Loader2, FileImage, Paperclip
 } from "lucide-react";
 
 const ticketTypeOptions = [
@@ -31,6 +31,18 @@ const statusLabels: Record<string, { label: string; color: string; icon: React.R
   launched: { label: "Launched", color: "bg-primary/10 text-primary", icon: <Rocket className="w-3 h-3" /> },
 };
 
+type UploadedFile = {
+  id: string;
+  fileName: string;
+  url: string;
+  mimeType: string;
+  fileSize: number;
+  preview?: string; // local preview URL
+};
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf'];
+
 export default function SupportTicket() {
   const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
@@ -38,23 +50,127 @@ export default function SupportTicket() {
   const [ticketType, setTicketType] = useState<"bug" | "feature_request" | "general">("bug");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [screenshotUrl, setScreenshotUrl] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadMutation = (trpc as any).upload.image.useMutation();
 
   const createTicket = trpc.supportTicket.create.useMutation({
     onSuccess: () => {
       toast.success("Ticket submitted! We'll get back to you soon.");
       setTitle("");
       setDescription("");
-      setScreenshotUrl("");
+      setUploadedFiles([]);
       setTab("my");
       myTickets.refetch();
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err: any) => toast.error(err.message),
   });
 
   const myTickets = trpc.supportTicket.myTickets.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+
+  const processFiles = useCallback(async (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    const validFiles = fileArray.filter(f => {
+      if (!ALLOWED_TYPES.includes(f.type)) {
+        toast.error(`${f.name}: Unsupported file type. Use PNG, JPEG, GIF, WebP, or PDF.`);
+        return false;
+      }
+      if (f.size > MAX_FILE_SIZE) {
+        toast.error(`${f.name}: File too large. Maximum size is 10MB.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+    if (uploadedFiles.length + validFiles.length > 5) {
+      toast.error("Maximum 5 files per ticket.");
+      return;
+    }
+
+    setIsUploading(true);
+
+    for (const file of validFiles) {
+      try {
+        // Create local preview
+        const preview = file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined;
+
+        // Convert to base64
+        const buffer = await file.arrayBuffer();
+        const base64 = btoa(
+          new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+        );
+
+        const result = await uploadMutation.mutateAsync({
+          fileName: file.name,
+          fileBase64: base64,
+          mimeType: file.type,
+          fileSize: file.size,
+          purpose: 'support-ticket',
+        });
+
+        setUploadedFiles(prev => [...prev, {
+          id: crypto.randomUUID(),
+          fileName: file.name,
+          url: result.url,
+          mimeType: file.type,
+          fileSize: file.size,
+          preview,
+        }]);
+      } catch (err: any) {
+        toast.error(`Failed to upload ${file.name}: ${err.message || 'Unknown error'}`);
+      }
+    }
+
+    setIsUploading(false);
+  }, [uploadedFiles, uploadMutation]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    if (e.dataTransfer.files.length > 0) {
+      processFiles(e.dataTransfer.files);
+    }
+  }, [processFiles]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processFiles(e.target.files);
+      e.target.value = ''; // Reset so same file can be selected again
+    }
+  }, [processFiles]);
+
+  const removeFile = (id: string) => {
+    setUploadedFiles(prev => {
+      const file = prev.find(f => f.id === id);
+      if (file?.preview) URL.revokeObjectURL(file.preview);
+      return prev.filter(f => f.id !== id);
+    });
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   if (!isAuthenticated) {
     return (
@@ -166,30 +282,110 @@ export default function SupportTicket() {
                   />
                 </div>
 
-                {/* Screenshot URL */}
+                {/* Screenshot Upload - Drag & Drop Zone */}
                 <div>
-                  <label className="text-sm font-medium flex items-center gap-2" style={{ textTransform: "none" }}>
-                    <ImagePlus className="w-4 h-4" /> Screenshot URL (optional)
+                  <label className="text-sm font-medium flex items-center gap-2 mb-2" style={{ textTransform: "none" }}>
+                    <Paperclip className="w-4 h-4" /> Screenshots (optional)
                   </label>
-                  <Input
-                    value={screenshotUrl}
-                    onChange={(e) => setScreenshotUrl(e.target.value)}
-                    placeholder="Paste a link to a screenshot (e.g. from Imgur, Google Drive)"
-                    className="mt-1"
-                    style={{ textTransform: "none" }}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1" style={{ textTransform: "none" }}>
-                    Upload your screenshot to any image hosting service and paste the link here.
-                  </p>
+
+                  {/* Drop Zone */}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all ${
+                      isDragOver
+                        ? "border-primary bg-primary/5 scale-[1.01]"
+                        : "border-border hover:border-primary/40 hover:bg-muted/30"
+                    } ${isUploading ? "pointer-events-none opacity-60" : ""}`}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+
+                    {isUploading ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground" style={{ textTransform: "none" }}>Uploading...</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
+                          <Upload className={`w-5 h-5 ${isDragOver ? "text-primary" : "text-muted-foreground"}`} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium" style={{ textTransform: "none" }}>
+                            {isDragOver ? "Drop files here" : "Drag & drop screenshots here"}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1" style={{ textTransform: "none" }}>
+                            or click to browse. PNG, JPEG, GIF, WebP, PDF up to 10MB. Max 5 files.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Uploaded Files Preview */}
+                  {uploadedFiles.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {uploadedFiles.map((file) => (
+                        <div
+                          key={file.id}
+                          className="flex items-center gap-3 p-2 rounded-lg border border-border bg-muted/20"
+                        >
+                          {file.preview ? (
+                            <img
+                              src={file.preview}
+                              alt={file.fileName}
+                              className="w-10 h-10 rounded object-cover border border-border"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                              <FileImage className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate" style={{ textTransform: "none" }}>{file.fileName}</p>
+                            <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                              {formatFileSize(file.fileSize)}
+                            </p>
+                          </div>
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline shrink-0"
+                            style={{ textTransform: "none" }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            View
+                          </a>
+                          <button
+                            onClick={() => removeFile(file.id)}
+                            className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <Button
                   onClick={() => {
+                    const screenshotUrls = uploadedFiles.map(f => f.url).join('\n');
                     createTicket.mutate({
                       title,
                       description,
                       ticketType,
-                      screenshotUrls: screenshotUrl || undefined,
+                      screenshotUrls: screenshotUrls || undefined,
                     });
                   }}
                   disabled={createTicket.isPending || !title || !description}
@@ -225,6 +421,7 @@ export default function SupportTicket() {
               ) : (
                 myTickets.data.map((ticket: any) => {
                   const status = statusLabels[ticket.status] || statusLabels.new;
+                  const screenshots = ticket.screenshotUrls ? ticket.screenshotUrls.split('\n').filter(Boolean) : [];
                   return (
                     <Card key={ticket.id}>
                       <CardContent className="p-4">
@@ -242,7 +439,24 @@ export default function SupportTicket() {
                             <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
                               <span>#{ticket.id}</span>
                               <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                              {screenshots.length > 0 && (
+                                <span className="flex items-center gap-1">
+                                  <Paperclip className="w-3 h-3" /> {screenshots.length} attachment{screenshots.length > 1 ? 's' : ''}
+                                </span>
+                              )}
                             </div>
+                            {/* Attachment thumbnails */}
+                            {screenshots.length > 0 && (
+                              <div className="flex gap-2 mt-2 flex-wrap">
+                                {screenshots.map((url: string, i: number) => (
+                                  <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                                    className="block w-12 h-12 rounded border border-border overflow-hidden hover:ring-2 ring-primary transition-all">
+                                    <img src={url} alt={`Attachment ${i + 1}`} className="w-full h-full object-cover"
+                                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                  </a>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           <div className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full shrink-0 ${status.color}`} style={{ textTransform: "none" }}>
                             {status.icon} {status.label}

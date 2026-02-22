@@ -18,7 +18,8 @@ import {
   Loader2, Gift, Heart, Bookmark, MapPin, ExternalLink,
   Ticket, CheckCircle2, Clock, AlertTriangle, Trash2,
   User, Target, Bike, Settings, ArrowRight, Bell, Check, CheckCheck,
-  Sparkles, Star, ChevronRight, Pencil, X, Save, Zap, Mail, BellRing, BellOff
+  Sparkles, Star, ChevronRight, Pencil, X, Save, Zap, Mail, BellRing, BellOff,
+  Users, ChevronDown, Shield
 } from "lucide-react";
 
 type TabId = "offers" | "saved" | "notifications" | "profile";
@@ -27,6 +28,13 @@ export default function AthleteDashboard() {
   const { user, loading } = useAuth({ redirectOnUnauthenticated: true });
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<TabId>("offers");
+  const [activeTestProfileId, setActiveTestProfileId] = useState<number | null>(null);
+  const [showProfileSwitcher, setShowProfileSwitcher] = useState(false);
+
+  // Admin test profiles
+  const isAdmin = user?.role === 'admin';
+  const { data: testProfiles } = (trpc as any).admin?.listTestProfiles?.useQuery?.(undefined, { enabled: !!isAdmin }) ?? { data: undefined };
+  const activeTestProfile = testProfiles?.find((p: any) => p.id === activeTestProfileId) ?? null;
 
   // Route guard: business owners should use /dashboard, not athlete dashboard
   useEffect(() => {
@@ -206,11 +214,72 @@ export default function AthleteDashboard() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
-                  Hey, {(user?.contactName || user?.name)?.split(' ')[0] || 'Athlete'} 👋
+                  Hey, {activeTestProfile ? activeTestProfile.displayName || activeTestProfile.profileName : (user?.contactName || user?.name)?.split(' ')[0] || 'Athlete'} 👋
                 </h1>
                 <p className="text-white/60 mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                  Your deals, your saves, your profile. All the stuff that matters.
+                  {activeTestProfile
+                    ? <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-violet-400" />Viewing as test profile: <strong className="text-violet-300">{activeTestProfile.profileName}</strong></span>
+                    : 'Your deals, your saves, your profile. All the stuff that matters.'
+                  }
                 </p>
+
+                {/* Admin Profile Switcher */}
+                {isAdmin && testProfiles && testProfiles.length > 0 && (
+                  <div className="relative mt-2">
+                    <button
+                      onClick={() => setShowProfileSwitcher(!showProfileSwitcher)}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-600/20 border border-violet-500/30 text-violet-200 text-xs hover:bg-violet-600/30 transition-colors"
+                      style={{ textTransform: 'none' }}
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      {activeTestProfile ? `Profile: ${activeTestProfile.profileName}` : 'Switch Test Profile'}
+                      <ChevronDown className={`w-3 h-3 transition-transform ${showProfileSwitcher ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {showProfileSwitcher && (
+                      <div className="absolute top-full left-0 mt-1 w-72 bg-card border border-border rounded-lg shadow-xl z-50 py-1 max-h-64 overflow-y-auto">
+                        <button
+                          onClick={() => { setActiveTestProfileId(null); setShowProfileSwitcher(false); }}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors flex items-center gap-2 ${
+                            !activeTestProfileId ? 'bg-primary/10 text-primary' : 'text-foreground'
+                          }`}
+                          style={{ textTransform: 'none' }}
+                        >
+                          <User className="w-4 h-4" />
+                          <div>
+                            <div className="font-medium">My Real Account</div>
+                            <div className="text-xs text-muted-foreground">{user?.contactName || user?.name}</div>
+                          </div>
+                          {!activeTestProfileId && <Check className="w-4 h-4 ml-auto text-primary" />}
+                        </button>
+                        <div className="border-t border-border my-1" />
+                        <div className="px-3 py-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Test Profiles</div>
+                        {testProfiles.map((p: any) => (
+                          <button
+                            key={p.id}
+                            onClick={() => { setActiveTestProfileId(p.id); setShowProfileSwitcher(false); }}
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors flex items-center gap-2 ${
+                              activeTestProfileId === p.id ? 'bg-violet-500/10 text-violet-400' : 'text-foreground'
+                            }`}
+                            style={{ textTransform: 'none' }}
+                          >
+                            <div className="w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 text-xs font-bold">
+                              {(p.displayName || p.profileName || '?').charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium truncate">{p.profileName}</div>
+                              <div className="text-xs text-muted-foreground truncate">
+                                {[p.city, p.region].filter(Boolean).join(' · ') || 'No location set'}
+                                {p.sportIds?.length > 0 && ` · ${p.sportIds.length} sport${p.sportIds.length > 1 ? 's' : ''}`}
+                              </div>
+                            </div>
+                            {activeTestProfileId === p.id && <Check className="w-4 h-4 ml-auto text-violet-400" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Quick Stats */}

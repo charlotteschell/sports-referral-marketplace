@@ -7,6 +7,8 @@ import { TRPCError } from "@trpc/server";
 import * as db from "./db";
 import { notifyOwner } from "./_core/notification";
 import { normalizeWebsiteUrl } from "../shared/normalizeUrl";
+import { storagePut } from "./storage";
+import crypto from "crypto";
 
 // Admin-only procedure helper
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -632,6 +634,106 @@ export const appRouter = router({
         await db.adminDeleteUser(input.userId, input.retainActivityData);
         return { success: true };
       }),
+
+    // ─── Admin Test Profiles ─────────────────────────────────
+    createTestProfile: adminProcedure
+      .input(z.object({
+        profileName: z.string().min(1).max(255),
+        displayName: z.string().max(255).optional(),
+        sportIds: z.array(z.number()).optional(),
+        experienceLevels: z.record(z.string(), z.string()).optional(),
+        city: z.string().max(100).optional(),
+        state: z.string().max(100).optional(),
+        country: z.string().max(100).optional(),
+        region: z.string().max(100).optional(),
+        hub: z.string().max(100).optional(),
+        interests: z.array(z.string()).optional(),
+        goals: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.createAdminTestProfile({
+          adminUserId: ctx.user.id,
+          profileName: input.profileName,
+          displayName: input.displayName,
+          sportIds: input.sportIds ? JSON.stringify(input.sportIds) : null,
+          experienceLevels: input.experienceLevels ? JSON.stringify(input.experienceLevels) : null,
+          city: input.city,
+          state: input.state,
+          country: input.country,
+          region: input.region,
+          hub: input.hub,
+          interests: input.interests ? JSON.stringify(input.interests) : null,
+          goals: input.goals,
+        });
+        return { success: true, profileId: id };
+      }),
+
+    listTestProfiles: adminProcedure.query(async ({ ctx }) => {
+      const profiles = await db.getAdminTestProfiles(ctx.user.id);
+      return profiles.map(p => ({
+        ...p,
+        sportIds: p.sportIds ? JSON.parse(p.sportIds) : [],
+        experienceLevels: p.experienceLevels ? JSON.parse(p.experienceLevels) : {},
+        interests: p.interests ? JSON.parse(p.interests) : [],
+      }));
+    }),
+
+    getTestProfile: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const profile = await db.getAdminTestProfileById(input.id);
+        if (!profile || profile.adminUserId !== ctx.user.id) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Test profile not found' });
+        }
+        return {
+          ...profile,
+          sportIds: profile.sportIds ? JSON.parse(profile.sportIds) : [],
+          experienceLevels: profile.experienceLevels ? JSON.parse(profile.experienceLevels) : {},
+          interests: profile.interests ? JSON.parse(profile.interests) : [],
+        };
+      }),
+
+    deleteTestProfile: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const deleted = await db.deleteAdminTestProfile(input.id, ctx.user.id);
+        if (!deleted) throw new TRPCError({ code: 'NOT_FOUND', message: 'Test profile not found' });
+        return { success: true };
+      }),
+
+    updateTestProfile: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        profileName: z.string().min(1).max(255).optional(),
+        displayName: z.string().max(255).optional(),
+        sportIds: z.array(z.number()).optional(),
+        experienceLevels: z.record(z.string(), z.string()).optional(),
+        city: z.string().max(100).optional(),
+        state: z.string().max(100).optional(),
+        country: z.string().max(100).optional(),
+        region: z.string().max(100).optional(),
+        hub: z.string().max(100).optional(),
+        interests: z.array(z.string()).optional(),
+        goals: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { id, ...data } = input;
+        const updateData: Record<string, any> = {};
+        if (data.profileName !== undefined) updateData.profileName = data.profileName;
+        if (data.displayName !== undefined) updateData.displayName = data.displayName;
+        if (data.sportIds !== undefined) updateData.sportIds = JSON.stringify(data.sportIds);
+        if (data.experienceLevels !== undefined) updateData.experienceLevels = JSON.stringify(data.experienceLevels);
+        if (data.city !== undefined) updateData.city = data.city;
+        if (data.state !== undefined) updateData.state = data.state;
+        if (data.country !== undefined) updateData.country = data.country;
+        if (data.region !== undefined) updateData.region = data.region;
+        if (data.hub !== undefined) updateData.hub = data.hub;
+        if (data.interests !== undefined) updateData.interests = JSON.stringify(data.interests);
+        if (data.goals !== undefined) updateData.goals = data.goals;
+        const updated = await db.updateAdminTestProfile(id, ctx.user.id, updateData);
+        if (!updated) throw new TRPCError({ code: 'NOT_FOUND', message: 'Test profile not found' });
+        return { success: true };
+      }),
   }),
 
   // ─── Referral Tracking ──────────────────────────────────────
@@ -941,6 +1043,83 @@ export const appRouter = router({
           }
         }
         return { success: true };
+      }),
+
+    // Upload attachment for a support ticket
+    uploadAttachment: protectedProcedure
+      .input(z.object({
+        ticketId: z.number(),
+        fileName: z.string().min(1).max(500),
+        fileBase64: z.string(), // base64-encoded file data
+        mimeType: z.string().min(1).max(100),
+        fileSize: z.number().min(1).max(10 * 1024 * 1024), // max 10MB
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Verify the ticket belongs to the user or user is admin
+        const ticket = await db.getSupportTicketById(input.ticketId);
+        if (!ticket) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ticket not found' });
+        if (ticket.userId !== ctx.user.id && ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized to upload to this ticket' });
+        }
+        // Validate mime type
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf'];
+        if (!allowedTypes.includes(input.mimeType)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'File type not allowed. Supported: PNG, JPEG, GIF, WebP, PDF' });
+        }
+        // Upload to S3
+        const suffix = crypto.randomBytes(8).toString('hex');
+        const ext = input.fileName.split('.').pop() || 'bin';
+        const fileKey = `support-tickets/${input.ticketId}/${suffix}.${ext}`;
+        const buffer = Buffer.from(input.fileBase64, 'base64');
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        // Save attachment record
+        const attachmentId = await db.createSupportTicketAttachment({
+          ticketId: input.ticketId,
+          fileName: input.fileName,
+          fileUrl: url,
+          fileKey,
+          mimeType: input.mimeType,
+          fileSize: input.fileSize,
+          uploadedByUserId: ctx.user.id,
+        });
+        return { success: true, attachmentId, url };
+      }),
+
+    // Get attachments for a ticket
+    getAttachments: protectedProcedure
+      .input(z.object({ ticketId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const ticket = await db.getSupportTicketById(input.ticketId);
+        if (!ticket) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ticket not found' });
+        if (ticket.userId !== ctx.user.id && ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        return db.getAttachmentsForTicket(input.ticketId);
+      }),
+  }),
+
+  // ─── File Upload (General) ─────────────────────────────────────
+  upload: router({
+    image: protectedProcedure
+      .input(z.object({
+        fileName: z.string().min(1).max(500),
+        fileBase64: z.string(),
+        mimeType: z.string().min(1).max(100),
+        fileSize: z.number().min(1).max(10 * 1024 * 1024),
+        purpose: z.string().max(50).optional(), // 'support-ticket', 'profile', etc.
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf'];
+        if (!allowedTypes.includes(input.mimeType)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'File type not allowed. Supported: PNG, JPEG, GIF, WebP, PDF' });
+        }
+        const suffix = crypto.randomBytes(8).toString('hex');
+        const ext = input.fileName.split('.').pop() || 'png';
+        const purpose = input.purpose || 'general';
+        const fileKey = `uploads/${purpose}/${ctx.user.id}/${suffix}.${ext}`;
+        const buffer = Buffer.from(input.fileBase64, 'base64');
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        return { success: true, url, fileKey };
       }),
   }),
 

@@ -422,3 +422,47 @@ export const userNotifications = mysqlTable("user_notifications", {
 
 export type UserNotification = typeof userNotifications.$inferSelect;
 export type InsertUserNotification = typeof userNotifications.$inferInsert;
+
+/**
+ * Admin test athlete profiles: allows admins to create multiple athlete personas for testing
+ * Unlike athlete_profiles (one per user), admins can have many test profiles
+ */
+export const adminTestProfiles = mysqlTable("admin_test_profiles", {
+  id: int("id").autoincrement().primaryKey(),
+  adminUserId: int("adminUserId").notNull(), // The admin user who created this profile
+  profileName: varchar("profileName", { length: 255 }).notNull(), // e.g. "Pro Cyclist - Boulder"
+  displayName: varchar("displayName", { length: 255 }),
+  sportIds: text("sportIds"), // JSON array of sport category IDs
+  experienceLevels: text("experienceLevels"), // JSON object: { sportId: level }
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 100 }),
+  country: varchar("country", { length: 100 }),
+  region: varchar("region", { length: 100 }),
+  hub: varchar("hub", { length: 100 }),
+  interests: text("interests"), // JSON array
+  goals: text("goals"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AdminTestProfile = typeof adminTestProfiles.$inferSelect;
+export type InsertAdminTestProfile = typeof adminTestProfiles.$inferInsert;
+
+/**
+ * Support ticket attachments: screenshots/images uploaded with support tickets
+ */
+export const supportTicketAttachments = mysqlTable("support_ticket_attachments", {
+  id: int("id").autoincrement().primaryKey(),
+  ticketId: int("ticketId").notNull(),
+  fileName: varchar("fileName", { length: 500 }).notNull(),
+  fileUrl: varchar("fileUrl", { length: 2000 }).notNull(),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(),
+  mimeType: varchar("mimeType", { length: 100 }).notNull(),
+  fileSize: int("fileSize").notNull(), // bytes
+  uploadedByUserId: int("uploadedByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SupportTicketAttachment = typeof supportTicketAttachments.$inferSelect;
+export type InsertSupportTicketAttachment = typeof supportTicketAttachments.$inferInsert;

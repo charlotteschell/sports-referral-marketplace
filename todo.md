@@ -771,3 +771,27 @@
 
 ## Pending Reminders
 - [ ] REMINDER: User needs to set up Resend API key (RESEND_API_KEY + RESEND_FROM_EMAIL) to activate email delivery
+
+## Admin Multi-Athlete Profiles
+- [x] Create admin_athlete_profiles table (linked to admin user, separate athlete profile data)
+- [x] Backend: CRUD procedures for admin to create/delete athlete profiles
+- [x] Frontend: Athlete profile switcher in Athlete Dashboard header
+- [x] When admin selects an athlete profile, experience site as that athlete
+- [x] Allow admins to sign up / set up multiple athlete profiles under same email
+
+## Role-Based Dashboard Experience
+- [x] Biz Dashboard: admin experiences as business owner account
+- [x] Athlete Dashboard: admin experiences as selected athlete profile
+- [x] Profile switcher UI for selecting which athlete profile to use
+
+## Support Ticket Screenshot Uploads
+- [x] Add drag-and-drop zone for screenshots on support ticket form
+- [x] Allow file picker upload from computer
+- [x] Store uploaded images in S3
+- [x] Display attached screenshots in support ticket detail view
+- [x] Support multiple image attachments per ticket
+
+## Tests for New Features
+- [x] Write vitest tests for admin test profile CRUD (8 tests)
+- [x] Write vitest tests for file upload (5 tests)
+- [x] All 175 tests passing

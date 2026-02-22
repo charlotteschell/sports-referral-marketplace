@@ -27,9 +27,205 @@ import {
   Building2, MapPin, Mail, Phone, Globe, Instagram, User, FileText,
   ArrowLeft, Loader2, AlertTriangle, Inbox, Eye, EyeOff, Gift,
   Search, RefreshCw, LifeBuoy, Bug, Lightbulb, HelpCircle, Rocket,
-  Tags, Plus, Trash2, UserX, UserCheck,
+  Tags, Plus, Trash2, UserX, UserCheck, Users, Bike, Mountain, Snowflake,
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+
+// ─── Test Profiles Tab ───────────────────────────────────────
+function TestProfilesTab() {
+  const profiles = (trpc.admin as any).listTestProfiles.useQuery();
+  const sportCategories = trpc.categories.sportCategories.useQuery();
+  const businessTypes = trpc.categories.businessTypes.useQuery();
+  const regions = trpc.categories.regions.useQuery();
+  const createMutation = (trpc.admin as any).createTestProfile.useMutation({
+    onSuccess: () => { profiles.refetch(); toast.success('Test profile created!'); setShowCreate(false); resetForm(); },
+    onError: (err: any) => toast.error(err.message),
+  });
+  const deleteMutation = (trpc.admin as any).deleteTestProfile.useMutation({
+    onSuccess: () => { profiles.refetch(); toast.success('Test profile deleted'); },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({
+    profileName: '',
+    displayName: '',
+    sportIds: [] as number[],
+    city: '',
+    state: '',
+    country: '',
+    region: '',
+    hub: '',
+    goals: '',
+  });
+
+  const resetForm = () => setForm({ profileName: '', displayName: '', sportIds: [], city: '', state: '', country: '', region: '', hub: '', goals: '' });
+
+  const handleCreate = () => {
+    if (!form.profileName.trim()) { toast.error('Profile name is required'); return; }
+    createMutation.mutate({
+      profileName: form.profileName,
+      displayName: form.displayName || undefined,
+      sportIds: form.sportIds.length > 0 ? form.sportIds : undefined,
+      city: form.city || undefined,
+      state: form.state || undefined,
+      country: form.country || undefined,
+      region: form.region || undefined,
+      hub: form.hub || undefined,
+      goals: form.goals || undefined,
+    });
+  };
+
+  const getSportName = (id: number) => sportCategories.data?.find((s: any) => s.id === id)?.name || `Sport #${id}`;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold flex items-center gap-2"><Users className="w-5 h-5 text-violet-500" /> Test Athlete Profiles</h2>
+          <p className="text-xs text-muted-foreground mt-1" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+            Create test athlete personas to experience the site from different athlete perspectives. Switch profiles in the Athlete Dashboard.
+          </p>
+        </div>
+        <Button size="sm" onClick={() => setShowCreate(!showCreate)} style={{ textTransform: 'none' }}>
+          <Plus className="w-4 h-4 mr-1" /> New Profile
+        </Button>
+      </div>
+
+      {/* Create Form */}
+      {showCreate && (
+        <Card className="border-violet-200 dark:border-violet-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base" style={{ textTransform: 'none' }}>Create Test Athlete Profile</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs" style={{ textTransform: 'none' }}>Profile Name *</Label>
+                <Input placeholder="e.g. Pro Cyclist - Boulder" value={form.profileName} onChange={e => setForm(f => ({ ...f, profileName: e.target.value }))} style={{ textTransform: 'none' }} />
+              </div>
+              <div>
+                <Label className="text-xs" style={{ textTransform: 'none' }}>Display Name</Label>
+                <Input placeholder="e.g. Alex the Cyclist" value={form.displayName} onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))} style={{ textTransform: 'none' }} />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs mb-2 block" style={{ textTransform: 'none' }}>Sports</Label>
+              <div className="flex flex-wrap gap-2">
+                {sportCategories.data?.map((s: any) => (
+                  <button key={s.id} onClick={() => setForm(f => ({ ...f, sportIds: f.sportIds.includes(s.id) ? f.sportIds.filter(x => x !== s.id) : [...f.sportIds, s.id] }))}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      form.sportIds.includes(s.id) ? 'bg-violet-600 text-white border-violet-600' : 'bg-transparent text-muted-foreground border-border hover:border-violet-400'
+                    }`} style={{ textTransform: 'none' }}>
+                    {s.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <Label className="text-xs" style={{ textTransform: 'none' }}>City</Label>
+                <Input placeholder="Boulder" value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} style={{ textTransform: 'none' }} />
+              </div>
+              <div>
+                <Label className="text-xs" style={{ textTransform: 'none' }}>State</Label>
+                <Input placeholder="Colorado" value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} style={{ textTransform: 'none' }} />
+              </div>
+              <div>
+                <Label className="text-xs" style={{ textTransform: 'none' }}>Country</Label>
+                <Input placeholder="USA" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} style={{ textTransform: 'none' }} />
+              </div>
+              <div>
+                <Label className="text-xs" style={{ textTransform: 'none' }}>Region</Label>
+                <Input placeholder="Rocky Mountain" value={form.region} onChange={e => setForm(f => ({ ...f, region: e.target.value }))} style={{ textTransform: 'none' }} />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs" style={{ textTransform: 'none' }}>Goals / Notes</Label>
+              <Textarea placeholder="What this test athlete is looking for..." value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} rows={2} style={{ textTransform: 'none' }} />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => { setShowCreate(false); resetForm(); }} className="bg-transparent" style={{ textTransform: 'none' }}>Cancel</Button>
+              <Button size="sm" onClick={handleCreate} disabled={createMutation.isPending} style={{ textTransform: 'none' }}>
+                {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Plus className="w-4 h-4 mr-1" />}
+                Create Profile
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Profiles List */}
+      {profiles.isLoading ? (
+        <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="animate-pulse p-4 border rounded-lg"><div className="h-4 bg-muted rounded w-3/4 mb-2" /><div className="h-3 bg-muted rounded w-1/2" /></div>)}</div>
+      ) : !profiles.data?.length ? (
+        <div className="text-center py-12">
+          <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+          <p className="text-muted-foreground font-medium" style={{ textTransform: 'none' }}>No test profiles yet</p>
+          <p className="text-xs text-muted-foreground mt-1" style={{ textTransform: 'none' }}>Create your first test athlete persona to start testing the athlete experience.</p>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {profiles.data.map((p: any) => (
+            <Card key={p.id} className="hover:border-violet-300 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 font-bold text-sm">
+                      {(p.displayName || p.profileName || '?').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm" style={{ textTransform: 'none' }}>{p.profileName}</p>
+                      {p.displayName && <p className="text-xs text-muted-foreground" style={{ textTransform: 'none' }}>Display: {p.displayName}</p>}
+                      <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                        {p.sportIds?.length > 0 && p.sportIds.map((sid: number) => (
+                          <Badge key={sid} variant="outline" className="text-[10px] py-0" style={{ textTransform: 'none' }}>{getSportName(sid)}</Badge>
+                        ))}
+                        {p.city && <span className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" />{[p.city, p.state, p.country].filter(Boolean).join(', ')}</span>}
+                        {p.region && <span className="text-xs text-muted-foreground" style={{ textTransform: 'none' }}>Region: {p.region}</span>}
+                      </div>
+                      {p.goals && <p className="text-xs text-muted-foreground mt-1 line-clamp-1" style={{ textTransform: 'none' }}>{p.goals}</p>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="h-7 text-xs bg-transparent text-red-600 border-red-300" style={{ textTransform: 'none' }}>
+                          <Trash2 className="w-3 h-3 mr-1" /> Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Test Profile</AlertDialogTitle>
+                          <AlertDialogDescription style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                            Are you sure you want to delete the test profile "{p.profileName}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel style={{ textTransform: 'none' }}>Cancel</AlertDialogCancel>
+                          <AlertDialogAction className="bg-red-600 hover:bg-red-700" style={{ textTransform: 'none' }}
+                            onClick={() => deleteMutation.mutate({ id: p.id })}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Users Tab ───────────────────────────────────────
 function UsersTab() {
@@ -461,7 +657,7 @@ export default function AdminPanel() {
 
         <div className="container py-8">
           <Tabs defaultValue="approvals" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 h-auto">
+            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 h-auto">
               <TabsTrigger value="approvals" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>
                 Claims {(pendingApprovals.data?.length || 0) > 0 && <Badge className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0">{pendingApprovals.data?.length}</Badge>}
               </TabsTrigger>
@@ -477,6 +673,9 @@ export default function AdminPanel() {
                 Categories {(categoryApprovals.data?.filter((c: any) => c.status === 'pending').length || 0) > 0 && <Badge className="ml-1 bg-purple-500 text-white text-[10px] px-1.5 py-0">{categoryApprovals.data?.filter((c: any) => c.status === 'pending').length}</Badge>}
               </TabsTrigger>
               <TabsTrigger value="users" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>Users</TabsTrigger>
+              <TabsTrigger value="test-profiles" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>
+                <Users className="w-3 h-3 mr-1" />Test Profiles
+              </TabsTrigger>
             </TabsList>
 
             {/* ─── Approvals Tab ─────────────────────────────── */}
@@ -877,6 +1076,11 @@ export default function AdminPanel() {
             {/* ─── Users Tab ─────────────────────────────── */}
             <TabsContent value="users" className="space-y-4">
               <UsersTab />
+            </TabsContent>
+
+            {/* ─── Test Profiles Tab ─────────────────────────────── */}
+            <TabsContent value="test-profiles" className="space-y-4">
+              <TestProfilesTab />
             </TabsContent>
           </Tabs>
         </div>
