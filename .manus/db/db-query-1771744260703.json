@@ -1,0 +1,9 @@
+{
+  "query": "\n-- Insert Zone6 Cycling (Coach, Cycling, Mallorca, featured)\nINSERT INTO businesses (name, slug, description, website, city, country, region, businessTypeId, sportCategoryId, isFeatured, approvalStatus, createdAt)\nVALUES ('Zone6 Cycling', 'zone6-cycling', 'Elite UCI-level cycling coaching founded by Steve Whittington-Coleman, former GB international cyclist and Olympic squad member. One-to-one performance coaching for road, time trial, and gravel cyclists at amateur, masters, and elite levels. Also offers guided cycling holidays in Mallorca.', 'https://zone6cycling.com', 'Mallorca', 'Spain', 'Mediterranean', 1, 1, 1, 'approved', NOW());\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute \n-- Insert Zone6 Cycling (Coach, Cycling, Mallorca, featured)\nINSERT INTO businesses (name, slug, description, website, city, country, region, businessTypeId, sportCategoryId, isFeatured, approvalStatus, createdAt)\nVALUES ('Zone6 Cycling', 'zone6-cycling', 'Elite UCI-level cycling coaching founded by Steve Whittington-Coleman, former GB international cyclist and Olympic squad member. One-to-one performance coaching for road, time trial, and gravel cyclists at amateur, masters, and elite levels. Also offers guided cycling holidays in Mallorca.', 'https://zone6cycling.com', 'Mallorca', 'Spain', 'Mediterranean', 1, 1, 1, 'approved', NOW());\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 57
+}

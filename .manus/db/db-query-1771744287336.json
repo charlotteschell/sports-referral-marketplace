@@ -1,0 +1,9 @@
+{
+  "query": "\n-- Sample incentives for Zone6 Cycling (id=150004)\nINSERT INTO referralOffers (businessId, title, description, offerType, incentiveType, incentiveValue, incentiveDescription, isSample, isActive) VALUES\n(150004, '10% Off First Coaching Month', 'New athletes referred by partner businesses receive 10% off their first month of 1-2-1 coaching.', 'consumer', 'percentage', '10', '10% discount on first coaching month', 1, 1),\n(150004, 'Coaching Referral Bonus', 'Partner businesses earn a €30 credit for each new athlete they refer to Zone6 Cycling coaching programs.', 'b2b', 'fixed', '30', '€30 referral credit per new athlete', 1, 1);\n\n-- Add Zone6 to cycling sport category\nINSERT IGNORE INTO businessSportCategories (businessId, sportCategoryId) VALUES\n(150004, 1);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute \n-- Sample incentives for Zone6 Cycling (id=150004)\nINSERT INTO referralOffers (businessId, title, description, offerType, incentiveType, incentiveValue, incentiveDescription, isSample, isActive) VALUES\n(150004, '10% Off First Coaching Month', 'New athletes referred by partner businesses receive 10% off their first month of 1-2-1 coaching.', 'consumer', 'percentage', '10', '10% discount on first coaching month', 1, 1),\n(150004, 'Coaching Referral Bonus', 'Partner businesses earn a €30 credit for each new athlete they refer to Zone6 Cycling coaching programs.', 'b2b', 'fixed', '30', '€30 referral credit per new athlete', 1, 1);\n\n-- Add Zone6 to cycling sport category\nINSERT IGNORE INTO businessSportCategories (businessId, sportCategoryId) VALUES\n(150004, 1);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 64
+}

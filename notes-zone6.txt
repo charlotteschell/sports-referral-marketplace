@@ -1,0 +1,13 @@
+ZONE6 CYCLING
+- Website: zone6cycling.com
+- Type: Coach (Elite Cycling Coaching)
+- Founded: 2019 by Steve Whittington-Coleman (former GB international cyclist, Olympic squad member)
+- Location: Mallorca, Spain (Zone6 Cycling Holidays launched 2024)
+- Services: 1-2-1 coaching plans, downloadable training plans, cycling holidays in Mallorca
+- Specialties: Road cycling, time trial, gravel cycling
+- Levels: Amateur, masters, elite
+- Methodology: Old school training techniques backed by modern science & technology
+- Focus areas: Aerobic endurance, aerobic force, anaerobic force, VO2 max, fatigue resistance, anaerobic efficiency
+- Region: Mediterranean / Europe
+- Sport Category: Cycling (id=1)
+- Business Type: Coach (id=1)

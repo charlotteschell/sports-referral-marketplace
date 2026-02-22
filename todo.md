@@ -689,3 +689,8 @@
 - [x] Research and add Vagabond Trails (vagabond-trails.com) to directory (id=150002, featured)
 - [x] Research and add Calgary COP Group 23 (group23.ca) to directory (id=30082)
 - [x] Feature Vagabond Trails in the homepage carousel
+
+## Region Merge & Zone6 Cycling
+- [x] Merge all "Alberta" region entries into "Western Canada" in businesses table
+- [x] Research and add Zone6 Cycling (zone6cycling.com) to directory (id=150004, featured)
+- [x] Feature Zone6 Cycling in the homepage carousel
