@@ -30,6 +30,7 @@ export default function Header() {
     { href: "/directory", label: "Directory" },
     { href: "/referral-offers", label: "Referral Offers" },
     { href: "/leaderboard", label: "Leaderboard" },
+    { href: "/university", label: "University" },
     { href: "/about", label: "About" },
     { href: "/support", label: "Support" },
   ];

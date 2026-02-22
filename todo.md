@@ -736,3 +736,10 @@
 - [x] Restrict business editing to only approved claims (backend: assertApprovedOwner on all mutation procedures)
 - [x] Update backend: all business mutation procedures check approvalStatus === 'approved'
 - [x] Update frontend: hide Edit/Offers/Logo buttons when claim is pending; show pending approval banner on Dashboard, EditBusiness, ManageOffers, BusinessProfile
+## University Section
+- [x] Build University page with "For Businesses" and "For Athletes" sections
+- [x] Create step-by-step tutorial: "How to Create Your Account & Claim Your Business" (with illustrated step cards)
+- [x] Used illustrated UI mockups instead of screenshots (more maintainable)
+- [x] Add University link to top navigation header
+- [x] Create article detail page for individual tutorials
+- [x] Added 6 business articles and 4 athlete articles (5 coming soon placeholders each)

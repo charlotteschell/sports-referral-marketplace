@@ -22,6 +22,8 @@ import Leaderboard from "./pages/Leaderboard";
 import Onboarding from "./pages/Onboarding";
 import AthleteDashboard from "./pages/AthleteDashboard";
 import BetaBanner from "./components/BetaBanner";
+import University from "./pages/University";
+import UniversityArticle from "./pages/UniversityArticle";
 
 function Router() {
   return (
@@ -42,6 +44,8 @@ function Router() {
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/athlete-dashboard" component={AthleteDashboard} />
+      <Route path="/university/:slug" component={UniversityArticle} />
+      <Route path="/university" component={University} />
       <Route path="/admin" component={AdminPanel} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
