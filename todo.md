@@ -672,3 +672,6 @@
 
 ## Launch Clock Update
 - [x] Change launch countdown target to midnight March 1st (2026-03-01 00:00 MST)
+
+## Mobile Info Icons
+- [x] Make info icons clickable/tappable on mobile (click-to-toggle on Home, inline desc on Onboarding & AthleteDashboard)

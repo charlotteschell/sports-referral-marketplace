@@ -51,6 +51,47 @@ const regionHighlights = [
 // Launch date: Sunday March 1, 2026 at 12:00 AM MST (07:00 UTC)
 const LAUNCH_DATE = new Date('2026-03-01T07:00:00Z').getTime();
 
+function InfoStatCard({ count }: { count: number }) {
+  const [showTip, setShowTip] = useState(false);
+  const tipRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showTip) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (tipRef.current && !tipRef.current.contains(e.target as Node)) {
+        setShowTip(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showTip]);
+
+  return (
+    <div className="col-span-2 md:col-span-1 relative" ref={tipRef}>
+      <p className="text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>{count}</p>
+      <p className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1" style={{ textTransform: "none" }}>Referrals Sent
+        <button
+          type="button"
+          onClick={() => setShowTip(!showTip)}
+          className="relative p-1 -m-1 rounded-full hover:bg-muted/30 active:bg-muted/50 transition-colors touch-manipulation"
+          aria-label="More info about referrals count"
+        >
+          <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-primary transition-colors" />
+        </button>
+      </p>
+      {showTip && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-lg bg-popover text-popover-foreground text-xs leading-relaxed shadow-lg border border-border z-50 animate-in fade-in-0 zoom-in-95 duration-150" style={{ textTransform: "none", letterSpacing: "normal" }}>
+          Full transparency: we seeded sample referrals so you can see how the platform works. Real numbers incoming once you lot start using it.
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LaunchTimer() {
   const [diff, setDiff] = useState(() => Date.now() - LAUNCH_DATE);
 
@@ -220,17 +261,7 @@ export default function Home() {
               <p className="text-3xl font-bold text-primary" style={{ fontFamily: "var(--font-heading)" }}>{stats?.regions || 0}</p>
               <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Regions Covered</p>
             </div>
-            <div className="col-span-2 md:col-span-1 relative group/info">
-              <p className="text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>{stats?.totalReferrals || 0}</p>
-              <p className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1" style={{ textTransform: "none" }}>Referrals Sent
-                <span className="relative">
-                  <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-primary cursor-help transition-colors" />
-                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-lg bg-popover text-popover-foreground text-xs leading-relaxed shadow-lg border border-border opacity-0 group-hover/info:opacity-100 pointer-events-none group-hover/info:pointer-events-auto transition-opacity z-50" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                    Full transparency: we seeded sample referrals so you can see how the platform works. Real numbers incoming once you lot start using it.
-                  </span>
-                </span>
-              </p>
-            </div>
+            <InfoStatCard count={stats?.totalReferrals || 0} />
           </div>
         </div>
       </section>

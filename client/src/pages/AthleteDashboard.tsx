@@ -870,15 +870,19 @@ function ProfileTab({
                                 ...prev,
                                 experienceLevels: { ...prev.experienceLevels, [sportId]: level.value },
                               }))}
-                              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors border ${
+                              className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors border flex flex-col items-center gap-0.5 ${
                                 editForm.experienceLevels[sportId] === level.value
                                   ? "bg-primary text-primary-foreground border-primary"
                                   : "bg-muted text-muted-foreground border-border hover:border-primary/40"
                               }`}
                               style={{ textTransform: "none" }}
-                              title={level.desc}
                             >
-                              {level.label}
+                              <span>{level.label}</span>
+                              <span className={`text-[10px] font-normal ${
+                                editForm.experienceLevels[sportId] === level.value
+                                  ? "text-primary-foreground/70"
+                                  : "text-muted-foreground/60"
+                              }`}>{level.desc}</span>
                             </button>
                           ))}
                         </div>
