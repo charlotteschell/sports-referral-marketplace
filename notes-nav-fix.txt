@@ -1,0 +1,6 @@
+Screenshot shows: Admin Panel | Biz Dashboard | Athlete View | Sign Out
+This is correct for an admin user - admins still get all three links.
+The fix removed Athlete View only for business_owner accounts.
+For business_owner users, they will now see only: Biz Dashboard | Sign Out
+For athlete/consumer users: My Dashboard | Sign Out
+For admin users: Admin Panel | Biz Dashboard | Athlete View | Sign Out

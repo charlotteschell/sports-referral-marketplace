@@ -114,14 +114,6 @@ export default function Header() {
                   </>
                 )}
 
-                {/* Business owners can also access athlete dashboard for consumer features */}
-                {!isAdmin && isBusinessOwner && (
-                  <Link href="/athlete-dashboard">
-                    <Button variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
-                      Athlete View
-                    </Button>
-                  </Link>
-                )}
 
                 <Button
                   variant="ghost"
@@ -207,14 +199,6 @@ export default function Header() {
                       </>
                     )}
 
-                    {/* Business owners can switch to athlete view */}
-                    {!isAdmin && isBusinessOwner && (
-                      <Link href="/athlete-dashboard">
-                        <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/50 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
-                          Athlete View
-                        </span>
-                      </Link>
-                    )}
 
                     <button
                       className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white/60 hover:text-white"

@@ -652,3 +652,6 @@
 
 ## Logo Visibility
 - [x] Make header logo bigger and more visually prominent (w-9→w-11, added warm glow shadow, bumped text to xl)
+
+## Business Owner Nav Fix
+- [x] Remove "Athlete View" link from header for business_owner accounts (they should only see Biz Dashboard)
