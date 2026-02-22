@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Link, useSearch, useLocation } from "wouter";
@@ -8,13 +8,14 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import {
   Search, MapPin, Shield, Bike, Mountain, Snowflake, Star,
   ChevronLeft, ChevronRight, Filter, X, Compass, Globe, UserPlus,
-  Gift, Tag, Phone
+  Gift, Tag, ExternalLink, Send, Mail, Plus, Check
 } from "lucide-react";
 
 const sportIcons: Record<string, React.ReactNode> = {
@@ -27,9 +28,80 @@ const sportIcons: Record<string, React.ReactNode> = {
 
 const ITEMS_PER_PAGE = 12;
 
+function MultiSelectDropdown({ label, options, selected, onChange, onAddNew }: {
+  label: string;
+  options: { value: string; label: string }[];
+  selected: string[];
+  onChange: (vals: string[]) => void;
+  onAddNew?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const toggle = (val: string) => {
+    if (selected.includes(val)) {
+      onChange(selected.filter(v => v !== val));
+    } else {
+      onChange([...selected, val]);
+    }
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 h-9 px-3 rounded-md border border-input bg-transparent text-sm hover:bg-accent hover:text-accent-foreground transition-colors min-w-[140px]"
+        style={{ textTransform: "none" }}
+      >
+        <span className="truncate">
+          {selected.length === 0 ? label : `${label} (${selected.length})`}
+        </span>
+        <ChevronRight className={`w-3 h-3 ml-auto transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 w-56 max-h-64 overflow-y-auto bg-popover text-popover-foreground border border-border rounded-md shadow-lg z-50">
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => toggle(opt.value)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground text-left"
+              style={{ textTransform: "none" }}
+            >
+              <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                selected.includes(opt.value) ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30"
+              }`}>
+                {selected.includes(opt.value) && <Check className="w-3 h-3" />}
+              </div>
+              <span className="truncate">{opt.label}</span>
+            </button>
+          ))}
+          {onAddNew && (
+            <button
+              onClick={() => { setOpen(false); onAddNew(); }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-primary hover:bg-accent border-t border-border"
+              style={{ textTransform: "none" }}
+            >
+              <Plus className="w-4 h-4" /> Add New
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Directory() {
   const { user, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+
   const searchString = useSearch();
   const urlParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
   const initialSport = urlParams.get("sport") || "";
@@ -37,53 +109,65 @@ export default function Directory() {
   const initialHub = urlParams.get("hub") || "";
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [sportFilter, setSportFilter] = useState(initialSport);
-  const [typeFilter, setTypeFilter] = useState("");
-  const [regionFilter, setRegionFilter] = useState(initialRegion);
-  const [hubFilter, setHubFilter] = useState(initialHub);
+  const [sportFilters, setSportFilters] = useState<string[]>(initialSport ? [initialSport] : []);
+  const [typeFilters, setTypeFilters] = useState<string[]>([]);
+  const [regionFilters, setRegionFilters] = useState<string[]>(initialRegion ? [initialRegion] : []);
+  const [hubFilters, setHubFilters] = useState<string[]>(initialHub ? [initialHub] : []);
   const [page, setPage] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Update filters when URL params change
+  // Send referral dialog
+  const [referralDialog, setReferralDialog] = useState<{ businessId: number; businessName: string } | null>(null);
+  const [referralNote, setReferralNote] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+
+  // Email dialog
+  const [emailDialog, setEmailDialog] = useState<{ businessId: number; businessName: string } | null>(null);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+
+  // Add new category dialog
+  const [addCategoryDialog, setAddCategoryDialog] = useState<{ type: 'sport' | 'business_type' | 'region' | 'hub' } | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState("");
+
   useEffect(() => {
     const sport = urlParams.get("sport") || "";
     const region = urlParams.get("region") || "";
     const hub = urlParams.get("hub") || "";
-    if (sport) setSportFilter(sport);
-    if (region) setRegionFilter(region);
-    if (hub) setHubFilter(hub);
+    if (sport) setSportFilters([sport]);
+    if (region) setRegionFilters([region]);
+    if (hub) setHubFilters([hub]);
   }, [urlParams]);
 
   const { data: sportCategories } = trpc.categories.sportCategories.useQuery();
   const { data: businessTypes } = trpc.categories.businessTypes.useQuery();
   const { data: regions } = trpc.categories.regions.useQuery();
   const { data: hubs } = trpc.categories.hubs.useQuery(
-    regionFilter ? { region: regionFilter } : undefined
+    regionFilters.length === 1 ? { region: regionFilters[0] } : undefined
   );
 
-  const sportCategoryId = useMemo(() => {
-    if (!sportFilter || !sportCategories) return undefined;
-    const cat = sportCategories.find(c => c.slug === sportFilter);
-    return cat?.id;
-  }, [sportFilter, sportCategories]);
+  const sportCategoryIds = useMemo(() => {
+    if (!sportFilters.length || !sportCategories) return undefined;
+    return sportCategories.filter(c => sportFilters.includes(c.slug)).map(c => c.id);
+  }, [sportFilters, sportCategories]);
 
-  const businessTypeId = useMemo(() => {
-    if (!typeFilter || !businessTypes) return undefined;
-    const bt = businessTypes.find(t => t.slug === typeFilter);
-    return bt?.id;
-  }, [typeFilter, businessTypes]);
+  const businessTypeIds = useMemo(() => {
+    if (!typeFilters.length || !businessTypes) return undefined;
+    return businessTypes.filter(t => typeFilters.includes(t.slug)).map(t => t.id);
+  }, [typeFilters, businessTypes]);
 
   const queryInput = useMemo(() => ({
     search: searchTerm || undefined,
-    sportCategoryId,
-    businessTypeId,
-    region: regionFilter || undefined,
-    hub: hubFilter || undefined,
+    sportCategoryIds: sportCategoryIds?.length ? sportCategoryIds : undefined,
+    businessTypeIds: businessTypeIds?.length ? businessTypeIds : undefined,
+    regions: regionFilters.length ? regionFilters : undefined,
+    hubs: hubFilters.length ? hubFilters : undefined,
     limit: ITEMS_PER_PAGE,
     offset: page * ITEMS_PER_PAGE,
-  }), [searchTerm, sportCategoryId, businessTypeId, regionFilter, hubFilter, page]);
+  }), [searchTerm, sportCategoryIds, businessTypeIds, regionFilters, hubFilters, page]);
 
-  const { data, isLoading } = trpc.business.search.useQuery(queryInput);
+  const { data, isLoading } = trpc.searchMulti.search.useQuery(queryInput);
 
   // Fetch offers for displayed businesses
   const businessIds = useMemo(() => data?.businesses.map(b => b.business.id) || [], [data]);
@@ -91,38 +175,61 @@ export default function Directory() {
     { businessIds },
     { enabled: businessIds.length > 0 }
   );
-  // Group offers by business ID
   const offersByBusiness = useMemo(() => {
-    const map: Record<number, typeof offersData> = {};
+    const map: Record<number, any[]> = {};
     if (!offersData) return map;
     for (const offer of offersData) {
       const bid = (offer as any).businessId;
       if (!map[bid]) map[bid] = [];
-      (map[bid] as any[]).push(offer);
+      map[bid].push(offer);
     }
     return map;
   }, [offersData]);
 
-  // Format phone number for display
-  const formatPhone = (phone: string | null | undefined) => {
-    if (!phone) return null;
-    const digits = phone.replace(/\D/g, '');
-    if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
-    if (digits.length === 11 && digits[0] === '1') return `+1 (${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
-    return phone;
-  };
+  // Mutations
+  const sendReferral = trpc.referral.send.useMutation({
+    onSuccess: () => {
+      toast.success("Referral sent! Your referral has been submitted.");
+      setReferralDialog(null);
+      setReferralNote("");
+      setCustomerName("");
+      setCustomerEmail("");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const sendEmail = trpc.partnershipEmail.send.useMutation({
+    onSuccess: () => {
+      toast.success("Email sent! Your message has been delivered.");
+      setEmailDialog(null);
+      setEmailSubject("");
+      setEmailMessage("");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const submitCategory = trpc.categoryApproval.submit.useMutation({
+    onSuccess: () => {
+      toast.success("Submitted! Your suggestion has been sent for review.");
+      setAddCategoryDialog(null);
+      setNewCategoryName("");
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
   const totalPages = Math.ceil((data?.total || 0) / ITEMS_PER_PAGE);
-  const hasActiveFilters = sportFilter || typeFilter || searchTerm || regionFilter || hubFilter;
+  const hasActiveFilters = sportFilters.length > 0 || typeFilters.length > 0 || searchTerm || regionFilters.length > 0 || hubFilters.length > 0;
 
   const clearFilters = () => {
     setSearchTerm("");
-    setSportFilter("");
-    setTypeFilter("");
-    setRegionFilter("");
-    setHubFilter("");
+    setSportFilters([]);
+    setTypeFilters([]);
+    setRegionFilters([]);
+    setHubFilters([]);
     setPage(0);
   };
+
+  const { data: myBusinesses } = trpc.business.myBusinesses.useQuery(undefined, { enabled: isAuthenticated });
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -135,16 +242,15 @@ export default function Directory() {
             Business Directory
           </h1>
           <p className="text-white/70 max-w-2xl text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-            Find coaches, shops, sport psychologists, vacation providers, and clubs serving cyclists, runners, and snowsports enthusiasts across the world's top endurance sports hubs.
+            Coaches, shops, sport psychologists, vacation providers, clubs, and more. Find your people in the world's best endurance sports hubs.
           </p>
         </div>
       </section>
 
-      {/* Search & Filters */}
+      {/* Search & Multi-Select Filters */}
       <section className="bg-card border-b border-border py-4 sticky top-16 z-40">
         <div className="container">
           <div className="flex flex-col md:flex-row gap-3">
-            {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -156,58 +262,35 @@ export default function Directory() {
               />
             </div>
 
-            {/* Desktop Filters */}
             <div className="hidden md:flex items-center gap-2 flex-wrap">
-              <Select value={sportFilter} onValueChange={(v) => { setSportFilter(v === "all" ? "" : v); setPage(0); }}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="All Sports" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sports</SelectItem>
-                  {sportCategories?.map(cat => (
-                    <SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v === "all" ? "" : v); setPage(0); }}>
-                <SelectTrigger className="w-44">
-                  <SelectValue placeholder="All Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Business Types</SelectItem>
-                  {businessTypes?.map(bt => (
-                    <SelectItem key={bt.id} value={bt.slug}>{bt.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={regionFilter} onValueChange={(v) => { setRegionFilter(v === "all" ? "" : v); setHubFilter(""); setPage(0); }}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="All Regions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Regions</SelectItem>
-                  {regions?.map(r => (
-                    <SelectItem key={r} value={r}>{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {hubs && hubs.length > 0 && (
-                <Select value={hubFilter} onValueChange={(v) => { setHubFilter(v === "all" ? "" : v); setPage(0); }}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="All Hubs" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Hubs</SelectItem>
-                    {hubs.map(h => (
-                      <SelectItem key={h.hub} value={h.hub}>{h.hub}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
+              <MultiSelectDropdown
+                label="Sports"
+                options={(sportCategories || []).map(c => ({ value: c.slug, label: c.name }))}
+                selected={sportFilters}
+                onChange={(v) => { setSportFilters(v); setPage(0); }}
+                onAddNew={() => setAddCategoryDialog({ type: 'sport' })}
+              />
+              <MultiSelectDropdown
+                label="Business Type"
+                options={(businessTypes || []).map(t => ({ value: t.slug, label: t.name }))}
+                selected={typeFilters}
+                onChange={(v) => { setTypeFilters(v); setPage(0); }}
+                onAddNew={() => setAddCategoryDialog({ type: 'business_type' })}
+              />
+              <MultiSelectDropdown
+                label="Region"
+                options={(regions || []).map(r => ({ value: r, label: r }))}
+                selected={regionFilters}
+                onChange={(v) => { setRegionFilters(v); setHubFilters([]); setPage(0); }}
+                onAddNew={() => setAddCategoryDialog({ type: 'region' })}
+              />
+              <MultiSelectDropdown
+                label="Hub / Area"
+                options={(hubs || []).map(h => ({ value: h.hub, label: h.hub }))}
+                selected={hubFilters}
+                onChange={(v) => { setHubFilters(v); setPage(0); }}
+                onAddNew={() => setAddCategoryDialog({ type: 'hub' })}
+              />
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground" style={{ textTransform: "none" }}>
                   <X className="w-4 h-4 mr-1" /> Clear
@@ -215,7 +298,6 @@ export default function Directory() {
               )}
             </div>
 
-            {/* Mobile Filter Toggle */}
             <Button
               variant="outline"
               className="md:hidden bg-transparent"
@@ -227,59 +309,32 @@ export default function Directory() {
             </Button>
           </div>
 
-          {/* Mobile Filters Expanded */}
           {showFilters && (
             <div className="md:hidden mt-3 flex flex-col gap-3 pb-2">
-              <Select value={sportFilter} onValueChange={(v) => { setSportFilter(v === "all" ? "" : v); setPage(0); }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Sports" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sports</SelectItem>
-                  {sportCategories?.map(cat => (
-                    <SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v === "all" ? "" : v); setPage(0); }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Business Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Business Types</SelectItem>
-                  {businessTypes?.map(bt => (
-                    <SelectItem key={bt.id} value={bt.slug}>{bt.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={regionFilter} onValueChange={(v) => { setRegionFilter(v === "all" ? "" : v); setHubFilter(""); setPage(0); }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Regions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Regions</SelectItem>
-                  {regions?.map(r => (
-                    <SelectItem key={r} value={r}>{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {hubs && hubs.length > 0 && (
-                <Select value={hubFilter} onValueChange={(v) => { setHubFilter(v === "all" ? "" : v); setPage(0); }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Hubs" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Hubs</SelectItem>
-                    {hubs.map(h => (
-                      <SelectItem key={h.hub} value={h.hub}>{h.hub}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
+              <MultiSelectDropdown
+                label="Sports"
+                options={(sportCategories || []).map(c => ({ value: c.slug, label: c.name }))}
+                selected={sportFilters}
+                onChange={(v) => { setSportFilters(v); setPage(0); }}
+              />
+              <MultiSelectDropdown
+                label="Business Type"
+                options={(businessTypes || []).map(t => ({ value: t.slug, label: t.name }))}
+                selected={typeFilters}
+                onChange={(v) => { setTypeFilters(v); setPage(0); }}
+              />
+              <MultiSelectDropdown
+                label="Region"
+                options={(regions || []).map(r => ({ value: r, label: r }))}
+                selected={regionFilters}
+                onChange={(v) => { setRegionFilters(v); setHubFilters([]); setPage(0); }}
+              />
+              <MultiSelectDropdown
+                label="Hub / Area"
+                options={(hubs || []).map(h => ({ value: h.hub, label: h.hub }))}
+                selected={hubFilters}
+                onChange={(v) => { setHubFilters(v); setPage(0); }}
+              />
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} style={{ textTransform: "none" }}>
                   <X className="w-4 h-4 mr-1" /> Clear Filters
@@ -293,12 +348,10 @@ export default function Directory() {
       {/* Results */}
       <section className="py-8 flex-1">
         <div className="container">
-          {/* Results count */}
           <div className="flex items-center justify-between mb-6">
             <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
               {data?.total || 0} business{(data?.total || 0) !== 1 ? "es" : ""} found
-              {regionFilter && <span className="text-primary font-medium"> in {regionFilter}</span>}
-              {hubFilter && <span className="text-primary font-medium"> — {hubFilter}</span>}
+              {regionFilters.length > 0 && <span className="text-primary font-medium"> in {regionFilters.join(", ")}</span>}
             </p>
           </div>
 
@@ -330,13 +383,18 @@ export default function Directory() {
             <>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {data?.businesses.map((item) => (
-                  <Link key={item.business.id} href={`/business/${item.business.slug}`}>
-                    <Card className="h-full hover:shadow-lg transition-all cursor-pointer border-border hover:border-primary/30 group">
-                      <CardContent className="p-6">
+                  <Card key={item.business.id} className="h-full hover:shadow-lg transition-all border-border hover:border-primary/30 group">
+                    <CardContent className="p-6">
+                      <Link href={`/business/${item.business.slug}`} className="block">
                         <div className="flex items-start justify-between mb-3">
-                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                            {sportIcons[item.sportCategory?.slug || ""] || <Star className="w-6 h-6" />}
-                          </div>
+                          {/* Logo or sport icon */}
+                          {item.business.logoUrl ? (
+                            <img src={item.business.logoUrl} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                              {sportIcons[item.sportCategory?.slug || ""] || <Star className="w-6 h-6" />}
+                            </div>
+                          )}
                           {item.business.isClaimed ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
                               <Shield className="w-3 h-3" /> Verified
@@ -351,13 +409,13 @@ export default function Directory() {
                         <h3 className="text-lg font-bold text-foreground mb-1 group-hover:text-primary transition-colors">
                           {item.business.name}
                         </h3>
-                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2" style={{ textTransform: "none", letterSpacing: "normal" }}>
                           {item.business.shortDescription}
                         </p>
 
-                        {/* Google Rating */}
+                        {/* Google Rating with link */}
                         {item.business.googleRating && (
-                          <div className="flex items-center gap-1 mb-3">
+                          <div className="flex items-center gap-1.5 mb-3">
                             <div className="flex items-center gap-0.5">
                               {Array.from({ length: 5 }).map((_, i) => (
                                 <Star
@@ -372,8 +430,11 @@ export default function Directory() {
                             </div>
                             <span className="text-xs font-medium text-foreground">{item.business.googleRating}</span>
                             {item.business.googleReviewCount && item.business.googleReviewCount > 0 && (
-                              <span className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>({item.business.googleReviewCount})</span>
+                              <span className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                                ({item.business.googleReviewCount} reviews)
+                              </span>
                             )}
+                            <span className="text-[10px] text-muted-foreground/60 ml-1">Google</span>
                           </div>
                         )}
 
@@ -396,84 +457,135 @@ export default function Directory() {
                             </span>
                           )}
                           {item.businessType && (
-                            <span className="bg-secondary px-2 py-0.5 rounded text-secondary-foreground">
-                              {item.businessType.name}
-                            </span>
+                            <Badge variant="secondary" className="text-[10px]">{item.businessType.name}</Badge>
                           )}
                         </div>
 
-                        {/* Incentives/Offers */}
-                        {offersByBusiness[item.business.id] && (offersByBusiness[item.business.id] as any[]).length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-border">
-                            <div className="flex items-center gap-1 text-xs font-medium text-green-600 mb-1.5" style={{ textTransform: "none" }}>
-                              <Gift className="w-3 h-3" /> Available Incentives
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              {(offersByBusiness[item.business.id] as any[]).slice(0, 2).map((offer: any) => (
-                                <div key={offer.id} className="flex items-center gap-1.5 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
-                                  <Tag className="w-3 h-3 text-green-500 shrink-0" />
-                                  <span className="truncate">{offer.title}</span>
-                                  {offer.isSample && (
-                                    <span className="text-[10px] bg-amber-500/10 text-amber-600 px-1 rounded shrink-0">Sample</span>
-                                  )}
-                                </div>
-                              ))}
-                              {(offersByBusiness[item.business.id] as any[]).length > 2 && (
-                                <span className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>+{(offersByBusiness[item.business.id] as any[]).length - 2} more</span>
-                              )}
-                            </div>
+                        {/* Website link (shown for claimed businesses) */}
+                        {item.business.isClaimed && item.business.website && (
+                          <div className="mt-2">
+                            <span
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(item.business.website!, '_blank'); }}
+                              className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"
+                              style={{ textTransform: "none" }}
+                            >
+                              <ExternalLink className="w-3 h-3" /> {item.business.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                            </span>
                           </div>
                         )}
 
-                        {/* Claim Your Business CTA for unclaimed listings */}
-                        {!item.business.isClaimed && (
-                          <div className="mt-4 pt-3 border-t border-border">
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (isAuthenticated) {
-                                  navigate(`/business/${item.business.slug}`);
-                                } else {
-                                  window.location.href = getLoginUrl();
-                                }
-                              }}
-                              className="w-full inline-flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700 transition-all border border-amber-500/20 hover:border-amber-500/40"
-                              style={{ textTransform: "none" }}
-                            >
-                              <UserPlus className="w-4 h-4" />
-                              Is this your business? Claim it
-                            </button>
+                        {/* Brands carried (for retailers) */}
+                        {item.business.brandsCarried && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {item.business.brandsCarried.split(',').slice(0, 4).map((brand, i) => (
+                              <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">{brand.trim()}</Badge>
+                            ))}
+                            {item.business.brandsCarried.split(',').length > 4 && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">+{item.business.brandsCarried.split(',').length - 4} more</Badge>
+                            )}
                           </div>
                         )}
-                      </CardContent>
-                    </Card>
-                  </Link>
+                      </Link>
+
+                      {/* Incentives/Offers */}
+                      {offersByBusiness[item.business.id] && offersByBusiness[item.business.id].length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-border">
+                          <div className="flex items-center gap-1 text-xs font-medium text-green-600 mb-1.5" style={{ textTransform: "none" }}>
+                            <Gift className="w-3 h-3" /> Available Incentives
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            {offersByBusiness[item.business.id].slice(0, 2).map((offer: any) => (
+                              <div key={offer.id} className="flex items-center gap-1.5 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                                <Tag className="w-3 h-3 text-green-500 shrink-0" />
+                                <span className="truncate">{offer.title}</span>
+                              </div>
+                            ))}
+                            {offersByBusiness[item.business.id].length > 2 && (
+                              <span className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>+{offersByBusiness[item.business.id].length - 2} more</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action buttons row */}
+                      <div className="mt-3 pt-3 border-t border-border flex items-center gap-2">
+                        {/* Send Referral button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-xs bg-transparent"
+                          style={{ textTransform: "none" }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (!isAuthenticated) {
+                              toast.info("Please log in to send a referral.");
+                              window.location.href = getLoginUrl();
+                              return;
+                            }
+                            setReferralDialog({ businessId: item.business.id, businessName: item.business.name });
+                          }}
+                        >
+                          <Send className="w-3 h-3 mr-1" /> Send Referral
+                        </Button>
+
+                        {/* Email button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-xs bg-transparent"
+                          style={{ textTransform: "none" }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (!isAuthenticated) {
+                              toast.info("Please log in or create an account to send an email.");
+                              window.location.href = getLoginUrl();
+                              return;
+                            }
+                            setEmailDialog({ businessId: item.business.id, businessName: item.business.name });
+                          }}
+                        >
+                          <Mail className="w-3 h-3 mr-1" /> Email
+                        </Button>
+                      </div>
+
+                      {/* Claim CTA for unclaimed */}
+                      {!item.business.isClaimed && (
+                        <div className="mt-2">
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (isAuthenticated) {
+                                navigate(`/business/${item.business.slug}`);
+                              } else {
+                                window.location.href = getLoginUrl();
+                              }
+                            }}
+                            className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-all border border-amber-500/20"
+                            style={{ textTransform: "none" }}
+                          >
+                            <UserPlus className="w-3 h-3" />
+                            Is this yours? Claim it
+                          </button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
 
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-10">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === 0}
-                    onClick={() => setPage(p => p - 1)}
-                    className="bg-transparent"
-                  >
+                  <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)} className="bg-transparent">
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
                   <span className="text-sm text-muted-foreground px-4" style={{ textTransform: "none" }}>
                     Page {page + 1} of {totalPages}
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page >= totalPages - 1}
-                    onClick={() => setPage(p => p + 1)}
-                    className="bg-transparent"
-                  >
+                  <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)} className="bg-transparent">
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -482,6 +594,157 @@ export default function Directory() {
           )}
         </div>
       </section>
+
+      {/* Send Referral Dialog */}
+      <Dialog open={!!referralDialog} onOpenChange={() => setReferralDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send a Referral to {referralDialog?.businessName}</DialogTitle>
+            <DialogDescription style={{ textTransform: "none" }}>
+              Refer a customer to this business. Select which of your businesses is sending the referral.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {myBusinesses && myBusinesses.length > 0 ? (
+              <>
+                <div>
+                  <label className="text-sm font-medium" style={{ textTransform: "none" }}>Your Business</label>
+                  <select
+                    className="w-full mt-1 h-9 px-3 rounded-md border border-input bg-transparent text-sm"
+                    id="referringBusiness"
+                    style={{ textTransform: "none" }}
+                  >
+                    {myBusinesses.map(b => (
+                      <option key={b.business.id} value={b.business.id}>{b.business.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium" style={{ textTransform: "none" }}>Customer Name</label>
+                  <Input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="John Doe" style={{ textTransform: "none" }} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium" style={{ textTransform: "none" }}>Customer Email</label>
+                  <Input value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} placeholder="john@example.com" style={{ textTransform: "none" }} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium" style={{ textTransform: "none" }}>Notes</label>
+                  <Textarea value={referralNote} onChange={e => setReferralNote(e.target.value)} placeholder="Any details about this referral..." style={{ textTransform: "none" }} />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground" style={{ textTransform: "none" }}>
+                You need to claim or add a business first before you can send referrals. Head to your dashboard to get started.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReferralDialog(null)} className="bg-transparent" style={{ textTransform: "none" }}>Cancel</Button>
+            {myBusinesses && myBusinesses.length > 0 && (
+              <Button
+                onClick={() => {
+                  const select = document.getElementById('referringBusiness') as HTMLSelectElement;
+                  sendReferral.mutate({
+                    referringBusinessId: parseInt(select.value),
+                    receivingBusinessId: referralDialog!.businessId,
+                    customerName: customerName || undefined,
+                    customerEmail: customerEmail || undefined,
+                    notes: referralNote || undefined,
+                  });
+                }}
+                disabled={sendReferral.isPending}
+                style={{ textTransform: "none" }}
+              >
+                {sendReferral.isPending ? "Sending..." : "Send Referral"}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Dialog */}
+      <Dialog open={!!emailDialog} onOpenChange={() => setEmailDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Email {emailDialog?.businessName}</DialogTitle>
+            <DialogDescription style={{ textTransform: "none" }}>
+              Send a partnership inquiry or message to this business.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium" style={{ textTransform: "none" }}>Subject</label>
+              <Input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} placeholder="Partnership inquiry" style={{ textTransform: "none" }} />
+            </div>
+            <div>
+              <label className="text-sm font-medium" style={{ textTransform: "none" }}>Message</label>
+              <Textarea value={emailMessage} onChange={e => setEmailMessage(e.target.value)} placeholder="Hi! I'd love to discuss a referral partnership..." rows={5} style={{ textTransform: "none" }} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEmailDialog(null)} className="bg-transparent" style={{ textTransform: "none" }}>Cancel</Button>
+            <Button
+              onClick={() => {
+                sendEmail.mutate({
+                  recipientBusinessId: emailDialog!.businessId,
+                  subject: emailSubject,
+                  message: emailMessage,
+                });
+              }}
+              disabled={sendEmail.isPending || !emailSubject || !emailMessage}
+              style={{ textTransform: "none" }}
+            >
+              {sendEmail.isPending ? "Sending..." : "Send Email"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add New Category Dialog */}
+      <Dialog open={!!addCategoryDialog} onOpenChange={() => setAddCategoryDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Suggest a New {addCategoryDialog?.type === 'sport' ? 'Sport' : addCategoryDialog?.type === 'business_type' ? 'Business Type' : addCategoryDialog?.type === 'region' ? 'Region' : 'Hub / Area'}</DialogTitle>
+            <DialogDescription style={{ textTransform: "none" }}>
+              Don't see what you're looking for? Suggest it and we'll review it. Once approved, it'll be available for everyone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium" style={{ textTransform: "none" }}>Name</label>
+              <Input value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="e.g. Gravel Cycling" style={{ textTransform: "none" }} />
+            </div>
+            {addCategoryDialog?.type === 'hub' && (
+              <div>
+                <label className="text-sm font-medium" style={{ textTransform: "none" }}>Parent Region (optional)</label>
+                <Input placeholder="e.g. Western Canada" style={{ textTransform: "none" }} id="parentRegionInput" />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddCategoryDialog(null)} className="bg-transparent" style={{ textTransform: "none" }}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (!isAuthenticated) {
+                  toast.info("Please log in to suggest a new category.");
+                  window.location.href = getLoginUrl();
+                  return;
+                }
+                const parentInput = document.getElementById('parentRegionInput') as HTMLInputElement;
+                submitCategory.mutate({
+                  categoryType: addCategoryDialog!.type,
+                  proposedName: newCategoryName,
+                  parentRegion: parentInput?.value || undefined,
+                });
+              }}
+              disabled={submitCategory.isPending || !newCategoryName}
+              style={{ textTransform: "none" }}
+            >
+              {submitCategory.isPending ? "Submitting..." : "Submit for Review"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

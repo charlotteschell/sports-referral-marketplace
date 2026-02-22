@@ -31,8 +31,8 @@ const sportSmallIcons: Record<string, React.ReactNode> = {
 
 const sportImages: Record<string, string> = {
   cycling: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=600&h=400&fit=crop",
-  running: "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=600&h=400&fit=crop",
-  "trail-running": "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=600&h=400&fit=crop",
+  running: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663371988607/OYNtBsrsPHnEVeOb.jpg",
+  "trail-running": "https://images.unsplash.com/photo-1483721310020-03333e577078?w=600&h=400&fit=crop",
   snowsports: "https://images.unsplash.com/photo-1565992441121-4367c2967103?w=600&h=400&fit=crop",
   "sport-vacations": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&h=400&fit=crop",
 };
@@ -99,15 +99,15 @@ export default function Home() {
               <span>The Endurance Sports Business Network</span>
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6" style={{ fontFamily: "var(--font-heading)" }}>
-              Where Sports Pros<br />
-              <span className="text-[oklch(0.55_0.15_45)]">&amp; Enthusiasts</span><br />
-              Grow Together
+              Your Crew.<br />
+              <span className="text-[oklch(0.55_0.15_45)]">Your Sport.</span><br />
+              One Network.
             </h1>
             <p className="text-lg md:text-xl text-white/80 mb-4 max-w-2xl leading-relaxed" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
-              Whether you're a <strong className="text-white">professional coach, bike shop owner, or sport psychologist</strong> — or an <strong className="text-white">enthusiast looking for trusted local services</strong> — SportConnect is the marketplace that brings the endurance sports community together.
+              Whether you're a <strong className="text-white">coach, bike shop owner, or sport psychologist</strong> or an <strong className="text-white">enthusiast hunting for the best local pros</strong>, SportConnect is where the endurance sports community actually hangs out.
             </p>
             <p className="text-base md:text-lg text-white/60 mb-4 max-w-2xl" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
-              Businesses send each other referral customers for incentives. Enthusiasts discover the best local pros. Everyone wins.
+              Businesses send each other customers and earn incentives. Enthusiasts find the best local pros and score exclusive deals. Everybody wins.
             </p>
             <p className="text-sm text-white/50 mb-8 max-w-2xl" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
               Cycling &bull; Road Running &bull; Trail Running &bull; Ultra Running &bull; Skiing &bull; Snowboarding &bull; Nordic Skiing &bull; Sport Vacations
@@ -213,14 +213,14 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How It Works</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              A simple, powerful way for sports businesses and enthusiasts to connect and grow together.
+              Three steps. Zero complexity. Maximum stoke.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: <Search className="w-8 h-8" />, title: "Discover", desc: "Browse the directory to find coaches, shops, sport psychologists, vacation providers, and clubs across cycling, running, snowsports, and sport vacations — whether you're a business or an enthusiast." },
-              { icon: <Handshake className="w-8 h-8" />, title: "Connect & Refer", desc: "Businesses claim profiles and post B2B or consumer referral offers. Send customers to partners and earn incentives. Enthusiasts can browse consumer offers directly." },
-              { icon: <TrendingUp className="w-8 h-8" />, title: "Grow Together", desc: "Track referrals, build partnerships locally and across borders, and watch your network expand from the Dolomites to Colorado." },
+              { icon: <Search className="w-8 h-8" />, title: "Discover", desc: "Browse coaches, shops, sport psychologists, clubs, and vacation providers across cycling, running, snowsports, and more. Whether you own a business or just love the sport, the directory has you covered." },
+              { icon: <Handshake className="w-8 h-8" />, title: "Connect & Refer", desc: "Claim your profile, post referral offers (B2B or consumer), and start sending customers to your partners. Enthusiasts can grab exclusive deals directly. It's a win-win." },
+              { icon: <TrendingUp className="w-8 h-8" />, title: "Grow Together", desc: "Track every referral, build partnerships locally and across borders, and watch your network grow from the Dolomites to the Canadian Rockies." },
             ].map((step, i) => (
               <div key={i} className="relative">
                 <div className="bg-card border border-border rounded-lg p-8 h-full hover:shadow-lg transition-shadow">
@@ -246,7 +246,7 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Endurance Sports</h2>
             <p className="text-white/70 max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              From mountain peaks to open roads, we serve every discipline — for professionals and enthusiasts alike. Including sport vacations to the world's best endurance destinations.
+              From mountain peaks to open roads, we serve every discipline. Pros and weekend warriors alike. And yes, sport vacations count too.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -288,7 +288,7 @@ export default function Home() {
               Endurance Sports Hubs
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Discover businesses in the world's top endurance sports destinations — from the Dolomites to the Canadian Rockies. Focused on hubs where North Americans love to train, race, and vacation.
+              The world's best endurance sports destinations, all in one place. From the Dolomites to the Canadian Rockies, these are the hubs where athletes train, race, and vacation.
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -311,7 +311,7 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Every Type of Sports Business</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Coaches, shops, sport psychologists, clubs, vacation providers, and more — all the professionals that keep athletes performing at their best.
+              Coaches, shops, sport psychologists, clubs, vacation providers, and more. Basically everyone who keeps athletes performing at their best (and recovering from their worst).
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
@@ -472,7 +472,7 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Two Types of Referral Offers</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Businesses can post offers for other businesses and for individual consumers — maximizing reach and revenue.
+              Businesses post offers for other businesses and for individual consumers. More reach, more revenue, more stoke.
             </p>
           </div>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -482,7 +482,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-foreground mb-3">B2B Offers</h3>
               <p className="text-muted-foreground leading-relaxed mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                For businesses looking to collaborate or send customers to each other. Earn commissions, trade services, or build strategic partnerships. The referred customers can still claim any eligible consumer offers.
+                For businesses that want to collaborate and send customers to each other. Earn commissions, trade services, or build strategic partnerships. The referred customers can still claim any eligible consumer offers too.
               </p>
               <ul className="space-y-2" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 {["Commission per referral", "Service trade agreements", "Cross-promotion partnerships", "Volume-based incentives"].map((item) => (
@@ -499,7 +499,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-foreground mb-3">Consumer Offers</h3>
               <p className="text-muted-foreground leading-relaxed mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                For individual consumers looking for services. Enthusiasts can browse and claim these offers directly — discounts, free sessions, package deals, and more.
+                For individual consumers looking for services. Enthusiasts can browse and claim these offers directly: discounts, free sessions, package deals, and more.
               </p>
               <ul className="space-y-2" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 {["Percentage discounts", "Free trial sessions", "Package deal pricing", "First-time customer specials"].map((item) => (
@@ -532,7 +532,7 @@ export default function Home() {
               </div>
               <h3 className="text-2xl md:text-3xl font-bold mb-4">For Sports Professionals</h3>
               <p className="text-primary-foreground/80 mb-6 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Claim your business, post B2B and consumer referral offers, and start receiving qualified customers from trusted partners across borders — from Mallorca to Colorado.
+                Claim your business, post referral offers, and start receiving qualified customers from trusted partners across borders. From Mallorca to Colorado, your next client could be one referral away.
               </p>
               <ul className="space-y-2 mb-8" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 {["Claim and manage your business profile", "Post B2B and consumer referral offers", "Track referrals sent and received", "Connect with businesses across regions"].map((item) => (
@@ -563,7 +563,7 @@ export default function Home() {
               </div>
               <h3 className="text-2xl md:text-3xl font-bold mb-4">For Sports Enthusiasts</h3>
               <p className="text-white/80 mb-6 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Find the best local coaches, shops, sport psychologists, vacation providers, and clubs for cycling, running, snowsports, and sport vacations. Discover trusted professionals and claim consumer offers.
+                Find the best local coaches, shops, sport psychologists, vacation providers, and clubs for cycling, running, snowsports, and more. Discover trusted professionals and claim exclusive deals.
               </p>
               <ul className="space-y-2 mb-8" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 {["Search by sport, region, hub, and business type", "Find verified businesses worldwide", "Browse and claim consumer offers", "Plan your next sport vacation"].map((item) => (

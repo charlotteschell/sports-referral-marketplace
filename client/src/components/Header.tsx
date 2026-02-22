@@ -11,11 +11,11 @@ export default function Header() {
   const [location] = useLocation();
 
   const navLinks = [
-    { href: "/", label: "Home" },
     { href: "/directory", label: "Directory" },
     { href: "/referral-offers", label: "Referral Offers" },
     { href: "/submit-business", label: "Submit Business" },
     { href: "/about", label: "About" },
+    { href: "/support", label: "Support" },
   ];
 
   const isActive = (href: string) => {
@@ -30,9 +30,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/">
             <div className="flex items-center gap-2 cursor-pointer">
-              <div className="w-9 h-9 rounded-lg bg-[oklch(0.55_0.15_45)] flex items-center justify-center">
-                <Mountain className="w-5 h-5 text-white" />
-              </div>
+              <img src="/favicon-64.png" alt="SportConnect" className="w-9 h-9 rounded-lg" />
               <div className="flex flex-col">
                 <span className="text-lg font-bold text-white tracking-wide leading-tight" style={{ fontFamily: "var(--font-heading)" }}>
                   SPORTCONNECT

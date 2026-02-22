@@ -20,7 +20,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-sm leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              The referral marketplace connecting endurance sports businesses and enthusiasts. Grow together through collaboration.
+              The referral marketplace for endurance sports businesses and enthusiasts. Grow together, refer together, ride together.
             </p>
           </div>
 
@@ -57,6 +57,8 @@ export default function Footer() {
               <li><Link href="/dashboard"><span className="hover:text-white transition-colors cursor-pointer">Business Dashboard</span></Link></li>
               <li><Link href="/submit-business"><span className="hover:text-white transition-colors cursor-pointer">Submit Your Business</span></Link></li>
               <li><Link href="/about"><span className="hover:text-white transition-colors cursor-pointer">About Us</span></Link></li>
+              <li><Link href="/support"><span className="hover:text-white transition-colors cursor-pointer">Support</span></Link></li>
+              <li><a href="mailto:support@rarelabs.ai"><span className="hover:text-white transition-colors cursor-pointer">Contact Us</span></a></li>
             </ul>
           </div>
 

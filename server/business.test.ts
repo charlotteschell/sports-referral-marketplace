@@ -165,6 +165,45 @@ vi.mock("./db", () => ({
   toggleOfferVisibility: vi.fn().mockResolvedValue(undefined),
   adminToggleBusinessVisibility: vi.fn().mockResolvedValue(undefined),
   toggleBusinessVisibility: vi.fn().mockResolvedValue(undefined),
+  // Partnership email mocks
+  sendPartnershipEmail: vi.fn().mockResolvedValue(1),
+  getPartnershipEmailsSent: vi.fn().mockResolvedValue([]),
+  getPartnershipEmailsReceived: vi.fn().mockResolvedValue([]),
+  // Support ticket mocks
+  createSupportTicket: vi.fn().mockResolvedValue(1),
+  getSupportTicketsByUser: vi.fn().mockResolvedValue([]),
+  getSupportTickets: vi.fn().mockResolvedValue({ tickets: [], total: 0 }),
+  updateSupportTicketStatus: vi.fn().mockResolvedValue(undefined),
+  getSupportTicketById: vi.fn().mockResolvedValue(null),
+  // Category approval mocks
+  createCategoryApproval: vi.fn().mockResolvedValue(1),
+  getCategoryApprovals: vi.fn().mockResolvedValue({ requests: [], total: 0 }),
+  updateCategoryApprovalStatus: vi.fn().mockResolvedValue(undefined),
+  getCategoryApprovalById: vi.fn().mockResolvedValue(null),
+  createSportCategory: vi.fn().mockResolvedValue(1),
+  createBusinessType: vi.fn().mockResolvedValue(1),
+  createHub: vi.fn().mockResolvedValue(1),
+  // Account type mock
+  updateUserAccountType: vi.fn().mockResolvedValue(undefined),
+  // Logo upload mock
+  updateBusinessLogo: vi.fn().mockResolvedValue(undefined),
+  // Multi-select search mock
+  searchBusinessesMulti: vi.fn().mockResolvedValue({ businesses: [], total: 0 }),
+  // Admin mocks
+  adminToggleOfferVisibility: vi.fn().mockResolvedValue(undefined),
+  approveOrRejectBusiness: vi.fn().mockResolvedValue(undefined),
+  getAllBusinessesAdmin: vi.fn().mockResolvedValue([]),
+  getAllOffersAdmin: vi.fn().mockResolvedValue([]),
+  getAllSupportTickets: vi.fn().mockResolvedValue({ tickets: [], total: 0 }),
+  getAllCategoryApprovals: vi.fn().mockResolvedValue({ requests: [], total: 0 }),
+  getBusinessAnalytics: vi.fn().mockResolvedValue({ totalReferralsReceived: 0, honoredReferrals: 0, totalEarned: 0, totalReferralsSent: 0, cashedOutReferrals: 0, totalCashedOut: 0 }),
+  getBusinessesPendingApproval: vi.fn().mockResolvedValue([]),
+  getPendingCategoryApprovals: vi.fn().mockResolvedValue([]),
+  getReferralOffersByBusinessAll: vi.fn().mockResolvedValue([]),
+  getReferralsForBusiness: vi.fn().mockResolvedValue([]),
+  ownerToggleBusinessVisibility: vi.fn().mockResolvedValue(undefined),
+  ownerToggleOfferVisibility: vi.fn().mockResolvedValue(undefined),
+  updateBusinessBrands: vi.fn().mockResolvedValue(undefined),
   getBusinessSubmissionById: vi.fn().mockImplementation(async (id: number) => {
     if (id === 1) return {
       submission: { id: 1, businessName: "Test Submission", businessDescription: "A test business", sportCategoryId: 1, businessTypeId: 1, contactName: "Jane", contactEmail: "jane@test.com", contactPhone: "555-1234", website: "https://test.com", instagram: null, facebook: null, city: "Chamonix", state: null, country: "France", region: "Alps", hub: "Chamonix", status: "pending" },
@@ -823,5 +862,128 @@ describe("platformStats router", () => {
     } catch (e: any) {
       expect(e.code || e.message).toBeDefined();
     }
+  });
+});
+
+
+// ─── Partnership Email Tests ───────────────────────────────────────
+describe("partnershipEmail", () => {
+  it("allows authenticated user to send partnership email", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.partnershipEmail.send({
+      recipientBusinessId: 1,
+      subject: "Partnership inquiry",
+      message: "Let's collaborate on referrals!",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects unauthenticated partnership email", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    await expect(
+      caller.partnershipEmail.send({
+        recipientBusinessId: 1,
+        subject: "Test",
+        message: "Test message",
+      })
+    ).rejects.toThrow();
+  });
+
+  it("returns sent emails for authenticated user", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.partnershipEmail.mySent();
+    expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+// ─── Support Ticket Tests ──────────────────────────────────────────
+describe("supportTicket", () => {
+  it("allows authenticated user to create a support ticket", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.supportTicket.create({
+      title: "Bug report",
+      description: "Something is broken",
+      ticketType: "bug",
+    });
+    expect(result).toBeDefined();
+  });
+
+  it("returns user's tickets", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.supportTicket.myTickets();
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("rejects unauthenticated ticket creation", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    await expect(
+      caller.supportTicket.create({
+        title: "Bug",
+        description: "Test",
+        ticketType: "bug",
+      })
+    ).rejects.toThrow();
+  });
+});
+
+// ─── Category Approval Tests ───────────────────────────────────────
+describe("categoryApproval", () => {
+  it("allows authenticated user to request new category", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.categoryApproval.submit({
+      categoryType: "hub",
+      proposedName: "New Hub Area",
+      description: "A new hub for testing",
+    });
+    expect(result).toBeDefined();
+  });
+
+  it("rejects unauthenticated category request", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    await expect(
+      caller.categoryApproval.submit({
+        categoryType: "hub",
+        proposedName: "Test",
+      })
+    ).rejects.toThrow();
+  });
+});
+
+// ─── Account Type Tests ────────────────────────────────────────────
+describe("accountType", () => {
+  it("allows authenticated user to set account type", async () => {
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.accountType.set({
+      accountType: "business_owner",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects unauthenticated account type change", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    await expect(
+      caller.accountType.set({ accountType: "consumer" })
+    ).rejects.toThrow();
+  });
+});
+
+// ─── Multi-Select Search Tests ─────────────────────────────────────
+describe("searchMulti", () => {
+  it("accepts multi-select search parameters", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.searchMulti.search({
+      sportCategoryIds: [1, 2],
+      businessTypeIds: [1],
+      regions: ["Western US"],
+    });
+    expect(result).toBeDefined();
+    expect(result.businesses).toBeDefined();
+    expect(result.total).toBeDefined();
+  });
+
+  it("works with empty filters", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.searchMulti.search({});
+    expect(result).toBeDefined();
   });
 });

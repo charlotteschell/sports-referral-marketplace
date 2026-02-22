@@ -1,0 +1,78 @@
+{
+  "query": "SELECT id, name FROM businessTypes ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name FROM businessTypes ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Coach"
+    },
+    {
+      "id": "2",
+      "name": "Bike Shop"
+    },
+    {
+      "id": "3",
+      "name": "Running Store"
+    },
+    {
+      "id": "4",
+      "name": "Cycling Studio"
+    },
+    {
+      "id": "5",
+      "name": "Running Club"
+    },
+    {
+      "id": "6",
+      "name": "Cycling Club"
+    },
+    {
+      "id": "7",
+      "name": "Physiotherapist"
+    },
+    {
+      "id": "8",
+      "name": "Sports Massage"
+    },
+    {
+      "id": "9",
+      "name": "Nutritionist"
+    },
+    {
+      "id": "10",
+      "name": "Personal Trainer"
+    },
+    {
+      "id": "11",
+      "name": "Ski Shop"
+    },
+    {
+      "id": "12",
+      "name": "Ski School"
+    },
+    {
+      "id": "13",
+      "name": "Bike Fitting"
+    },
+    {
+      "id": "14",
+      "name": "Race Organizer"
+    },
+    {
+      "id": "15",
+      "name": "Vacation Provider"
+    },
+    {
+      "id": "16",
+      "name": "Supplement Retailer"
+    },
+    {
+      "id": "17",
+      "name": "Bike Retailer"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n1\tCoach\n2\tBike Shop\n3\tRunning Store\n4\tCycling Studio\n5\tRunning Club\n6\tCycling Club\n7\tPhysiotherapist\n8\tSports Massage\n9\tNutritionist\n10\tPersonal Trainer\n11\tSki Shop\n12\tSki School\n13\tBike Fitting\n14\tRace Organizer\n15\tVacation Provider\n16\tSupplement Retailer\n17\tBike Retailer\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

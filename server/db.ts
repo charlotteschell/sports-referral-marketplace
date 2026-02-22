@@ -12,6 +12,9 @@ import {
   emailVerifications, InsertEmailVerification,
   consumerClaims, InsertConsumerClaim, ConsumerClaim,
   platformStats,
+  partnershipEmails, InsertPartnershipEmail,
+  supportTickets, InsertSupportTicket, SupportTicket,
+  categoryApprovals, InsertCategoryApproval,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1325,5 +1328,260 @@ export async function getReferralsForBusiness(businessId: number, direction: 'se
       .where(eq(referrals.referringBusinessId, businessId))
       .orderBy(desc(referrals.createdAt))
       .limit(limit);
+  }
+}
+
+
+// ─── Partnership Emails ─────────────────────────────────────
+export async function sendPartnershipEmail(data: {
+  senderUserId: number;
+  senderBusinessId?: number;
+  recipientBusinessId: number;
+  recipientEmail: string;
+  subject: string;
+  message: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(partnershipEmails).values(data);
+  return { id: result[0].insertId };
+}
+
+export async function getPartnershipEmailsSent(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(partnershipEmails)
+    .where(eq(partnershipEmails.senderUserId, userId))
+    .orderBy(desc(partnershipEmails.createdAt));
+}
+
+export async function getPartnershipEmailsForBusiness(businessId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(partnershipEmails)
+    .where(eq(partnershipEmails.recipientBusinessId, businessId))
+    .orderBy(desc(partnershipEmails.createdAt));
+}
+
+export async function getPartnershipEmailCount() {
+  const db = await getDb();
+  if (!db) return 0;
+  const result = await db.select({ count: sql<number>`COUNT(*)` }).from(partnershipEmails);
+  return result[0]?.count ?? 0;
+}
+
+// ─── Support Tickets ────────────────────────────────────────
+export async function createSupportTicket(data: {
+  userId?: number;
+  userName?: string;
+  userEmail: string;
+  title: string;
+  description: string;
+  ticketType: 'bug' | 'feature_request' | 'general';
+  screenshotUrls?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(supportTickets).values(data);
+  return { id: result[0].insertId };
+}
+
+export async function getAllSupportTickets() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(supportTickets).orderBy(desc(supportTickets.createdAt));
+}
+
+export async function getSupportTicketsByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(supportTickets)
+    .where(eq(supportTickets.userId, userId))
+    .orderBy(desc(supportTickets.createdAt));
+}
+
+export async function updateSupportTicketStatus(id: number, status: string, adminNotes?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updateData: any = { status };
+  if (adminNotes !== undefined) updateData.adminNotes = adminNotes;
+  if (status === 'done' || status === 'launched') updateData.resolvedAt = new Date();
+  await db.update(supportTickets).set(updateData).where(eq(supportTickets.id, id));
+}
+
+export async function getSupportTicketById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(supportTickets).where(eq(supportTickets.id, id));
+  return result[0] ?? null;
+}
+
+// ─── Category Approvals ─────────────────────────────────────
+export async function createCategoryApproval(data: {
+  userId?: number;
+  categoryType: 'sport' | 'business_type' | 'region' | 'hub';
+  proposedName: string;
+  proposedSlug?: string;
+  parentRegion?: string;
+  description?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(categoryApprovals).values(data);
+  return { id: result[0].insertId };
+}
+
+export async function getAllCategoryApprovals() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(categoryApprovals).orderBy(desc(categoryApprovals.createdAt));
+}
+
+export async function getPendingCategoryApprovals() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(categoryApprovals)
+    .where(eq(categoryApprovals.status, 'pending'))
+    .orderBy(desc(categoryApprovals.createdAt));
+}
+
+export async function updateCategoryApprovalStatus(id: number, status: 'approved' | 'rejected', adminNotes?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(categoryApprovals).set({ status, adminNotes }).where(eq(categoryApprovals.id, id));
+}
+
+export async function getCategoryApprovalById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(categoryApprovals).where(eq(categoryApprovals.id, id));
+  return result[0] ?? null;
+}
+
+// ─── Account Type ───────────────────────────────────────────
+export async function updateUserAccountType(userId: number, accountType: 'consumer' | 'business_owner') {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ accountType }).where(eq(users.id, userId));
+}
+
+// ─── Logo Upload ────────────────────────────────────────────
+export async function updateBusinessLogo(businessId: number, logoUrl: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(businesses).set({ logoUrl }).where(eq(businesses.id, businessId));
+}
+
+// ─── Brands Carried ─────────────────────────────────────────
+export async function updateBusinessBrands(businessId: number, brandsCarried: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(businesses).set({ brandsCarried }).where(eq(businesses.id, businessId));
+}
+
+// ─── Multi-select search support ────────────────────────────
+export async function searchBusinessesMulti(filters: {
+  search?: string;
+  sportCategoryIds?: number[];
+  businessTypeIds?: number[];
+  regions?: string[];
+  hubs?: string[];
+  isClaimed?: boolean;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) return { businesses: [], total: 0 };
+  
+  const conditions = [
+    eq(businesses.isActive, true),
+    eq(businesses.approvalStatus, 'approved'),
+    eq(businesses.isHidden, false),
+    eq(businesses.isAdminHidden, false),
+  ];
+
+  if (filters.search) {
+    const term = `%${filters.search}%`;
+    conditions.push(
+      or(
+        like(businesses.name, term),
+        like(businesses.description, term),
+        like(businesses.city, term),
+        like(businesses.region, term),
+        like(businesses.hub, term),
+        like(businesses.country, term),
+      )!
+    );
+  }
+
+  if (filters.sportCategoryIds && filters.sportCategoryIds.length > 0) {
+    conditions.push(inArray(businesses.sportCategoryId, filters.sportCategoryIds));
+  }
+
+  if (filters.businessTypeIds && filters.businessTypeIds.length > 0) {
+    conditions.push(inArray(businesses.businessTypeId, filters.businessTypeIds));
+  }
+
+  if (filters.regions && filters.regions.length > 0) {
+    conditions.push(inArray(businesses.region, filters.regions));
+  }
+
+  if (filters.hubs && filters.hubs.length > 0) {
+    conditions.push(inArray(businesses.hub, filters.hubs));
+  }
+
+  if (filters.isClaimed !== undefined) {
+    conditions.push(eq(businesses.isClaimed, filters.isClaimed));
+  }
+
+  const limit = filters.limit ?? 20;
+  const offset = filters.offset ?? 0;
+
+  const [results, countResult] = await Promise.all([
+    db.select({
+      business: businesses,
+      sportCategory: sportCategories,
+      businessType: businessTypes,
+    })
+    .from(businesses)
+    .leftJoin(sportCategories, eq(businesses.sportCategoryId, sportCategories.id))
+    .leftJoin(businessTypes, eq(businesses.businessTypeId, businessTypes.id))
+    .where(and(...conditions))
+    .orderBy(desc(businesses.isFeatured), desc(businesses.isClaimed), asc(businesses.name))
+    .limit(limit)
+    .offset(offset),
+    
+    db.select({ count: sql<number>`COUNT(*)` })
+    .from(businesses)
+    .where(and(...conditions)),
+  ]);
+
+  return {
+    businesses: results,
+    total: countResult[0]?.count ?? 0,
+  };
+}
+
+
+// ─── Create Sport Category / Business Type (for approved category requests) ──
+export async function createSportCategory(data: { name: string; slug: string; description?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  try {
+    await db.insert(sportCategories).values(data);
+  } catch (e: any) {
+    if (e.code === 'ER_DUP_ENTRY') return; // already exists
+    throw e;
+  }
+}
+
+export async function createBusinessType(data: { name: string; slug: string; description?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  try {
+    await db.insert(businessTypes).values(data);
+  } catch (e: any) {
+    if (e.code === 'ER_DUP_ENTRY') return; // already exists
+    throw e;
   }
 }

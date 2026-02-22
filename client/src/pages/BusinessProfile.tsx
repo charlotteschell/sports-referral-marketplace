@@ -5,16 +5,19 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import {
   MapPin, Phone, Mail, Globe, Shield, ArrowLeft,
   Bike, Mountain, Snowflake, Star, Handshake, Compass,
   Instagram, Facebook, Pencil, Gift, Send, ExternalLink,
-  Users, Info, Sparkles, Heart, Loader2, CheckCircle2, AlertCircle
+  Users, Info, Sparkles, Heart, Loader2, CheckCircle2, AlertCircle,
+  Upload, Camera, Tag, MessageSquare
 } from "lucide-react";
 
 const sportIcons: Record<string, React.ReactNode> = {
@@ -104,6 +107,57 @@ export default function BusinessProfile() {
     },
   });
 
+  // Partnership email state
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const sendPartnershipEmail = trpc.partnershipEmail.send.useMutation({
+    onSuccess: () => {
+      toast.success("Email sent! They'll receive it in their inbox.");
+      setEmailDialogOpen(false);
+      setEmailSubject('');
+      setEmailBody('');
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to send email"),
+  });
+
+  // Logo upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const uploadLogo = trpc.logoUpload.upload.useMutation({
+    onSuccess: () => {
+      toast.success("Logo updated!");
+      utils.business.getBySlug.invalidate({ slug: params.slug });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to upload logo"),
+  });
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !data?.business.id) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Logo must be under 2MB");
+      return;
+    }
+    setUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(',')[1];
+        uploadLogo.mutate({
+          businessId: data.business.id,
+          logoData: base64,
+          contentType: file.type,
+        });
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setUploading(false);
+      toast.error("Failed to read file");
+    }
+  };
+
   // Extract domain from business website for email validation
   const businessDomain = useMemo(() => {
     if (!data?.business.website) return null;
@@ -191,7 +245,9 @@ export default function BusinessProfile() {
 
   const { business, sportCategory, businessType } = data;
   const isOwner = isAuthenticated && user?.id === business.claimedByUserId;
+  const isAdmin = user?.role === 'admin';
   const isClaimed = business.isClaimed;
+  const canSeePrivateInfo = isOwner || isAdmin;
 
   const b2bOffers = offers?.filter(o => o.offerType === "b2b") || [];
   const consumerOffers = offers?.filter(o => o.offerType === "consumer") || [];
@@ -331,6 +387,25 @@ export default function BusinessProfile() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 shrink-0">
+              {/* Email Button */}
+              {isClaimed && (
+                isAuthenticated ? (
+                  <Button
+                    onClick={() => setEmailDialogOpen(true)}
+                    variant="outline"
+                    className="border-white/30 text-white hover:bg-white/10 bg-transparent"
+                    style={{ textTransform: "none" }}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" /> Email Business
+                  </Button>
+                ) : (
+                  <a href={getLoginUrl()}>
+                    <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 bg-transparent" style={{ textTransform: "none" }}>
+                      <MessageSquare className="w-4 h-4 mr-2" /> Sign In to Email
+                    </Button>
+                  </a>
+                )
+              )}
               {!isClaimed && isAuthenticated && claimStep === 'idle' && (
                 <Button
                   onClick={() => setClaimStep('email')}
@@ -360,6 +435,23 @@ export default function BusinessProfile() {
                       <Gift className="w-4 h-4 mr-2" /> Update Offers
                     </Button>
                   </Link>
+                  <Button
+                    variant="outline"
+                    className="border-white/30 text-white hover:bg-white/10 bg-transparent"
+                    style={{ textTransform: "none" }}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Camera className="w-4 h-4 mr-2" />}
+                    {uploading ? "Uploading..." : "Upload Logo"}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoUpload}
+                  />
                 </>
               )}
             </div>
@@ -665,48 +757,76 @@ export default function BusinessProfile() {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Contact Info - Only for claimed businesses */}
-              {isClaimed && (
+              {/* Contact Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Contact & Links</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Website - always visible */}
+                  {business.website && (
+                    <a href={business.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors" style={{ textTransform: "none" }}>
+                      <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                      Visit Website <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                  {/* Google Maps - always visible */}
+                  {googleMapsUrl && (
+                    <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors" style={{ textTransform: "none" }}>
+                      <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4 shrink-0" />
+                      Google Maps <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                  {/* Social - always visible */}
+                  {business.instagram && (
+                    <a href={`https://instagram.com/${business.instagram}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors" style={{ textTransform: "none" }}>
+                      <Instagram className="w-4 h-4 text-muted-foreground shrink-0" />
+                      @{business.instagram}
+                    </a>
+                  )}
+                  {business.facebook && (
+                    <a href={business.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors" style={{ textTransform: "none" }}>
+                      <Facebook className="w-4 h-4 text-muted-foreground shrink-0" />
+                      Facebook
+                    </a>
+                  )}
+                  {/* Phone & Email - only visible to owner and admin */}
+                  {canSeePrivateInfo && business.phone && (
+                    <a href={`tel:${business.phone}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors" style={{ textTransform: "none" }}>
+                      <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+                      {formatPhone(business.phone)}
+                    </a>
+                  )}
+                  {canSeePrivateInfo && business.email && (
+                    <a href={`mailto:${business.email}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors" style={{ textTransform: "none" }}>
+                      <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                      {business.email}
+                    </a>
+                  )}
+                  {!canSeePrivateInfo && (business.phone || business.email) && (
+                    <p className="text-xs text-muted-foreground/60 italic" style={{ textTransform: "none" }}>
+                      Phone and email are only visible to verified business owners.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Brands Carried (for retailers) */}
+              {(business as any).brandsCarried && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Contact Information</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Tag className="w-4 h-4" /> Brands Carried
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    {business.phone && (
-                      <a href={`tel:${business.phone}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors" style={{ textTransform: "none" }}>
-                        <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
-                        {formatPhone(business.phone)}
-                      </a>
-                    )}
-                    {business.email && (
-                      <a href={`mailto:${business.email}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors" style={{ textTransform: "none" }}>
-                        <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
-                        {business.email}
-                      </a>
-                    )}
-                    {business.website && (
-                      <a href={business.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors" style={{ textTransform: "none" }}>
-                        <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
-                        Visit Website <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-                    {business.instagram && (
-                      <a href={`https://instagram.com/${business.instagram}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors" style={{ textTransform: "none" }}>
-                        <Instagram className="w-4 h-4 text-muted-foreground shrink-0" />
-                        @{business.instagram}
-                      </a>
-                    )}
-                    {business.facebook && (
-                      <a href={business.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors" style={{ textTransform: "none" }}>
-                        <Facebook className="w-4 h-4 text-muted-foreground shrink-0" />
-                        Facebook
-                      </a>
-                    )}
-                    {!business.phone && !business.email && !business.website && (
-                      <p className="text-sm text-muted-foreground" style={{ textTransform: "none" }}>
-                        No contact information added yet.
-                      </p>
-                    )}
+                  <CardContent>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(business as any).brandsCarried.split(',').map((brand: string, i: number) => (
+                        <Badge key={i} variant="outline" className="text-xs" style={{ textTransform: "none" }}>
+                          {brand.trim()}
+                        </Badge>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -804,6 +924,53 @@ export default function BusinessProfile() {
           </div>
         </div>
       </section>
+
+      {/* Partnership Email Dialog */}
+      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Email {business.name}</DialogTitle>
+            <DialogDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
+              Send a partnership inquiry or message. They'll receive this in their registered email.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Subject</label>
+              <Input
+                placeholder="Partnership inquiry, referral question, etc."
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Message</label>
+              <Textarea
+                placeholder="Hi! I'd love to discuss a referral partnership..."
+                value={emailBody}
+                onChange={(e) => setEmailBody(e.target.value)}
+                rows={5}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEmailDialogOpen(false)} style={{ textTransform: "none" }}>Cancel</Button>
+            <Button
+              onClick={() => sendPartnershipEmail.mutate({
+                recipientBusinessId: business.id,
+                subject: emailSubject,
+                message: emailBody,
+              })}
+              disabled={sendPartnershipEmail.isPending || !emailSubject.trim() || !emailBody.trim()}
+              className="bg-primary text-primary-foreground"
+              style={{ textTransform: "none" }}
+            >
+              {sendPartnershipEmail.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+              Send Email
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

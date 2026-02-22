@@ -2,6 +2,7 @@ import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, bigint, 
 
 /**
  * Core user table backing auth flow.
+ * accountType: consumer or business_owner
  */
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -10,6 +11,7 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  accountType: mysqlEnum("accountType", ["consumer", "business_owner"]).default("consumer").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -95,14 +97,17 @@ export const businesses = mysqlTable("businesses", {
   logoUrl: varchar("logoUrl", { length: 500 }),
   coverImageUrl: varchar("coverImageUrl", { length: 500 }),
   
+  // Brands carried (for retailers: bike retailers, supplement retailers)
+  brandsCarried: text("brandsCarried"),
+  
   // Approval workflow
   approvalStatus: mysqlEnum("approvalStatus", ["pending", "approved", "rejected"]).default("approved").notNull(),
   approvalNotes: text("approvalNotes"),
   approvedAt: timestamp("approvedAt"),
   
   // Visibility controls
-  isHidden: boolean("isHidden").default(false).notNull(), // owner can hide
-  isAdminHidden: boolean("isAdminHidden").default(false).notNull(), // super admin can hide
+  isHidden: boolean("isHidden").default(false).notNull(),
+  isAdminHidden: boolean("isAdminHidden").default(false).notNull(),
   
   // Status
   isActive: boolean("isActive").default(true).notNull(),
@@ -140,8 +145,8 @@ export const referralOffers = mysqlTable("referralOffers", {
   termsAndConditions: text("termsAndConditions"),
   isSample: boolean("isSample").default(false).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
-  isHidden: boolean("isHidden").default(false).notNull(), // owner can hide
-  isAdminHidden: boolean("isAdminHidden").default(false).notNull(), // super admin can hide
+  isHidden: boolean("isHidden").default(false).notNull(),
+  isAdminHidden: boolean("isAdminHidden").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -151,51 +156,30 @@ export type InsertReferralOffer = typeof referralOffers.$inferInsert;
 
 /**
  * Referral tracking: when business A sends a customer to business B
- * Enhanced with verification and $ tracking for honoring/cashout
  */
 export const referrals = mysqlTable("referrals", {
   id: int("id").autoincrement().primaryKey(),
-  
-  // Who sent the referral
   referringBusinessId: int("referringBusinessId").notNull(),
   referringUserId: int("referringUserId").notNull(),
-  
-  // Who received the referral
   receivingBusinessId: int("receivingBusinessId").notNull(),
   referralOfferId: int("referralOfferId"),
-  
-  // Customer info
   customerName: varchar("customerName", { length: 255 }),
   customerEmail: varchar("customerEmail", { length: 320 }),
   customerPhone: varchar("customerPhone", { length: 30 }),
-  
-  // Notes
   notes: text("notes"),
-  
-  // Status
   status: mysqlEnum("status", ["pending", "contacted", "converted", "declined", "expired"]).default("pending").notNull(),
-  
-  // Verification: receiver confirms they honored the referral
   receiverHonored: boolean("receiverHonored").default(false).notNull(),
   receiverHonoredAt: timestamp("receiverHonoredAt"),
   receiverHonoredNotes: text("receiverHonoredNotes"),
-  
-  // Verification: sender confirms they received the incentive (cashout)
   senderCashedOut: boolean("senderCashedOut").default(false).notNull(),
   senderCashedOutAt: timestamp("senderCashedOutAt"),
   senderCashedOutNotes: text("senderCashedOutNotes"),
-  
-  // $ amount tracking
   incentiveAmount: varchar("incentiveAmount", { length: 20 }),
   incentiveCurrency: varchar("incentiveCurrency", { length: 10 }).default("USD"),
-  
-  // Dispute
   isDisputed: boolean("isDisputed").default(false).notNull(),
   disputeReason: text("disputeReason"),
   disputedAt: timestamp("disputedAt"),
   disputedByUserId: int("disputedByUserId"),
-  
-  // Timestamps
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   completedAt: timestamp("completedAt"),
@@ -205,38 +189,23 @@ export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = typeof referrals.$inferInsert;
 
 /**
- * Consumer offer claims: when a consumer claims a SportConnect-exclusive offer
+ * Consumer offer claims
  */
 export const consumerClaims = mysqlTable("consumerClaims", {
   id: int("id").autoincrement().primaryKey(),
-  
-  // Which offer was claimed
   referralOfferId: int("referralOfferId").notNull(),
   businessId: int("businessId").notNull(),
-  
-  // Who claimed it (must be logged in)
   userId: int("userId").notNull(),
-  
-  // Claim details
   claimCode: varchar("claimCode", { length: 20 }),
-  
-  // Status
   status: mysqlEnum("status", ["claimed", "redeemed", "expired", "disputed"]).default("claimed").notNull(),
-  
-  // Consumer verification: did the business honor the offer?
   isHonored: boolean("isHonored").default(false).notNull(),
   honoredAt: timestamp("honoredAt"),
   honoredNotes: text("honoredNotes"),
-  
-  // $ amount saved
   amountSaved: varchar("amountSaved", { length: 20 }),
   currency: varchar("currency", { length: 10 }).default("USD"),
-  
-  // Dispute
   isDisputed: boolean("isDisputed").default(false).notNull(),
   disputeReason: text("disputeReason"),
   disputedAt: timestamp("disputedAt"),
-  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -246,7 +215,6 @@ export type InsertConsumerClaim = typeof consumerClaims.$inferInsert;
 
 /**
  * Platform activity stats for the home page tracker
- * Stores both real computed stats and seeded baseline numbers
  */
 export const platformStats = mysqlTable("platformStats", {
   id: int("id").autoincrement().primaryKey(),
@@ -263,41 +231,26 @@ export type PlatformStat = typeof platformStats.$inferSelect;
  */
 export const businessSubmissions = mysqlTable("businessSubmissions", {
   id: int("id").autoincrement().primaryKey(),
-
-  // Business info
   businessName: varchar("businessName", { length: 255 }).notNull(),
   businessDescription: text("businessDescription"),
   sportCategoryId: int("sportCategoryId").notNull(),
   businessTypeId: int("businessTypeId").notNull(),
-
-  // Location
   city: varchar("city", { length: 100 }),
   state: varchar("state", { length: 100 }),
   country: varchar("country", { length: 100 }),
   region: varchar("region", { length: 100 }),
   hub: varchar("hub", { length: 100 }),
-
-  // Contact
   contactName: varchar("contactName", { length: 255 }).notNull(),
   contactEmail: varchar("contactEmail", { length: 320 }).notNull(),
   contactPhone: varchar("contactPhone", { length: 30 }),
   website: varchar("website", { length: 500 }),
-
-  // Social
   instagram: varchar("instagram", { length: 255 }),
   facebook: varchar("facebook", { length: 255 }),
-
-  // Additional info
   additionalNotes: text("additionalNotes"),
-
-  // Submitter (optional - if logged in)
   submittedByUserId: int("submittedByUserId"),
-
-  // Review status
   status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
   reviewNotes: text("reviewNotes"),
   reviewedAt: timestamp("reviewedAt"),
-
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -321,3 +274,63 @@ export const emailVerifications = mysqlTable("emailVerifications", {
 
 export type EmailVerification = typeof emailVerifications.$inferSelect;
 export type InsertEmailVerification = typeof emailVerifications.$inferInsert;
+
+/**
+ * Partnership emails: messages sent between businesses through the platform
+ */
+export const partnershipEmails = mysqlTable("partnershipEmails", {
+  id: int("id").autoincrement().primaryKey(),
+  senderUserId: int("senderUserId").notNull(),
+  senderBusinessId: int("senderBusinessId"),
+  recipientBusinessId: int("recipientBusinessId").notNull(),
+  recipientEmail: varchar("recipientEmail", { length: 320 }).notNull(),
+  subject: varchar("subject", { length: 500 }).notNull(),
+  message: text("message").notNull(),
+  status: mysqlEnum("status", ["sent", "delivered", "failed"]).default("sent").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PartnershipEmail = typeof partnershipEmails.$inferSelect;
+export type InsertPartnershipEmail = typeof partnershipEmails.$inferInsert;
+
+/**
+ * Support tickets: user-submitted bug reports and feature requests
+ */
+export const supportTickets = mysqlTable("supportTickets", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  userName: varchar("userName", { length: 255 }),
+  userEmail: varchar("userEmail", { length: 320 }).notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description").notNull(),
+  ticketType: mysqlEnum("ticketType", ["bug", "feature_request", "general"]).default("general").notNull(),
+  screenshotUrls: text("screenshotUrls"),
+  status: mysqlEnum("status", ["new", "in_backlog", "in_progress", "in_testing", "done", "launched"]).default("new").notNull(),
+  adminNotes: text("adminNotes"),
+  resolvedAt: timestamp("resolvedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SupportTicket = typeof supportTickets.$inferSelect;
+export type InsertSupportTicket = typeof supportTickets.$inferInsert;
+
+/**
+ * Category approval requests: when users want to add new categories/regions/hubs
+ */
+export const categoryApprovals = mysqlTable("categoryApprovals", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  categoryType: mysqlEnum("categoryType", ["sport", "business_type", "region", "hub"]).notNull(),
+  proposedName: varchar("proposedName", { length: 255 }).notNull(),
+  proposedSlug: varchar("proposedSlug", { length: 255 }),
+  parentRegion: varchar("parentRegion", { length: 100 }),
+  description: text("description"),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  adminNotes: text("adminNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CategoryApproval = typeof categoryApprovals.$inferSelect;
+export type InsertCategoryApproval = typeof categoryApprovals.$inferInsert;

@@ -295,3 +295,68 @@
 - [x] Frontend: Consumer dashboard - analytics (total $ saved, incentives utilized)
 - [x] Frontend: Home page activity tracker with seeded numbers
 - [x] Seed database with realistic activity numbers for home page tracker
+
+## Logo Upload for Business Owners
+- [x] Allow business owners to upload a logo for their claimed business
+- [x] Display uploaded logos on directory cards and business profiles
+
+## Privacy Controls for Directory Cards
+- [x] Show website URL on directory cards for claimed businesses
+- [x] Show logos on directory cards
+- [x] Hide emails and phone numbers from public view
+- [x] Emails and phone numbers visible only to Admin and claimed business owners
+- [x] Feature website and Google My Business link on business profiles
+
+## Email Messaging System
+- [x] Add "Email" button on business profiles (like Get in Touch)
+- [x] Only clickable when user is logged in (prompt login if not)
+- [x] Send email to business's registered email
+- [x] Track "partnership emails exchanged" metric
+- [x] Add metric to all data trackers and dashboards
+
+## Multi-Select Filters
+- [x] Allow multiple selection on sports category filter
+- [x] Allow multiple selection on business type filter
+- [x] Allow multiple selection on region filter
+- [x] Convert Hub/Area to dropdown with multi-select
+- [x] Allow "Add New" option on all dropdowns (subject to approval)
+- [x] Admin dashboard to approve new category additions
+
+## Support Ticket System
+- [x] Create support ticket form (describe problem/feature request with screenshots)
+- [x] Support ticket queue in Admin dashboard
+- [x] Admin can set status: done, in backlog, in progress, in testing, launched
+- [x] Send congratulation email to submitter when status is "Launched"
+
+## Account Types
+- [x] When logging in, ask user: consumer or business owner
+- [x] Allow switching between account types
+- [x] Support multiple accounts with same email
+
+## Navigation Updates
+- [x] Remove Home button (logo serves as home)
+- [x] Add Support Ticket link to navigation
+
+## Copywriting Overhaul
+- [x] Remove excessive use of dashes (AI signal)
+- [x] Make copy casual, funny, sporty, witty, human
+- [x] Fix running image on homepage (currently shows skiing)
+- [x] Update SportConnect logo to browser logo
+
+## New Categories
+- [x] Add "Supplement Retailer" business type with brand listings (Feed, Ketone IQ, Tailwind, Scratch, Momentus, Pillar)
+- [x] Add "Bike Retailer" business type
+
+## Send Referral Button
+- [x] Add small "Send a Referral" button to directory cards and everywhere businesses are shown
+
+## Get in Touch Email
+- [x] Send Get in Touch emails to support@rarelabs.ai
+
+## Seed Businesses
+- [x] Seed all Google Maps businesses in Mallorca fitting categories
+- [x] Seed all Google Maps businesses in Calgary area (Cochrane, Okotoks, Airdrie, Canmore, Banff, Bragg Creek)
+
+## Brands / OEMs for Retailers
+- [x] Add "brands carried" field to businesses for bike retailers and supplement retailers
+- [x] Display brands on directory cards and business profiles for retailer types

@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE users ADD COLUMN IF NOT EXISTS accountType varchar(20) DEFAULT 'consumer';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute \nALTER TABLE users ADD COLUMN IF NOT EXISTS accountType varchar(20) DEFAULT 'consumer';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 59
+}

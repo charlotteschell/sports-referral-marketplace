@@ -1,6 +1,8 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Heart, Coffee, Mountain, Users, Clock, HandHeart } from "lucide-react";
+import { Heart, Coffee, Mountain, Users, Clock, HandHeart, Zap } from "lucide-react";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 
 const ABOUT_HERO = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663371988607/GSsAYVXwIlZznLhu.jpg";
 const ABOUT_VOLUNTEERS = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663371988607/JsbXrVJnnSpJXqEl.jpg";
@@ -24,8 +26,8 @@ export default function About() {
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Built by Athletes, for Athletes
             </h1>
-            <p className="text-lg text-white/90">
-              A community-driven marketplace connecting the small businesses that fuel our passion for cycling, trail running, and snow sports.
+            <p className="text-lg text-white/90" style={{ textTransform: "none", letterSpacing: "normal" }}>
+              A community of cyclists, runners, and snow sports junkies who thought: "Why don't the businesses that serve us actually talk to each other?"
             </p>
           </div>
         </div>
@@ -36,15 +38,15 @@ export default function About() {
         <div className="container max-w-4xl">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-6">Our Story</h2>
-              <p className="text-muted-foreground mb-4 leading-relaxed">
-                SportConnect was born from a simple observation: the small businesses that serve our sporting communities — the coaches, bike shops, nutritionists, sport psychologists, running clubs, and cycling studios — often operate in silos. They serve the same passionate athletes but rarely collaborate.
+              <h2 className="text-3xl font-bold text-foreground mb-6">The Short Version</h2>
+              <p className="text-muted-foreground mb-4 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                SportConnect started with a simple observation: the small businesses that serve our sporting communities (coaches, bike shops, nutritionists, sport psychologists, running clubs, cycling studios) almost never collaborate. They serve the same passionate athletes but operate in silos.
               </p>
-              <p className="text-muted-foreground mb-4 leading-relaxed">
-                We believe that when a cycling coach refers a client to a trusted sports nutritionist, or when a bike shop recommends a great sport psychologist, everyone wins — the businesses grow, and the athletes get better care.
+              <p className="text-muted-foreground mb-4 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                When a cycling coach refers a client to a trusted sports nutritionist, or a bike shop recommends a great sport psychologist, everyone wins. The businesses grow, and the athletes get better care.
               </p>
-              <p className="text-muted-foreground leading-relaxed">
-                That's why we built this referral marketplace: to make it easy for sports SMBs to find each other, collaborate, and grow together through mutual referrals.
+              <p className="text-muted-foreground leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                So we built a referral marketplace to make it easy for sports SMBs to find each other, collaborate, and grow together through mutual referrals. That's it. No venture capital pitch deck. Just a bunch of athletes who wanted to fix something.
               </p>
             </div>
             <div className="rounded-2xl overflow-hidden shadow-lg">
@@ -67,14 +69,14 @@ export default function About() {
             </div>
           </div>
           <h2 className="text-3xl font-bold text-white mb-6">
-            100% Volunteer-Driven
+            100% Volunteer Powered
           </h2>
-          <p className="text-white/90 text-lg leading-relaxed max-w-2xl mx-auto mb-8">
-            This site is purely driven by unpaid volunteers who are passionate about these sports themselves. We're cyclists, runners, and skiers who believe in the power of community. So please be patient if there's a small bug, or if responses are a bit delayed.
+          <p className="text-white/90 text-lg leading-relaxed max-w-2xl mx-auto mb-8" style={{ textTransform: "none", letterSpacing: "normal" }}>
+            This entire site is built and maintained by unpaid volunteers who are passionate about these sports themselves. We're cyclists, runners, and skiers who believe in the power of community. So please be patient if there's a small bug, or if responses are a bit delayed.
           </p>
           <div className="bg-white/10 rounded-2xl p-8 max-w-2xl mx-auto backdrop-blur-sm">
-            <p className="text-white/95 text-lg italic leading-relaxed">
-              "Just remember, the world still ran before this marketplace was created! And our volunteers sometimes have real bosses at their day jobs that may demand their attention so they can pay the bills."
+            <p className="text-white/95 text-lg italic leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
+              "Just remember, the world still ran before this marketplace was created! And our volunteers sometimes have real bosses at their day jobs that may demand their attention so they can pay the bills. We promise we're pedaling as fast as we can."
             </p>
           </div>
         </div>
@@ -92,8 +94,8 @@ export default function About() {
                 <Users className="w-7 h-7 text-emerald-600" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-3">Community First</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                We exist to help local sports businesses collaborate and thrive together. When one business grows, the whole community benefits.
+              <p className="text-muted-foreground leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                We exist to help local sports businesses collaborate and thrive together. When one business grows, the whole community benefits. Rising tides lift all boats (and bikes, and running shoes).
               </p>
             </div>
             <div className="bg-background rounded-xl p-8 shadow-sm border border-border/50">
@@ -101,8 +103,8 @@ export default function About() {
                 <Mountain className="w-7 h-7 text-blue-600" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-3">Passion for Sport</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Every volunteer on this project is an active cyclist, runner, or snow sports enthusiast. We understand the ecosystem because we live it.
+              <p className="text-muted-foreground leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                Every volunteer on this project is an active cyclist, runner, or snow sports enthusiast. We understand the ecosystem because we live it. We've bonked on long rides, DNF'd races, and still signed up for the next one.
               </p>
             </div>
             <div className="bg-background rounded-xl p-8 shadow-sm border border-border/50">
@@ -110,8 +112,8 @@ export default function About() {
                 <HandHeart className="w-7 h-7 text-amber-600" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-3">Trust & Transparency</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                All businesses are verified before being listed. We maintain quality so you can refer with confidence and build lasting partnerships.
+              <p className="text-muted-foreground leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                All businesses are verified before being listed. We maintain quality so you can refer with confidence and build lasting partnerships. No shady stuff. Just good people helping good people.
               </p>
             </div>
           </div>
@@ -131,10 +133,10 @@ export default function About() {
             </div>
             <div className="order-1 md:order-2">
               <h2 className="text-3xl font-bold text-foreground mb-6">Looking Ahead</h2>
-              <p className="text-muted-foreground mb-4 leading-relaxed">
-                Right now, we're keeping SportConnect completely free — funded by our own coffee money. We believe in building something valuable first and figuring out sustainability later.
+              <p className="text-muted-foreground mb-4 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                Right now, we're keeping SportConnect completely free. Funded by our own coffee money (and the occasional post-ride beer fund). We believe in building something valuable first and figuring out sustainability later.
               </p>
-              <p className="text-muted-foreground mb-4 leading-relaxed">
+              <p className="text-muted-foreground mb-4 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 At some point, as the number of businesses and activities increase, we may ask for donations or a small payment to help support the basic cost of running and building this site. But that day isn't today.
               </p>
               <div className="bg-muted/50 rounded-xl p-6 border border-border/50">
@@ -142,8 +144,8 @@ export default function About() {
                   <Coffee className="w-5 h-5 text-amber-600" />
                   <span className="font-semibold text-foreground">Currently Free</span>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  No subscription fees, no commissions, no hidden costs. Just a community of sports enthusiasts helping each other grow.
+                <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                  No subscription fees, no commissions, no hidden costs. Just a community of sports enthusiasts helping each other grow. If you want to buy us a coffee, we won't say no.
                 </p>
               </div>
             </div>
@@ -160,16 +162,27 @@ export default function About() {
             </div>
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-4">A Note on Patience</h2>
-          <p className="text-muted-foreground leading-relaxed mb-6">
-            We're a small team of volunteers who squeeze in development time between rides, runs, and ski days. If you spot a bug, we appreciate your understanding. If you have a suggestion, we'd love to hear it. And if you want to help, we'd be thrilled to have you on board.
+          <p className="text-muted-foreground leading-relaxed mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
+            We're a small team of volunteers who squeeze in development time between rides, runs, and ski days (priorities, right?). If you spot a bug, we appreciate your understanding. If you have a suggestion, we'd love to hear it. And if you want to help, we'd be thrilled to have you on board.
           </p>
-          <a
-            href="mailto:hello@sportconnect.com"
-            className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
-          >
-            <Heart className="w-4 h-4" />
-            Get in Touch
-          </a>
+          <p className="text-muted-foreground leading-relaxed mb-6" style={{ textTransform: "none", letterSpacing: "normal" }}>
+            Found something broken? Got a brilliant idea? Just want to say hi? Drop us a line or submit a support ticket.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="mailto:support@rarelabs.ai"
+              className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+            >
+              <Heart className="w-4 h-4" />
+              Email Us
+            </a>
+            <Link href="/support">
+              <Button variant="outline" className="bg-transparent px-6 py-3 h-auto font-medium">
+                <Zap className="w-4 h-4 mr-2" />
+                Submit a Ticket
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 

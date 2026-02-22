@@ -716,6 +716,263 @@ export const appRouter = router({
     }),
   }),
 
+  // ─── Partnership Emails ────────────────────────────────────
+  partnershipEmail: router({
+    send: protectedProcedure
+      .input(z.object({
+        recipientBusinessId: z.number(),
+        senderBusinessId: z.number().optional(),
+        subject: z.string().min(1).max(500),
+        message: z.string().min(1),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.recipientBusinessId);
+        if (!biz) throw new TRPCError({ code: 'NOT_FOUND', message: 'Business not found' });
+        const recipientEmail = biz.business.email || 'support@rarelabs.ai';
+        const result = await db.sendPartnershipEmail({
+          senderUserId: ctx.user.id,
+          senderBusinessId: input.senderBusinessId,
+          recipientBusinessId: input.recipientBusinessId,
+          recipientEmail,
+          subject: input.subject,
+          message: input.message,
+        });
+        // Notify owner about the email
+        try {
+          await notifyOwner({
+            title: `Partnership Email: ${input.subject}`,
+            content: `A partnership email was sent.\n\nFrom: ${ctx.user.name || ctx.user.email || 'User #' + ctx.user.id}\nTo: ${biz.business.name} (${recipientEmail})\nSubject: ${input.subject}\n\nMessage:\n${input.message}`,
+          });
+        } catch (e) {
+          console.warn('[Notification] Failed to notify owner:', e);
+        }
+        await db.incrementPlatformStat('partnership_emails');
+        return { id: result.id, success: true };
+      }),
+
+    mySent: protectedProcedure.query(async ({ ctx }) => {
+      return db.getPartnershipEmailsSent(ctx.user.id);
+    }),
+  }),
+
+  // ─── Support Tickets ──────────────────────────────────────────
+  supportTicket: router({
+    create: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1).max(500),
+        description: z.string().min(1),
+        ticketType: z.enum(['bug', 'feature_request', 'general']),
+        screenshotUrls: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const result = await db.createSupportTicket({
+          userId: ctx.user.id,
+          userName: ctx.user.name || undefined,
+          userEmail: ctx.user.email || 'unknown@sportconnect.com',
+          ...input,
+        });
+        try {
+          await notifyOwner({
+            title: `Support Ticket: ${input.title}`,
+            content: `New support ticket submitted.\n\nFrom: ${ctx.user.name || ctx.user.email || 'User #' + ctx.user.id}\nType: ${input.ticketType}\nTitle: ${input.title}\n\nDescription:\n${input.description}`,
+          });
+        } catch (e) {
+          console.warn('[Notification] Failed to notify owner:', e);
+        }
+        return result;
+      }),
+
+    myTickets: protectedProcedure.query(async ({ ctx }) => {
+      return db.getSupportTicketsByUser(ctx.user.id);
+    }),
+
+    // Admin: list all tickets
+    all: adminProcedure.query(async () => {
+      return db.getAllSupportTickets();
+    }),
+
+    // Admin: update ticket status
+    updateStatus: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(['new', 'in_backlog', 'in_progress', 'in_testing', 'done', 'launched']),
+        adminNotes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const ticket = await db.getSupportTicketById(input.id);
+        if (!ticket) throw new TRPCError({ code: 'NOT_FOUND' });
+        await db.updateSupportTicketStatus(input.id, input.status, input.adminNotes);
+        // If launched, send congratulation notification
+        if (input.status === 'launched' && ticket.userEmail) {
+          try {
+            await notifyOwner({
+              title: `Feature Launched: ${ticket.title}`,
+              content: `The feature/fix "${ticket.title}" has been launched!\n\nPlease send a congratulation email to: ${ticket.userEmail}\n\nOriginal request: ${ticket.description?.substring(0, 200)}`,
+            });
+          } catch (e) {
+            console.warn('[Notification] Failed to notify:', e);
+          }
+        }
+        return { success: true };
+      }),
+  }),
+
+  // ─── Category Approvals ───────────────────────────────────────
+  categoryApproval: router({
+    submit: protectedProcedure
+      .input(z.object({
+        categoryType: z.enum(['sport', 'business_type', 'region', 'hub']),
+        proposedName: z.string().min(1).max(255),
+        parentRegion: z.string().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const slug = input.proposedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const result = await db.createCategoryApproval({
+          userId: ctx.user.id,
+          ...input,
+          proposedSlug: slug,
+        });
+        try {
+          await notifyOwner({
+            title: `New Category Request: ${input.proposedName}`,
+            content: `A new ${input.categoryType} category has been proposed.\n\nName: ${input.proposedName}\nType: ${input.categoryType}\nBy: ${ctx.user.name || ctx.user.email || 'User #' + ctx.user.id}\n${input.parentRegion ? 'Parent Region: ' + input.parentRegion : ''}\n\nPlease review in the Admin Panel.`,
+          });
+        } catch (e) {
+          console.warn('[Notification] Failed to notify:', e);
+        }
+        return result;
+      }),
+
+    // Admin: list pending
+    pending: adminProcedure.query(async () => {
+      return db.getPendingCategoryApprovals();
+    }),
+
+    // Admin: all
+    all: adminProcedure.query(async () => {
+      return db.getAllCategoryApprovals();
+    }),
+
+    // Admin: approve/reject
+    review: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(['approved', 'rejected']),
+        adminNotes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const approval = await db.getCategoryApprovalById(input.id);
+        if (!approval) throw new TRPCError({ code: 'NOT_FOUND' });
+        await db.updateCategoryApprovalStatus(input.id, input.status, input.adminNotes);
+        // If approved, create the actual category
+        if (input.status === 'approved') {
+          const slug = approval.proposedSlug || approval.proposedName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          if (approval.categoryType === 'sport') {
+            await db.createSportCategory({ name: approval.proposedName, slug });
+          } else if (approval.categoryType === 'business_type') {
+            await db.createBusinessType({ name: approval.proposedName, slug });
+          }
+          // For region/hub, they are just string values used in businesses, no separate table needed
+        }
+        return { success: true };
+      }),
+  }),
+
+  // ─── Account Type ─────────────────────────────────────────────
+  accountType: router({
+    set: protectedProcedure
+      .input(z.object({
+        accountType: z.enum(['consumer', 'business_owner']),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await db.updateUserAccountType(ctx.user.id, input.accountType);
+        return { success: true };
+      }),
+  }),
+
+  // ─── Logo Upload ──────────────────────────────────────────────
+  logoUpload: router({
+    upload: protectedProcedure
+      .input(z.object({
+        businessId: z.number(),
+        logoData: z.string(), // base64 encoded
+        contentType: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        if (!biz) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the business owner can upload a logo' });
+        }
+        const { storagePut } = await import('./storage');
+        const buffer = Buffer.from(input.logoData, 'base64');
+        const ext = input.contentType.includes('png') ? 'png' : input.contentType.includes('svg') ? 'svg' : 'jpg';
+        const fileKey = `logos/${input.businessId}-${Date.now()}.${ext}`;
+        const { url } = await storagePut(fileKey, buffer, input.contentType);
+        await db.updateBusinessLogo(input.businessId, url);
+        return { url };
+      }),
+  }),
+
+  // ─── Brands Carried ───────────────────────────────────────────
+  brands: router({
+    update: protectedProcedure
+      .input(z.object({
+        businessId: z.number(),
+        brandsCarried: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        if (!biz) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        await db.updateBusinessBrands(input.businessId, input.brandsCarried);
+        return { success: true };
+      }),
+  }),
+
+  // ─── Multi-select Search ──────────────────────────────────────
+  searchMulti: router({
+    search: publicProcedure
+      .input(z.object({
+        search: z.string().optional(),
+        sportCategoryIds: z.array(z.number()).optional(),
+        businessTypeIds: z.array(z.number()).optional(),
+        regions: z.array(z.string()).optional(),
+        hubs: z.array(z.string()).optional(),
+        isClaimed: z.boolean().optional(),
+        limit: z.number().min(1).max(50).optional(),
+        offset: z.number().min(0).optional(),
+      }))
+      .query(async ({ input }) => {
+        return db.searchBusinessesMulti(input);
+      }),
+  }),
+
+  // ─── Get in Touch (sends to support@rarelabs.ai) ──────────────
+  contact: router({
+    send: publicProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        subject: z.string().min(1),
+        message: z.string().min(1),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          await notifyOwner({
+            title: `Contact Form: ${input.subject}`,
+            content: `New contact form submission.\n\nFrom: ${input.name} (${input.email})\nSubject: ${input.subject}\n\nMessage:\n${input.message}\n\nPlease reply to: ${input.email}`,
+          });
+        } catch (e) {
+          console.warn('[Notification] Failed to notify:', e);
+        }
+        return { success: true };
+      }),
+  }),
+
   // ─── Email Verification ────────────────────────────────────
   verification: router({
     sendCode: publicProcedure

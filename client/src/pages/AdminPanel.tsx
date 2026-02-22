@@ -26,8 +26,10 @@ import {
   Shield, Clock, CheckCircle2, XCircle, ChevronDown, ChevronUp,
   Building2, MapPin, Mail, Phone, Globe, Instagram, User, FileText,
   ArrowLeft, Loader2, AlertTriangle, Inbox, Eye, EyeOff, Gift,
-  Search, RefreshCw,
+  Search, RefreshCw, LifeBuoy, Bug, Lightbulb, HelpCircle, Rocket,
+  Tags, Plus,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -161,6 +163,14 @@ export default function AdminPanel() {
   // All offers for admin management
   const allOffers = trpc.admin.allOffers.useQuery(undefined, { enabled: isAdmin });
 
+  // Support tickets
+  const allTickets = trpc.supportTicket.all.useQuery(undefined, { enabled: isAdmin });
+
+  // Category approvals
+  const categoryApprovals = trpc.categoryApproval.all.useQuery(undefined, { enabled: isAdmin });
+
+  const [ticketNotes, setTicketNotes] = useState<Record<number, string>>({});
+
   const reviewMutation = trpc.submission.review.useMutation({
     onSuccess: (_, variables) => {
       toast.success(variables.status === "approved" ? "Business approved and added to directory!" : "Submission rejected.");
@@ -190,6 +200,22 @@ export default function AdminPanel() {
     onSuccess: () => {
       toast.success("Offer visibility updated.");
       allOffers.refetch();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const updateTicketStatus = trpc.supportTicket.updateStatus.useMutation({
+    onSuccess: () => {
+      toast.success("Ticket status updated!");
+      allTickets.refetch();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const updateCategoryApproval = trpc.categoryApproval.review.useMutation({
+    onSuccess: () => {
+      toast.success("Category request updated!");
+      categoryApprovals.refetch();
     },
     onError: (error) => toast.error(error.message),
   });
@@ -326,7 +352,7 @@ export default function AdminPanel() {
 
         <div className="container py-8">
           <Tabs defaultValue="approvals" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 h-auto">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto">
               <TabsTrigger value="approvals" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>
                 Claims {(pendingApprovals.data?.length || 0) > 0 && <Badge className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0">{pendingApprovals.data?.length}</Badge>}
               </TabsTrigger>
@@ -335,6 +361,12 @@ export default function AdminPanel() {
               </TabsTrigger>
               <TabsTrigger value="businesses" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>Businesses</TabsTrigger>
               <TabsTrigger value="offers" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>Offers</TabsTrigger>
+              <TabsTrigger value="tickets" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>
+                Tickets {(allTickets.data?.filter((t: any) => t.status === 'new').length || 0) > 0 && <Badge className="ml-1 bg-blue-500 text-white text-[10px] px-1.5 py-0">{allTickets.data?.filter((t: any) => t.status === 'new').length}</Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="categories" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>
+                Categories {(categoryApprovals.data?.filter((c: any) => c.status === 'pending').length || 0) > 0 && <Badge className="ml-1 bg-purple-500 text-white text-[10px] px-1.5 py-0">{categoryApprovals.data?.filter((c: any) => c.status === 'pending').length}</Badge>}
+              </TabsTrigger>
             </TabsList>
 
             {/* ─── Approvals Tab ─────────────────────────────── */}
@@ -588,6 +620,146 @@ export default function AdminPanel() {
                       </Card>
                     );
                   })}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* ─── Support Tickets Tab ────────────────────────── */}
+            <TabsContent value="tickets" className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold flex items-center gap-2"><LifeBuoy className="w-5 h-5 text-blue-500" /> Support Tickets</h2>
+                <Button size="sm" variant="ghost" onClick={() => allTickets.refetch()} style={{ textTransform: "none" }}><RefreshCw className="w-4 h-4 mr-1" /> Refresh</Button>
+              </div>
+
+              {allTickets.isLoading ? (
+                <div className="flex items-center justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
+              ) : !allTickets.data?.length ? (
+                <Card className="border-dashed"><CardContent className="p-12 text-center">
+                  <LifeBuoy className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-muted-foreground">No Tickets Yet</h3>
+                  <p className="text-sm text-muted-foreground/70" style={{ textTransform: "none" }}>When users submit support tickets, they'll appear here.</p>
+                </CardContent></Card>
+              ) : (
+                <div className="space-y-3">
+                  {allTickets.data.map((ticket: any) => {
+                    const typeIcon = ticket.ticketType === 'bug' ? <Bug className="w-4 h-4" /> : ticket.ticketType === 'feature_request' ? <Lightbulb className="w-4 h-4" /> : <HelpCircle className="w-4 h-4" />;
+                    const statusOptions = ['new', 'in_backlog', 'in_progress', 'in_testing', 'done', 'launched'] as const;
+                    return (
+                      <Card key={ticket.id} className="border border-border/60">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                {typeIcon}
+                                <h3 className="font-semibold text-sm" style={{ textTransform: "none" }}>{ticket.title}</h3>
+                                <Badge variant="secondary" className="text-[10px]" style={{ textTransform: "none" }}>
+                                  {ticket.ticketType === 'bug' ? 'Bug' : ticket.ticketType === 'feature_request' ? 'Feature' : 'General'}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground line-clamp-2 mb-2" style={{ textTransform: "none" }}>{ticket.description}</p>
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                                <span>#{ticket.id}</span>
+                                <span>{ticket.userName || ticket.userEmail}</span>
+                                <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                              </div>
+                              {ticket.screenshotUrls && (
+                                <a href={ticket.screenshotUrls} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block" style={{ textTransform: "none" }}>View Screenshot</a>
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-2 shrink-0">
+                              <select
+                                value={ticket.status}
+                                onChange={(e) => updateTicketStatus.mutate({ id: ticket.id, status: e.target.value as any, adminNotes: ticketNotes[ticket.id] || undefined })}
+                                className="text-xs border rounded px-2 py-1 bg-background"
+                                style={{ textTransform: "none" }}
+                              >
+                                {statusOptions.map(s => (
+                                  <option key={s} value={s}>{s.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-border/30">
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Admin notes..."
+                                value={ticketNotes[ticket.id] || ''}
+                                onChange={(e) => setTicketNotes(prev => ({ ...prev, [ticket.id]: e.target.value }))}
+                                className="text-xs h-8"
+                                style={{ textTransform: "none" }}
+                              />
+                              <Button size="sm" variant="outline" className="text-xs shrink-0 h-8" style={{ textTransform: "none" }}
+                                onClick={() => updateTicketStatus.mutate({ id: ticket.id, status: ticket.status, adminNotes: ticketNotes[ticket.id] || undefined })}
+                                disabled={updateTicketStatus.isPending}>
+                                Save Note
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* ─── Category Approvals Tab ──────────────────────── */}
+            <TabsContent value="categories" className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold flex items-center gap-2"><Tags className="w-5 h-5 text-purple-500" /> Category Approval Requests</h2>
+                <Button size="sm" variant="ghost" onClick={() => categoryApprovals.refetch()} style={{ textTransform: "none" }}><RefreshCw className="w-4 h-4 mr-1" /> Refresh</Button>
+              </div>
+              <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                Users can suggest new sports, business types, regions, or hubs. Approved items become available site-wide.
+              </p>
+
+              {categoryApprovals.isLoading ? (
+                <div className="flex items-center justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
+              ) : !categoryApprovals.data?.length ? (
+                <Card className="border-dashed"><CardContent className="p-12 text-center">
+                  <Tags className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-muted-foreground">No Category Requests</h3>
+                  <p className="text-sm text-muted-foreground/70" style={{ textTransform: "none" }}>When users suggest new categories, they'll appear here.</p>
+                </CardContent></Card>
+              ) : (
+                <div className="space-y-3">
+                  {categoryApprovals.data.map((item: any) => (
+                    <Card key={item.id} className={`border ${item.status === 'pending' ? 'border-purple-200 bg-purple-50/30' : 'border-border/60'}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <h3 className="font-semibold text-sm" style={{ textTransform: "none" }}>{item.proposedName}</h3>
+                              <Badge variant="outline" className="text-[10px]" style={{ textTransform: "none" }}>{item.categoryType}</Badge>
+                              {item.status === 'pending' && <Badge className="bg-amber-100 text-amber-800 text-[10px]">Pending</Badge>}
+                              {item.status === 'approved' && <Badge className="bg-emerald-100 text-emerald-800 text-[10px]">Approved</Badge>}
+                              {item.status === 'rejected' && <Badge className="bg-red-100 text-red-800 text-[10px]">Rejected</Badge>}
+                            </div>
+                            {item.description && <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>{item.description}</p>}
+                            {item.parentRegion && <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Parent Region: {item.parentRegion}</p>}
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1" style={{ textTransform: "none" }}>
+                              <span>User #{item.userId}</span>
+                              <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                          {item.status === 'pending' && (
+                            <div className="flex gap-2 shrink-0">
+                              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs" style={{ textTransform: "none" }}
+                                onClick={() => updateCategoryApproval.mutate({ id: item.id, status: 'approved' })}
+                                disabled={updateCategoryApproval.isPending}>
+                                <CheckCircle2 className="w-3 h-3 mr-1" /> Approve
+                              </Button>
+                              <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 text-xs" style={{ textTransform: "none" }}
+                                onClick={() => updateCategoryApproval.mutate({ id: item.id, status: 'rejected' })}
+                                disabled={updateCategoryApproval.isPending}>
+                                <XCircle className="w-3 h-3 mr-1" /> Reject
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               )}
             </TabsContent>
