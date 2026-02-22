@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ArrowLeft, Pencil, Loader2, Camera, X, Tag } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -40,8 +41,6 @@ export default function EditBusiness() {
     name: "",
     shortDescription: "",
     description: "",
-    sportCategoryId: "",
-    businessTypeId: "",
     city: "",
     state: "",
     country: "",
@@ -55,6 +54,10 @@ export default function EditBusiness() {
     facebook: "",
     brandsCarried: "",
   });
+
+  // Multi-select state
+  const [selectedSportCategoryIds, setSelectedSportCategoryIds] = useState<number[]>([]);
+  const [selectedBusinessTypeIds, setSelectedBusinessTypeIds] = useState<number[]>([]);
 
   // Logo upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,8 +109,6 @@ export default function EditBusiness() {
         name: b.name || "",
         shortDescription: b.shortDescription || "",
         description: b.description || "",
-        sportCategoryId: b.sportCategoryId ? String(b.sportCategoryId) : "",
-        businessTypeId: b.businessTypeId ? String(b.businessTypeId) : "",
         city: b.city || "",
         state: b.state || "",
         country: b.country || "",
@@ -121,13 +122,24 @@ export default function EditBusiness() {
         facebook: b.facebook || "",
         brandsCarried: (b as any).brandsCarried || "",
       });
+      // Initialize multi-select from junction table data
+      if (bizData.allSportCategories && bizData.allSportCategories.length > 0) {
+        setSelectedSportCategoryIds(bizData.allSportCategories.map((c: any) => c.id));
+      } else if (b.sportCategoryId) {
+        setSelectedSportCategoryIds([b.sportCategoryId]);
+      }
+      if (bizData.allBusinessTypes && bizData.allBusinessTypes.length > 0) {
+        setSelectedBusinessTypeIds(bizData.allBusinessTypes.map((t: any) => t.id));
+      } else if (b.businessTypeId) {
+        setSelectedBusinessTypeIds([b.businessTypeId]);
+      }
       setFormInitialized(true);
     }
   }, [bizData, formInitialized]);
 
   const updateMutation = trpc.business.update.useMutation({
     onSuccess: () => {
-      toast.success("Business updated successfully!");
+      toast.success("Business updated!");
       navigate("/dashboard");
     },
     onError: (err) => {
@@ -137,11 +149,21 @@ export default function EditBusiness() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (selectedSportCategoryIds.length === 0) {
+      toast.error("Select at least one sport category");
+      return;
+    }
+    if (selectedBusinessTypeIds.length === 0) {
+      toast.error("Select at least one business type");
+      return;
+    }
     updateMutation.mutate({
       id: businessId,
       ...form,
-      sportCategoryId: form.sportCategoryId ? parseInt(form.sportCategoryId) : undefined,
-      businessTypeId: form.businessTypeId ? parseInt(form.businessTypeId) : undefined,
+      sportCategoryId: selectedSportCategoryIds[0],
+      businessTypeId: selectedBusinessTypeIds[0],
+      sportCategoryIds: selectedSportCategoryIds,
+      businessTypeIds: selectedBusinessTypeIds,
     });
   };
 
@@ -149,18 +171,39 @@ export default function EditBusiness() {
     setForm(prev => ({ ...prev, [field]: value }));
   };
 
-  // Check if selected business type is a retailer (should show brands)
-  const isRetailerType = useMemo(() => {
-    if (!form.businessTypeId || !businessTypes) return false;
-    const selectedType = businessTypes.find(bt => bt.id === parseInt(form.businessTypeId));
-    return selectedType ? RETAILER_TYPE_NAMES.includes(selectedType.name) : false;
-  }, [form.businessTypeId, businessTypes]);
+  // Toggle a sport category
+  const toggleSportCategory = (id: number) => {
+    setSelectedSportCategoryIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
 
-  // Filter hubs by selected region
+  // Toggle a business type
+  const toggleBusinessType = (id: number) => {
+    setSelectedBusinessTypeIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  // Check if any selected business type is a retailer (should show brands)
+  const isRetailerType = useMemo(() => {
+    if (selectedBusinessTypeIds.length === 0 || !businessTypes) return false;
+    return selectedBusinessTypeIds.some(id => {
+      const bt = businessTypes.find(t => t.id === id);
+      return bt ? RETAILER_TYPE_NAMES.includes(bt.name) : false;
+    });
+  }, [selectedBusinessTypeIds, businessTypes]);
+
+  // Filter hubs by selected region (deduplicated)
   const filteredHubs = useMemo(() => {
     if (!hubs) return [];
-    if (!form.region) return hubs;
-    return hubs.filter((h: any) => h.region === form.region);
+    const filtered = !form.region ? hubs : hubs.filter((h: any) => h.region === form.region);
+    const seen = new Set<string>();
+    return filtered.filter((h: any) => {
+      if (seen.has(h.hub)) return false;
+      seen.add(h.hub);
+      return true;
+    });
   }, [hubs, form.region]);
 
   // Brands management
@@ -295,29 +338,81 @@ export default function EditBusiness() {
                     <Label htmlFor="description" style={{ textTransform: "none" }}>Full Description</Label>
                     <Textarea id="description" value={form.description} onChange={(e) => updateField("description", e.target.value)} rows={4} />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label style={{ textTransform: "none" }}>Sport Category *</Label>
-                      <Select value={form.sportCategoryId} onValueChange={(v) => updateField("sportCategoryId", v)}>
-                        <SelectTrigger><SelectValue placeholder="Select sport" /></SelectTrigger>
-                        <SelectContent>
-                          {sportCategories?.map(cat => (
-                            <SelectItem key={cat.id} value={String(cat.id)}>{cat.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+
+                  {/* Multi-select Sport Categories */}
+                  <div>
+                    <Label style={{ textTransform: "none" }}>Sport Categories * <span className="text-xs text-muted-foreground font-normal">(select all that apply)</span></Label>
+                    <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {sportCategories?.map(cat => (
+                        <label
+                          key={cat.id}
+                          className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                            selectedSportCategoryIds.includes(cat.id)
+                              ? "border-primary bg-primary/5 text-foreground"
+                              : "border-border bg-card hover:border-muted-foreground/30"
+                          }`}
+                        >
+                          <Checkbox
+                            checked={selectedSportCategoryIds.includes(cat.id)}
+                            onCheckedChange={() => toggleSportCategory(cat.id)}
+                          />
+                          <span className="text-sm" style={{ textTransform: "none" }}>{cat.name}</span>
+                        </label>
+                      ))}
                     </div>
-                    <div>
-                      <Label style={{ textTransform: "none" }}>Business Type *</Label>
-                      <Select value={form.businessTypeId} onValueChange={(v) => updateField("businessTypeId", v)}>
-                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                        <SelectContent>
-                          {businessTypes?.map(bt => (
-                            <SelectItem key={bt.id} value={String(bt.id)}>{bt.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    {selectedSportCategoryIds.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {selectedSportCategoryIds.map(id => {
+                          const cat = sportCategories?.find(c => c.id === id);
+                          return cat ? (
+                            <Badge key={id} variant="secondary" className="text-xs gap-1 pr-1" style={{ textTransform: "none" }}>
+                              {cat.name}
+                              <button type="button" onClick={() => toggleSportCategory(id)} className="ml-0.5 hover:bg-destructive/20 rounded-full p-0.5">
+                                <X className="w-3 h-3" />
+                              </button>
+                            </Badge>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Multi-select Business Types */}
+                  <div>
+                    <Label style={{ textTransform: "none" }}>Business Types * <span className="text-xs text-muted-foreground font-normal">(select all that apply)</span></Label>
+                    <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {businessTypes?.map(bt => (
+                        <label
+                          key={bt.id}
+                          className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                            selectedBusinessTypeIds.includes(bt.id)
+                              ? "border-primary bg-primary/5 text-foreground"
+                              : "border-border bg-card hover:border-muted-foreground/30"
+                          }`}
+                        >
+                          <Checkbox
+                            checked={selectedBusinessTypeIds.includes(bt.id)}
+                            onCheckedChange={() => toggleBusinessType(bt.id)}
+                          />
+                          <span className="text-sm" style={{ textTransform: "none" }}>{bt.name}</span>
+                        </label>
+                      ))}
                     </div>
+                    {selectedBusinessTypeIds.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {selectedBusinessTypeIds.map(id => {
+                          const bt = businessTypes?.find(t => t.id === id);
+                          return bt ? (
+                            <Badge key={id} variant="secondary" className="text-xs gap-1 pr-1" style={{ textTransform: "none" }}>
+                              {bt.name}
+                              <button type="button" onClick={() => toggleBusinessType(id)} className="ml-0.5 hover:bg-destructive/20 rounded-full p-0.5">
+                                <X className="w-3 h-3" />
+                              </button>
+                            </Badge>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Brands field - shown for retailer types */}
@@ -379,7 +474,6 @@ export default function EditBusiness() {
                       <Label style={{ textTransform: "none" }}>Region</Label>
                       <Select value={form.region} onValueChange={(v) => {
                         updateField("region", v);
-                        // Reset hub when region changes if hub doesn't belong to new region
                         if (form.hub && hubs) {
                           const hubInRegion = hubs.find((h: any) => h.hub === form.hub && h.region === v);
                           if (!hubInRegion) updateField("hub", "");

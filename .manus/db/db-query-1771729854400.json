@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, COUNT(DISTINCT referringBusinessId) as senders, COUNT(DISTINCT receivingBusinessId) as receivers FROM referrals;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT COUNT(*) as total, COUNT(DISTINCT referringBusinessId) as senders, COUNT(DISTINCT receivingBusinessId) as receivers FROM referrals;",
+  "rows": [
+    {
+      "total": "200",
+      "senders": "120",
+      "receivers": "125"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tsenders\treceivers\n200\t120\t125\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

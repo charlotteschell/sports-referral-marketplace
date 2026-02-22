@@ -450,10 +450,6 @@ export default function Home() {
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
                               <Shield className="w-3 h-3" /> Verified
                             </span>
-                          ) : item.business.isClaimed && !item.business.claimedByUserId ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-500/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
-                              <Shield className="w-3 h-3" /> Listed
-                            </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-500/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
                               Unclaimed

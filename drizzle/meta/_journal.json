@@ -50,6 +50,20 @@
       "when": 1771708254802,
       "tag": "0006_blue_ironclad",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1771728414665,
+      "tag": "0007_careful_chamber",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1771729182105,
+      "tag": "0008_low_amphibian",
+      "breakpoints": true
     }
   ]
 }

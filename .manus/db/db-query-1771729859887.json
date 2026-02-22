@@ -1,0 +1,25 @@
+{
+  "query": "SELECT COUNT(*) as total FROM referrals; SELECT * FROM referrals LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT COUNT(*) as total FROM referrals; SELECT * FROM referrals LIMIT 3;",
+  "rows": [
+    {
+      "total": "200"
+    },
+    {
+      "total": "id\treferringBusinessId\treferringUserId\treceivingBusinessId\treferralOfferId\tcustomerName\tcustomerEmail\tcustomerPhone\tnotes\tstatus\tcreatedAt\tupdatedAt\tcompletedAt\treceiverHonored\treceiverHonoredAt\treceiverHonoredNotes\tsenderCashedOut\tsenderCashedOutAt\tsenderCashedOutNotes\tincentiveAmount\tincentiveCurrency\tisDisputed\tdisputeReason\tdisputedAt\tdisputedByUserId"
+    },
+    {
+      "total": "1\t30047\t1\t30050\t30122\tCasey Moore\tNULL\tNULL\tNULL\tdeclined\t2026-02-03 16:28:50\t2026-02-03 16:28:50\tNULL\t0\tNULL\tNULL\t0\tNULL\tNULL\t197\tUSD\t0\tNULL\tNULL\tNULL"
+    },
+    {
+      "total": "2\t30069\t1\t30085\t30008\tCasey Johnson\tNULL\tNULL\tNULL\tconverted\t2025-11-23 02:52:50\t2025-11-23 02:52:50\tNULL\t1\tNULL\tNULL\t1\tNULL\tNULL\t71\tUSD\t0\tNULL\tNULL\tNULL"
+    },
+    {
+      "total": "3\t60015\t1\t48\t30092\tJamie Davis\tNULL\tNULL\tNULL\texpired\t2025-08-29 17:28:50\t2025-08-29 17:28:50\tNULL\t0\tNULL\tNULL\t0\tNULL\tNULL\t99\tUSD\t0\tNULL\tNULL\tNULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n200\nid\treferringBusinessId\treferringUserId\treceivingBusinessId\treferralOfferId\tcustomerName\tcustomerEmail\tcustomerPhone\tnotes\tstatus\tcreatedAt\tupdatedAt\tcompletedAt\treceiverHonored\treceiverHonoredAt\treceiverHonoredNotes\tsenderCashedOut\tsenderCashedOutAt\tsenderCashedOutNotes\tincentiveAmount\tincentiveCurrency\tisDisputed\tdisputeReason\tdisputedAt\tdisputedByUserId\n1\t30047\t1\t30050\t30122\tCasey Moore\tNULL\tNULL\tNULL\tdeclined\t2026-02-03 16:28:50\t2026-02-03 16:28:50\tNULL\t0\tNULL\tNULL\t0\tNULL\tNULL\t197\tUSD\t0\tNULL\tNULL\tNULL\n2\t30069\t1\t30085\t30008\tCasey Johnson\tNULL\tNULL\tNULL\tconverted\t2025-11-23 02:52:50\t2025-11-23 02:52:50\tNULL\t1\tNULL\tNULL\t1\tNULL\tNULL\t71\tUSD\t0\tNULL\tNULL\tNULL\n3\t60015\t1\t48\t30092\tJamie Davis\tNULL\tNULL\tNULL\texpired\t2025-08-29 17:28:50\t2025-08-29 17:28:50\tNULL\t0\tNULL\tNULL\t0\tNULL\tNULL\t99\tUSD\t0\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

@@ -8,6 +8,7 @@ import {
   referralOffers, InsertReferralOffer, ReferralOffer,
   referrals, InsertReferral, Referral,
   businessSportCategories,
+  businessBusinessTypes,
   businessSubmissions, InsertBusinessSubmission, BusinessSubmission,
   emailVerifications, InsertEmailVerification,
   consumerClaims, InsertConsumerClaim, ConsumerClaim,
@@ -1508,6 +1509,60 @@ export async function updateBusinessBrands(businessId: number, brandsCarried: st
   await db.update(businesses).set({ brandsCarried }).where(eq(businesses.id, businessId));
 }
 
+// ─── Multi-Select: Sport Categories & Business Types ────────
+
+export async function getBusinessSportCategories(businessId: number): Promise<SportCategory[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({ category: sportCategories })
+    .from(businessSportCategories)
+    .innerJoin(sportCategories, eq(businessSportCategories.sportCategoryId, sportCategories.id))
+    .where(eq(businessSportCategories.businessId, businessId))
+    .orderBy(asc(sportCategories.name));
+  return rows.map(r => r.category);
+}
+
+export async function getBusinessBusinessTypes(businessId: number): Promise<BusinessType[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({ type: businessTypes })
+    .from(businessBusinessTypes)
+    .innerJoin(businessTypes, eq(businessBusinessTypes.businessTypeId, businessTypes.id))
+    .where(eq(businessBusinessTypes.businessId, businessId))
+    .orderBy(asc(businessTypes.name));
+  return rows.map(r => r.type);
+}
+
+export async function setBusinessSportCategories(businessId: number, categoryIds: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Delete existing
+  await db.delete(businessSportCategories).where(eq(businessSportCategories.businessId, businessId));
+  // Insert new
+  if (categoryIds.length > 0) {
+    await db.insert(businessSportCategories).values(
+      categoryIds.map(id => ({ businessId, sportCategoryId: id }))
+    );
+    // Update primary to first selected
+    await db.update(businesses).set({ sportCategoryId: categoryIds[0] }).where(eq(businesses.id, businessId));
+  }
+}
+
+export async function setBusinessBusinessTypes(businessId: number, typeIds: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Delete existing
+  await db.delete(businessBusinessTypes).where(eq(businessBusinessTypes.businessId, businessId));
+  // Insert new
+  if (typeIds.length > 0) {
+    await db.insert(businessBusinessTypes).values(
+      typeIds.map(id => ({ businessId, businessTypeId: id }))
+    );
+    // Update primary to first selected
+    await db.update(businesses).set({ businessTypeId: typeIds[0] }).where(eq(businesses.id, businessId));
+  }
+}
+
 // ─── Multi-select search support ────────────────────────────
 export async function searchBusinessesMulti(filters: {
   search?: string;
@@ -1642,7 +1697,7 @@ export async function getLeaderboard(opts: { limit?: number; timeframe?: 'all' |
     LEFT JOIN referrals r ON r.referringBusinessId = b.id ${timeFilter}
     LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
     WHERE b.isActive = 1
-    GROUP BY b.id
+    GROUP BY b.id, b.name, b.slug, b.logoUrl, b.city, b.region, bt.name
     HAVING totalSent > 0
     ORDER BY totalSent DESC, totalEarned DESC
     LIMIT ${limit}
@@ -1660,7 +1715,7 @@ export async function getLeaderboard(opts: { limit?: number; timeframe?: 'all' |
     LEFT JOIN referrals r ON r.receivingBusinessId = b.id ${timeFilter}
     LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
     WHERE b.isActive = 1
-    GROUP BY b.id
+    GROUP BY b.id, b.name, b.slug, b.logoUrl, b.city, b.region, bt.name
     HAVING totalReceived > 0
     ORDER BY honored DESC, totalReceived DESC
     LIMIT ${limit}
@@ -1672,8 +1727,8 @@ export async function getLeaderboard(opts: { limit?: number; timeframe?: 'all' |
       b.id, b.name, b.slug, b.logoUrl, b.city, b.region,
       bt.name as businessTypeName,
       (
-        SELECT COUNT(*) FROM partnershipEmails pe 
-        WHERE pe.senderBusinessId = b.id OR pe.receiverBusinessId = b.id
+        SELECT COUNT(*) FROM partnership_emails pe 
+        WHERE pe.senderBusinessId = b.id OR pe.recipientBusinessId = b.id
       ) as totalEmails
     FROM businesses b
     LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id

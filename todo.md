@@ -501,3 +501,70 @@
 - [x] Rewrote Leaderboard.tsx: 2 copy edits (empty state, bottom CTA)
 - [x] Rewrote Footer.tsx: 1 copy edit (tagline)
 - [x] Saved copywriting guidelines as a reusable skill for future tasks
+
+## Multi-Select Sport Categories & Business Types
+- [x] Create junction tables: businessSportCategories and businessBusinessTypes for many-to-many
+- [x] Migrate existing single-category/type data to junction tables
+- [x] Update backend db helpers to read/write multiple categories and types per business
+- [x] Update tRPC procedures (create, update, search) to handle arrays of category/type IDs
+- [x] Update EditBusiness form with multi-select checkboxes/tags for categories and types
+- [ ] Update SubmitBusiness form with multi-select for categories and types
+- [ ] Update directory cards to display multiple categories/types
+- [ ] Update business profile page to show all categories and types
+- [ ] Update directory filters to match businesses with any of their categories/types
+- [ ] Brands field should appear when ANY selected type is a retailer type
+- [ ] Write/update tests for multi-category/type functionality
+
+## Consumer Enthusiast Signup Flow
+- [ ] "I'm an Enthusiast" button goes through a signup form (not just OAuth)
+- [ ] Collect: real name, email, hobbies/sports interests, location
+- [ ] Real name identification for businesses to verify when honoring incentives
+- [ ] After account creation and login, redirect to consumer dashboard
+
+## Consumer Dashboard
+- [ ] Simple dashboard showing all incentives claimed as a consumer
+- [ ] List businesses they frequent or have cashed out incentives from
+- [ ] Show total $$ saved from claimed incentives
+- [ ] Similar layout to business owner dashboard but consumer-focused
+- [ ] Track claimed offers with status (claimed, redeemed, expired)
+
+## Navigation Consolidation
+- [x] Remove "Submit a Business" from main nav links (was duplicate of List Your Business)
+- [x] "List Your Business" triggers login flow, then redirects to /submit-business form
+- [x] Submitting a business auto-sets accountType to business_owner for logged-in users
+- [x] Three main nav buttons: Sign In, I'm an Enthusiast, List Your Business
+- [x] Footer updated: "Submit Your Business" renamed to "List Your Business"
+- [x] Onboarding: business_owner selection now redirects to /submit-business
+- [x] I'm an Enthusiast pre-selects consumer on onboarding via URL query param
+
+## Comprehensive Error Check
+- [x] Check dev server for TS compilation errors
+- [x] Check browser console for runtime errors on all pages
+- [x] Verify admin account for charlotte@rarelabs.ai still exists and works
+- [x] Test all major pages: Home, Directory, BusinessProfile, Leaderboard, ReferralOffers, About, Support, Dashboard, EditBusiness, SubmitBusiness, Onboarding, AdminPanel
+- [x] Fix any errors found
+
+## Eliminate "Listed" Badge
+- [x] Remove "Listed" badge entirely - only show "Unclaimed" or "Verified"
+- [x] Update directory cards to use Unclaimed/Verified only
+- [x] Update business profile pages to use Unclaimed/Verified only
+- [x] Update any backend logic that references "Listed" status
+
+## Fix Leaderboard SQL Error
+- [x] Fix GROUP BY error in getLeaderboard queries (only_full_group_by mode)
+- [x] Verify leaderboard displays rankings correctly after fix
+
+## Thorough User Flow Testing
+- [x] Test Admin flow: login, admin panel, approve/reject submissions, hide businesses/offers
+- [x] Test Business Owner flow: signup, submit business, claim business, edit business, manage offers, send referrals, dashboard
+- [x] Test Consumer/Enthusiast flow: signup, browse directory, view profiles, claim offers
+- [x] Fix all issues found during testing
+
+## Additional Fixes During Testing
+- [x] Fix partnershipEmails table name mismatch (schema said "partnershipEmails", DB has "partnership_emails")
+- [x] Fix categoryApprovals table name mismatch (schema said "categoryApprovals", DB has "category_approvals")
+- [x] Fix supportTickets table name mismatch (already fixed to "support_tickets")
+- [x] Fix duplicate key warning in EditBusiness hub dropdown (deduplicate hubs)
+- [x] Fix duplicate key warning in SubmitBusiness hub dropdown (deduplicate hubs)
+- [x] Add missing mock functions in business.test.ts (getBusinessSportCategories, setBusinessSportCategories, etc.)
+- [x] All 92 tests passing

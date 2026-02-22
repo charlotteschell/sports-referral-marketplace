@@ -13,7 +13,6 @@ export default function Header() {
   const navLinks = [
     { href: "/directory", label: "Directory" },
     { href: "/referral-offers", label: "Referral Offers" },
-    { href: "/submit-business", label: "Submit Business" },
     { href: "/leaderboard", label: "Leaderboard" },
     { href: "/about", label: "About" },
     { href: "/support", label: "Support" },
@@ -91,16 +90,16 @@ export default function Header() {
                     Sign In
                   </Button>
                 </a>
-                <a href={getLoginUrl("/onboarding")}>
+                <a href={getLoginUrl("/onboarding?type=enthusiast")}>
                   <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 bg-transparent text-sm" style={{ textTransform: "none" }}>
                     <Mountain className="w-3.5 h-3.5 mr-1.5" /> I'm an Enthusiast
                   </Button>
                 </a>
-                <Link href="/submit-business">
+                <a href={getLoginUrl("/submit-business")}>
                   <Button className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white text-sm" style={{ textTransform: "none" }}>
                     List Your Business
                   </Button>
-                </Link>
+                </a>
               </>
             )}
           </div>
@@ -163,16 +162,16 @@ export default function Header() {
                         Sign In
                       </span>
                     </a>
-                    <a href={getLoginUrl("/onboarding")}>
+                    <a href={getLoginUrl("/onboarding?type=enthusiast")}>
                       <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
                         <span className="inline-flex items-center gap-1.5"><Mountain className="w-3.5 h-3.5" /> I'm an Enthusiast</span>
                       </span>
                     </a>
-                    <Link href="/submit-business">
+                    <a href={getLoginUrl("/submit-business")}>
                       <span className="block px-3 py-2 rounded-md text-sm font-medium text-[oklch(0.55_0.15_45)] hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
                         List Your Business
                       </span>
-                    </Link>
+                    </a>
                   </>
                 )}
               </div>

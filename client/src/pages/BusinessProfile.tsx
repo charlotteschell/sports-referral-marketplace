@@ -158,6 +158,18 @@ export default function BusinessProfile() {
     }
   };
 
+  // Google Maps URL for reviews - generate search URL as fallback
+  const googleMapsUrl = useMemo(() => {
+    if (!data?.business) return null;
+    if ((data.business as any).googleMapsUrl) return (data.business as any).googleMapsUrl;
+    // Generate a Google Maps search URL from business name + city
+    if (data.business.name && data.business.city) {
+      const query = encodeURIComponent(`${data.business.name} ${data.business.city}${data.business.country ? ` ${data.business.country}` : ''}`);
+      return `https://www.google.com/maps/search/?api=1&query=${query}`;
+    }
+    return null;
+  }, [data?.business]);
+
   // Extract domain from business website for email validation
   const businessDomain = useMemo(() => {
     if (!data?.business.website) return null;
@@ -248,22 +260,12 @@ export default function BusinessProfile() {
   const isAdmin = user?.role === 'admin';
   const isClaimed = business.isClaimed;
   const isReallyVerified = isClaimed && !!business.claimedByUserId;
-  const isDemoListed = isClaimed && !business.claimedByUserId;
   const canSeePrivateInfo = isOwner || isAdmin;
 
   const b2bOffers = offers?.filter(o => o.offerType === "b2b") || [];
   const consumerOffers = offers?.filter(o => o.offerType === "consumer") || [];
 
-  // Google Maps URL for reviews - generate search URL as fallback
-  const googleMapsUrl = useMemo(() => {
-    if ((business as any).googleMapsUrl) return (business as any).googleMapsUrl;
-    // Generate a Google Maps search URL from business name + city
-    if (business.name && business.city) {
-      const query = encodeURIComponent(`${business.name} ${business.city}${business.country ? ` ${business.country}` : ''}`);
-      return `https://www.google.com/maps/search/?api=1&query=${query}`;
-    }
-    return null;
-  }, [business]);
+
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -300,10 +302,6 @@ export default function BusinessProfile() {
                 {isReallyVerified ? (
                   <Badge className="bg-primary/20 text-primary border-primary/30" style={{ textTransform: "none" }}>
                     <Shield className="w-3 h-3 mr-1" /> Verified
-                  </Badge>
-                ) : isDemoListed ? (
-                  <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30" style={{ textTransform: "none" }}>
-                    <Shield className="w-3 h-3 mr-1" /> Listed
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="border-white/30 text-white/60" style={{ textTransform: "none" }}>
@@ -717,7 +715,7 @@ export default function BusinessProfile() {
               )}
 
               {/* Unclaimed notice */}
-              {!isReallyVerified && !isDemoListed && (
+              {!isReallyVerified && (
                 <Card className="border-dashed border-2 border-muted">
                   <CardContent className="p-8 text-center">
                     <Shield className="w-10 h-10 text-muted-foreground mx-auto mb-3" />

@@ -399,10 +399,6 @@ export default function Directory() {
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
                               <Shield className="w-3 h-3" /> Verified
                             </span>
-                          ) : item.business.isClaimed && !item.business.claimedByUserId ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-500/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
-                              <Shield className="w-3 h-3" /> Listed
-                            </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-500/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
                               Unclaimed
@@ -532,7 +528,7 @@ export default function Directory() {
                           <Send className="w-3.5 h-3.5 mr-1.5" /> Send Referral
                         </Button>
 
-                        {/* Claim button - shown for unclaimed or demo-listed (no real owner), View Profile for truly claimed */}
+                        {/* Claim button - shown for unclaimed businesses (no real owner), View Profile for verified/claimed */}
                         {(!item.business.isClaimed || (item.business.isClaimed && !item.business.claimedByUserId)) ? (
                           <Button
                             size="sm"

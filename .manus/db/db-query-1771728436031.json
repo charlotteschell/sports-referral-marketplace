@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO businessSportCategories (businessId, sportCategoryId)\nSELECT b.id, b.sportCategoryId FROM businesses b\nWHERE b.sportCategoryId IS NOT NULL\nAND NOT EXISTS (\n  SELECT 1 FROM businessSportCategories bsc \n  WHERE bsc.businessId = b.id AND bsc.sportCategoryId = b.sportCategoryId\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute INSERT INTO businessSportCategories (businessId, sportCategoryId)\nSELECT b.id, b.sportCategoryId FROM businesses b\nWHERE b.sportCategoryId IS NOT NULL\nAND NOT EXISTS (\n  SELECT 1 FROM businessSportCategories bsc \n  WHERE bsc.businessId = b.id AND bsc.sportCategoryId = b.sportCategoryId\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 62
+}

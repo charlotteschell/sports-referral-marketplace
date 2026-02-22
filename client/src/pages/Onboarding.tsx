@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -15,15 +15,19 @@ import {
 export default function Onboarding() {
   const { user, loading } = useAuth({ redirectOnUnauthenticated: true });
   const [, navigate] = useLocation();
-  const [selected, setSelected] = useState<"business_owner" | "consumer" | null>(null);
+  const urlParams = new URLSearchParams(window.location.search);
+  const typeFromUrl = urlParams.get('type');
+  const [selected, setSelected] = useState<"business_owner" | "consumer" | null>(
+    typeFromUrl === 'enthusiast' ? 'consumer' : null
+  );
   const utils = trpc.useUtils();
 
   const setAccountType = trpc.accountType.set.useMutation({
     onSuccess: () => {
       utils.auth.me.invalidate();
       if (selected === "business_owner") {
-        toast.success("You're in! Head to your dashboard to get started.");
-        navigate("/dashboard");
+        toast.success("You're in! Let's get your business listed.");
+        navigate("/submit-business");
       } else {
         toast.success("You're in! Check out what's near you.");
         navigate("/directory");
@@ -129,7 +133,7 @@ export default function Onboarding() {
                   {selected === "business_owner" && (
                     <div className="mt-5 pt-4 border-t border-primary/20">
                       <p className="text-xs text-primary font-medium" style={{ textTransform: "none" }}>
-                        Selected — You'll be taken to your business dashboard
+                        Selected — You'll list your business next
                       </p>
                     </div>
                   )}

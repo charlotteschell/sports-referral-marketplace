@@ -130,6 +130,15 @@ export const businessSportCategories = mysqlTable("businessSportCategories", {
 });
 
 /**
+ * Additional business types for a business (many-to-many)
+ */
+export const businessBusinessTypes = mysqlTable("businessBusinessTypes", {
+  id: int("id").autoincrement().primaryKey(),
+  businessId: int("businessId").notNull(),
+  businessTypeId: int("businessTypeId").notNull(),
+});
+
+/**
  * Referral offers that businesses post
  * offerType: 'b2b' for business-to-business, 'consumer' for individual consumers
  */
@@ -247,6 +256,8 @@ export const businessSubmissions = mysqlTable("businessSubmissions", {
   instagram: varchar("instagram", { length: 255 }),
   facebook: varchar("facebook", { length: 255 }),
   additionalNotes: text("additionalNotes"),
+  sportCategoryIds: text("sportCategoryIds"), // JSON array of additional sport category IDs
+  businessTypeIds: text("businessTypeIds"), // JSON array of additional business type IDs
   submittedByUserId: int("submittedByUserId"),
   status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
   reviewNotes: text("reviewNotes"),
@@ -278,7 +289,7 @@ export type InsertEmailVerification = typeof emailVerifications.$inferInsert;
 /**
  * Partnership emails: messages sent between businesses through the platform
  */
-export const partnershipEmails = mysqlTable("partnershipEmails", {
+export const partnershipEmails = mysqlTable("partnership_emails", {
   id: int("id").autoincrement().primaryKey(),
   senderUserId: int("senderUserId").notNull(),
   senderBusinessId: int("senderBusinessId"),
@@ -296,7 +307,7 @@ export type InsertPartnershipEmail = typeof partnershipEmails.$inferInsert;
 /**
  * Support tickets: user-submitted bug reports and feature requests
  */
-export const supportTickets = mysqlTable("supportTickets", {
+export const supportTickets = mysqlTable("support_tickets", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId"),
   userName: varchar("userName", { length: 255 }),
@@ -318,7 +329,7 @@ export type InsertSupportTicket = typeof supportTickets.$inferInsert;
 /**
  * Category approval requests: when users want to add new categories/regions/hubs
  */
-export const categoryApprovals = mysqlTable("categoryApprovals", {
+export const categoryApprovals = mysqlTable("category_approvals", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId"),
   categoryType: mysqlEnum("categoryType", ["sport", "business_type", "region", "hub"]).notNull(),

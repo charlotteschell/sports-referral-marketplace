@@ -92,7 +92,12 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const result = await db.getBusinessBySlug(input.slug);
         if (!result) throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
-        return result;
+        // Fetch all categories and types from junction tables
+        const [allSportCategories, allBusinessTypes] = await Promise.all([
+          db.getBusinessSportCategories(result.business.id),
+          db.getBusinessBusinessTypes(result.business.id),
+        ]);
+        return { ...result, allSportCategories, allBusinessTypes };
       }),
 
     getById: publicProcedure
@@ -100,7 +105,11 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const result = await db.getBusinessById(input.id);
         if (!result) throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
-        return result;
+        const [allSportCategories, allBusinessTypes] = await Promise.all([
+          db.getBusinessSportCategories(result.business.id),
+          db.getBusinessBusinessTypes(result.business.id),
+        ]);
+        return { ...result, allSportCategories, allBusinessTypes };
       }),
 
     myBusinesses: protectedProcedure.query(async ({ ctx }) => {
@@ -182,6 +191,8 @@ export const appRouter = router({
         shortDescription: z.string().max(500).optional(),
         sportCategoryId: z.number().optional(),
         businessTypeId: z.number().optional(),
+        sportCategoryIds: z.array(z.number()).optional(),
+        businessTypeIds: z.array(z.number()).optional(),
         city: z.string().optional(),
         state: z.string().optional(),
         country: z.string().optional(),
@@ -203,8 +214,22 @@ export const appRouter = router({
         if (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
           throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized to edit this business" });
         }
-        const { id, ...updateData } = input;
+        const { id, sportCategoryIds, businessTypeIds, ...updateData } = input;
+        // Update primary fields from first selected
+        if (sportCategoryIds && sportCategoryIds.length > 0) {
+          updateData.sportCategoryId = sportCategoryIds[0];
+        }
+        if (businessTypeIds && businessTypeIds.length > 0) {
+          updateData.businessTypeId = businessTypeIds[0];
+        }
         await db.updateBusiness(id, updateData);
+        // Update junction tables if provided
+        if (sportCategoryIds) {
+          await db.setBusinessSportCategories(id, sportCategoryIds);
+        }
+        if (businessTypeIds) {
+          await db.setBusinessBusinessTypes(id, businessTypeIds);
+        }
         return { success: true };
       }),
 
@@ -369,6 +394,8 @@ export const appRouter = router({
         businessDescription: z.string().optional(),
         sportCategoryId: z.number(),
         businessTypeId: z.number(),
+        sportCategoryIds: z.array(z.number()).optional(),
+        businessTypeIds: z.array(z.number()).optional(),
         city: z.string().optional(),
         state: z.string().optional(),
         country: z.string().optional(),
@@ -404,8 +431,18 @@ export const appRouter = router({
         }
         const id = await db.createBusinessSubmission({
           ...input,
+          sportCategoryIds: input.sportCategoryIds ? JSON.stringify(input.sportCategoryIds) : null,
+          businessTypeIds: input.businessTypeIds ? JSON.stringify(input.businessTypeIds) : null,
           submittedByUserId: ctx.user?.id ?? null,
         });
+        // Auto-set account type to business_owner when a logged-in user submits a business
+        if (ctx.user?.id) {
+          try {
+            await db.updateUserAccountType(ctx.user.id, 'business_owner');
+          } catch (e) {
+            console.warn('[AccountType] Failed to auto-set business_owner:', e);
+          }
+        }
         try {
           await notifyOwner({
             title: `New Business Submission: ${input.businessName}`,
@@ -441,7 +478,7 @@ export const appRouter = router({
           const uniqueSlug = `${slug}-${Date.now().toString(36)}`;
           // Auto-claim if submitted by a logged-in user (business owner)
           const wasSubmittedByUser = !!s.submittedByUserId;
-          await db.createBusiness({
+           const newBizId = await db.createBusiness({
             name: s.businessName,
             slug: uniqueSlug,
             description: s.businessDescription,
@@ -464,6 +501,21 @@ export const appRouter = router({
             isActive: true,
             approvalStatus: 'approved',
           });
+          // Save additional categories/types to junction tables
+          if (newBizId) {
+            const extraSportIds = (s as any).sportCategoryIds?.filter((id: number) => id !== s.sportCategoryId) || [];
+            const extraTypeIds = (s as any).businessTypeIds?.filter((id: number) => id !== s.businessTypeId) || [];
+            if (extraSportIds.length > 0) {
+              await db.setBusinessSportCategories(newBizId, [s.sportCategoryId, ...extraSportIds]);
+            } else {
+              await db.setBusinessSportCategories(newBizId, [s.sportCategoryId]);
+            }
+            if (extraTypeIds.length > 0) {
+              await db.setBusinessBusinessTypes(newBizId, [s.businessTypeId, ...extraTypeIds]);
+            } else {
+              await db.setBusinessBusinessTypes(newBizId, [s.businessTypeId]);
+            }
+          }
         }
         return { success: true };
       }),

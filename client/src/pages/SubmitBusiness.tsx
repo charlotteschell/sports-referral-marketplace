@@ -22,8 +22,8 @@ export default function SubmitBusiness() {
   // Form state
   const [businessName, setBusinessName] = useState("");
   const [businessDescription, setBusinessDescription] = useState("");
-  const [sportCategoryId, setSportCategoryId] = useState<number | null>(null);
-  const [businessTypeId, setBusinessTypeId] = useState<number | null>(null);
+  const [sportCategoryIds, setSportCategoryIds] = useState<number[]>([]);
+  const [businessTypeIds, setBusinessTypeIds] = useState<number[]>([]);
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
@@ -44,18 +44,33 @@ export default function SubmitBusiness() {
   const { data: regions } = trpc.categories.regions.useQuery();
   const { data: hubs } = trpc.categories.hubs.useQuery();
 
-  // Check if selected business type is a retailer
+  // Check if any selected business type is a retailer
   const isRetailerType = useMemo(() => {
-    if (!businessTypeId || !businessTypes) return false;
-    const selectedType = businessTypes.find(bt => bt.id === businessTypeId);
-    return selectedType ? RETAILER_TYPE_NAMES.includes(selectedType.name) : false;
-  }, [businessTypeId, businessTypes]);
+    if (businessTypeIds.length === 0 || !businessTypes) return false;
+    return businessTypeIds.some(id => {
+      const t = businessTypes.find(bt => bt.id === id);
+      return t ? RETAILER_TYPE_NAMES.includes(t.name) : false;
+    });
+  }, [businessTypeIds, businessTypes]);
 
-  // Filter hubs by selected region
+  const toggleSportCategory = (id: number) => {
+    setSportCategoryIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+  const toggleBusinessType = (id: number) => {
+    setBusinessTypeIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  // Filter hubs by selected region (deduplicated)
   const filteredHubs = useMemo(() => {
     if (!hubs) return [];
-    if (!region) return hubs;
-    return hubs.filter((h: any) => h.region === region);
+    const filtered = !region ? hubs : hubs.filter((h: any) => h.region === region);
+    // Deduplicate by hub name
+    const seen = new Set<string>();
+    return filtered.filter((h: any) => {
+      if (seen.has(h.hub)) return false;
+      seen.add(h.hub);
+      return true;
+    });
   }, [hubs, region]);
 
   // Brands management
@@ -96,12 +111,12 @@ export default function SubmitBusiness() {
       toast.error("Business name is required");
       return;
     }
-    if (!sportCategoryId) {
-      toast.error("Please select a sport category");
+    if (sportCategoryIds.length === 0) {
+      toast.error("Please select at least one sport category");
       return;
     }
-    if (!businessTypeId) {
-      toast.error("Please select a business type");
+    if (businessTypeIds.length === 0) {
+      toast.error("Please select at least one business type");
       return;
     }
     if (!website.trim()) {
@@ -120,8 +135,10 @@ export default function SubmitBusiness() {
     submitMutation.mutate({
       businessName: businessName.trim(),
       businessDescription: businessDescription.trim() || undefined,
-      sportCategoryId,
-      businessTypeId,
+      sportCategoryId: sportCategoryIds[0],
+      businessTypeId: businessTypeIds[0],
+      sportCategoryIds,
+      businessTypeIds,
       city: city.trim() || undefined,
       state: state.trim() || undefined,
       country: country.trim() || undefined,
@@ -168,8 +185,8 @@ export default function SubmitBusiness() {
                     setSubmitted(false);
                     setBusinessName("");
                     setBusinessDescription("");
-                    setSportCategoryId(null);
-                    setBusinessTypeId(null);
+                    setSportCategoryIds([]);
+                    setBusinessTypeIds([]);
                     setCity("");
                     setState("");
                     setCountry("");
@@ -262,47 +279,49 @@ export default function SubmitBusiness() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="space-y-2">
-                      <Label className="font-medium">
-                        Sport Category <span className="text-red-500">*</span>
-                      </Label>
-                      <Select
-                        value={sportCategoryId?.toString() || ""}
-                        onValueChange={(v) => setSportCategoryId(Number(v))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select sport category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {sportCategories?.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id.toString()}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  <div className="space-y-2">
+                    <Label className="font-medium">
+                      Sport Categories <span className="text-red-500">*</span>
+                      <span className="text-xs text-muted-foreground font-normal ml-2">Select all that apply</span>
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {sportCategories?.map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => toggleSportCategory(cat.id)}
+                          className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                            sportCategoryIds.includes(cat.id)
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-foreground border-border hover:border-primary/50"
+                          }`}
+                        >
+                          {cat.name}
+                        </button>
+                      ))}
                     </div>
+                  </div>
 
-                    <div className="space-y-2">
-                      <Label className="font-medium">
-                        Business Type <span className="text-red-500">*</span>
-                      </Label>
-                      <Select
-                        value={businessTypeId?.toString() || ""}
-                        onValueChange={(v) => setBusinessTypeId(Number(v))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select business type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {businessTypes?.map((type) => (
-                            <SelectItem key={type.id} value={type.id.toString()}>
-                              {type.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  <div className="space-y-2">
+                    <Label className="font-medium">
+                      Business Types <span className="text-red-500">*</span>
+                      <span className="text-xs text-muted-foreground font-normal ml-2">Select all that apply</span>
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {businessTypes?.map((type) => (
+                        <button
+                          key={type.id}
+                          type="button"
+                          onClick={() => toggleBusinessType(type.id)}
+                          className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                            businessTypeIds.includes(type.id)
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-foreground border-border hover:border-primary/50"
+                          }`}
+                        >
+                          {type.name}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
