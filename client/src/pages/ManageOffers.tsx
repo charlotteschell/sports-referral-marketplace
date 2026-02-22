@@ -48,13 +48,13 @@ function OfferFormFields({ form, updateField }: { form: OfferForm; updateField: 
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="b2b">B2B — For partner businesses</SelectItem>
-            <SelectItem value="consumer">Consumer — For individual customers</SelectItem>
+            <SelectItem value="consumer">Athlete — For individual athletes & enthusiasts</SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>
           {form.offerType === "b2b"
-            ? "B2B offers are for businesses that send you customers. Referred customers can still claim consumer offers."
-            : "Consumer offers are visible to individual enthusiasts browsing the marketplace."
+            ? "B2B offers are for businesses that send you customers. Referred customers can still claim athlete offers."
+            : "Athlete offers are visible to individual enthusiasts browsing the marketplace."
           }
         </p>
       </div>
@@ -263,7 +263,7 @@ export default function ManageOffers() {
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <h3 className="font-bold text-foreground">{offer.title}</h3>
                 <Badge variant="secondary" className={`${type === "b2b" ? "bg-[oklch(0.55_0.15_45)]/10 text-[oklch(0.55_0.15_45)]" : "bg-primary/10 text-primary"} text-xs`} style={{ textTransform: "none" }}>
-                  <TypeIcon className="w-3 h-3 mr-1" /> {type === "b2b" ? "B2B" : "Consumer"}
+                  <TypeIcon className="w-3 h-3 mr-1" /> {type === "b2b" ? "B2B" : "Athlete"}
                 </Badge>
                 {(offer as any).isHidden && (
                   <Badge className="bg-gray-100 text-gray-600 text-xs" style={{ textTransform: "none" }}>
@@ -392,7 +392,7 @@ export default function ManageOffers() {
                 <Gift className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                 <h3 className="text-lg font-bold mb-2">No Referral Offers Yet</h3>
                 <p className="text-muted-foreground mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                  Create B2B offers for partner businesses or consumer offers for individual enthusiasts.
+                  Create B2B offers for partner businesses or athlete offers for individual enthusiasts.
                 </p>
               </CardContent>
             </Card>
@@ -410,11 +410,11 @@ export default function ManageOffers() {
                 </div>
               )}
 
-              {/* Consumer Offers */}
+              {/* Athlete Offers */}
               {consumerOffers.length > 0 && (
                 <div>
                   <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                    <Users className="w-5 h-5 text-primary" /> Consumer Offers
+                    <Users className="w-5 h-5 text-primary" /> Athlete Offers
                   </h2>
                   <div className="space-y-3">
                     {consumerOffers.map((offer) => renderOfferCard(offer, "consumer"))}

@@ -80,7 +80,7 @@ export default function ReferralOffers() {
                 <Handshake className="w-4 h-4 mr-1.5" /> B2B ({b2bCount})
               </TabsTrigger>
               <TabsTrigger value="consumer" className="data-[state=active]:bg-background" style={{ textTransform: "none" }}>
-                <Users className="w-4 h-4 mr-1.5" /> Consumer ({consumerCount})
+                <Users className="w-4 h-4 mr-1.5" /> Athlete ({consumerCount})
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -97,7 +97,7 @@ export default function ReferralOffers() {
                 <h3 className="font-bold text-foreground">B2B Referral Offers</h3>
               </div>
               <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                For businesses that send customers to each other. Earn commissions, trade services, or set up a partnership. Referred customers can still grab consumer offers too.
+                For businesses that send customers to each other. Earn commissions, trade services, or set up a partnership. Referred customers can still grab athlete offers too.
               </p>
             </div>
           )}
@@ -105,7 +105,7 @@ export default function ReferralOffers() {
             <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
               <div className="flex items-center gap-2 mb-1">
                 <Users className="w-5 h-5 text-primary" />
-                <h3 className="font-bold text-foreground">Consumer Offers</h3>
+                <h3 className="font-bold text-foreground">Athlete Offers</h3>
               </div>
               <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 For athletes and enthusiasts. Discounts, free sessions, and deals straight from sports businesses near you.
@@ -128,12 +128,12 @@ export default function ReferralOffers() {
           ) : filteredOffers.length === 0 ? (
             <div className="text-center py-20">
               <Gift className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-bold mb-2">No {offerTypeFilter !== "all" ? (offerTypeFilter === "b2b" ? "B2B" : "Consumer") : "Active"} Offers</h3>
+              <h3 className="text-xl font-bold mb-2">No {offerTypeFilter !== "all" ? (offerTypeFilter === "b2b" ? "B2B" : "Athlete") : "Active"} Offers</h3>
               <p className="text-muted-foreground mb-6" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 {offerTypeFilter === "b2b" 
                   ? "No B2B referral offers yet. Claim your business and post the first one."
                   : offerTypeFilter === "consumer"
-                  ? "No consumer offers yet. Check back soon or browse B2B offers."
+                  ? "No athlete offers yet. Check back soon or browse B2B offers."
                   : "Be the first to post a referral offer. Claim your business and start attracting referrals."
                 }
               </p>
@@ -173,7 +173,7 @@ export default function ReferralOffers() {
                             {item.offer.offerType === "b2b" ? (
                               <><Handshake className="w-3 h-3 mr-1" /> B2B</>
                             ) : (
-                              <><Users className="w-3 h-3 mr-1" /> Consumer</>
+                              <><Users className="w-3 h-3 mr-1" /> Athlete</>
                             )}
                           </Badge>
                           {(item.offer as any).isSample && (

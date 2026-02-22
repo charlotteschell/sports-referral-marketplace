@@ -1,0 +1,66 @@
+{
+  "query": "SELECT * FROM platformStats;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT * FROM platformStats;",
+  "rows": [
+    {
+      "id": "1",
+      "statKey": "total_referrals_sent",
+      "statValue": "847",
+      "label": "Total Referrals Sent",
+      "updatedAt": "2026-02-21 22:16:19"
+    },
+    {
+      "id": "2",
+      "statKey": "total_referrals_honored",
+      "statValue": "613",
+      "label": "Referrals Honored",
+      "updatedAt": "2026-02-22 02:08:45"
+    },
+    {
+      "id": "3",
+      "statKey": "total_incentive_value",
+      "statValue": "28450",
+      "label": "Total Incentive Value ($)",
+      "updatedAt": "2026-02-21 22:16:19"
+    },
+    {
+      "id": "4",
+      "statKey": "total_consumer_claims",
+      "statValue": "1243",
+      "label": "Consumer Offers Claimed",
+      "updatedAt": "2026-02-21 22:16:19"
+    },
+    {
+      "id": "5",
+      "statKey": "total_consumer_savings",
+      "statValue": "18720",
+      "label": "Consumer Savings ($)",
+      "updatedAt": "2026-02-21 22:16:19"
+    },
+    {
+      "id": "6",
+      "statKey": "active_businesses",
+      "statValue": "60",
+      "label": "Active Businesses",
+      "updatedAt": "2026-02-21 22:16:19"
+    },
+    {
+      "id": "7",
+      "statKey": "active_partnerships",
+      "statValue": "134",
+      "label": "Active B2B Partnerships",
+      "updatedAt": "2026-02-21 22:16:19"
+    },
+    {
+      "id": "8",
+      "statKey": "regions_covered",
+      "statValue": "8",
+      "label": "Regions Covered",
+      "updatedAt": "2026-02-21 22:16:19"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tstatKey\tstatValue\tlabel\tupdatedAt\n1\ttotal_referrals_sent\t847\tTotal Referrals Sent\t2026-02-21 22:16:19\n2\ttotal_referrals_honored\t613\tReferrals Honored\t2026-02-22 02:08:45\n3\ttotal_incentive_value\t28450\tTotal Incentive Value ($)\t2026-02-21 22:16:19\n4\ttotal_consumer_claims\t1243\tConsumer Offers Claimed\t2026-02-21 22:16:19\n5\ttotal_consumer_savings\t18720\tConsumer Savings ($)\t2026-02-21 22:16:19\n6\tactive_businesses\t60\tActive Businesses\t2026-02-21 22:16:19\n7\tactive_partnerships\t134\tActive B2B Partnerships\t2026-02-21 22:16:19\n8\tregions_covered\t8\tRegions Covered\t2026-02-21 22:16:19\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

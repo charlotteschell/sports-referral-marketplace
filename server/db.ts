@@ -1297,7 +1297,7 @@ export async function getConsumerAnalytics(userId: number) {
  */
 export async function getPlatformStats() {
   const db = await getDb();
-  if (!db) return { totalReferrals: 0, honoredReferrals: 0, totalIncentivesExchanged: 0, consumerOffersClaimed: 0, consumerSavings: 0, activeBusinesses: 0 };
+  if (!db) return { totalReferrals: 0, honoredReferrals: 0, totalIncentivesExchanged: 0, consumerOffersClaimed: 0, consumerSavings: 0, activeBusinesses: 0, businessRevenueFromReferrals: 0, totalAthletesSentToBusinesses: 0, totalPartnershipsBrokered: 0 };
   const rows = await db.select().from(platformStats);
   const raw: Record<string, number> = {};
   for (const row of rows) {
@@ -1310,6 +1310,9 @@ export async function getPlatformStats() {
     consumerOffersClaimed: raw['consumerOffersClaimed'] || 0,
     consumerSavings: raw['consumerSavings'] || 0,
     activeBusinesses: raw['activeBusinesses'] || 0,
+    businessRevenueFromReferrals: raw['businessRevenueFromReferrals'] || 0,
+    totalAthletesSentToBusinesses: raw['totalAthletesSentToBusinesses'] || 0,
+    totalPartnershipsBrokered: raw['totalPartnershipsBrokered'] || 0,
   };
 }
 

@@ -641,7 +641,7 @@ export default function BusinessProfile() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                      For businesses looking to collaborate or send customers. Referred customers can still claim eligible consumer offers.
+                      For businesses looking to collaborate or send customers. Referred customers can still claim eligible athlete offers.
                     </p>
                     <div className="space-y-4">
                       {b2bOffers.map((offer) => (
@@ -696,17 +696,17 @@ export default function BusinessProfile() {
                 </Card>
               )}
 
-              {/* Consumer Offers */}
+              {/* Athlete Offers */}
               {consumerOffers.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Users className="w-5 h-5 text-primary" /> Consumer Offers
+                      <Users className="w-5 h-5 text-primary" /> Athlete Offers
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                      Special offers for individual consumers and enthusiasts — discounts, free sessions, and more.
+                      Special offers for individual athletes and enthusiasts — discounts, free sessions, and more.
                     </p>
                     <div className="space-y-4">
                       {consumerOffers.map((offer) => (
@@ -723,7 +723,7 @@ export default function BusinessProfile() {
                             <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-semibold text-foreground">{offer.title}</h4>
                               <Badge variant="secondary" className="bg-primary/10 text-primary text-xs" style={{ textTransform: "none" }}>
-                                <Users className="w-3 h-3 mr-1" /> Consumer
+                                <Users className="w-3 h-3 mr-1" /> Athlete
                               </Badge>
                               {(offer as any).isSample && (
                                 <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 text-[10px]" style={{ textTransform: "none" }}>

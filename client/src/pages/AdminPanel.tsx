@@ -589,7 +589,7 @@ export default function AdminPanel() {
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h3 className="font-semibold text-foreground text-sm">{item.offer.title}</h3>
-                                <Badge variant="outline" className="text-[10px]">{item.offer.offerType === "b2b" ? "B2B" : "Consumer"}</Badge>
+                                <Badge variant="outline" className="text-[10px]">{item.offer.offerType === "b2b" ? "B2B" : "Athlete"}</Badge>
                                 {item.offer.isSample && <Badge className="bg-amber-100 text-amber-800 text-[10px]">Sample</Badge>}
                                 {item.offer.isAdminHidden && <Badge className="bg-red-100 text-red-800 text-[10px]"><EyeOff className="w-2.5 h-2.5 mr-0.5" /> Admin Hidden</Badge>}
                                 {item.offer.isHidden && !item.offer.isAdminHidden && <Badge className="bg-gray-100 text-gray-600 text-[10px]"><EyeOff className="w-2.5 h-2.5 mr-0.5" /> Owner Hidden</Badge>}

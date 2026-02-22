@@ -1,0 +1,42 @@
+{
+  "query": "SELECT statKey, statValue FROM platformStats ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT statKey, statValue FROM platformStats ORDER BY id;",
+  "rows": [
+    {
+      "statKey": "total_referrals_sent",
+      "statValue": "847"
+    },
+    {
+      "statKey": "total_referrals_honored",
+      "statValue": "613"
+    },
+    {
+      "statKey": "total_incentive_value",
+      "statValue": "28450"
+    },
+    {
+      "statKey": "total_consumer_claims",
+      "statValue": "1243"
+    },
+    {
+      "statKey": "total_consumer_savings",
+      "statValue": "18720"
+    },
+    {
+      "statKey": "active_businesses",
+      "statValue": "60"
+    },
+    {
+      "statKey": "active_partnerships",
+      "statValue": "134"
+    },
+    {
+      "statKey": "regions_covered",
+      "statValue": "8"
+    }
+  ],
+  "messages": [],
+  "stdout": "statKey\tstatValue\ntotal_referrals_sent\t847\ntotal_referrals_honored\t613\ntotal_incentive_value\t28450\ntotal_consumer_claims\t1243\ntotal_consumer_savings\t18720\nactive_businesses\t60\nactive_partnerships\t134\nregions_covered\t8\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

@@ -708,3 +708,11 @@
 ## Homepage Stats & API Error Fix
 - [x] Fix tRPC API error: query returning HTML instead of JSON on homepage (was 502 transient error; added retry logic to tRPC client)
 - [x] Replace "4 Sport Categories" stat with athlete count (308 fake number) with demo tooltip
+## Consumer→Athlete Rename & Scoreboard Revamp
+- [x] Replace all "consumer offers" with "athlete offers" in copywriting across the codebase
+- [x] Replace other "consumer" references with "athlete" where appropriate
+- [x] Change "Launching in" to "Public launch in" on homepage
+- [x] Rename "Incentives Exchanged" to "Referral Incentives Earned" on Scoreboard
+- [x] Change "Active Businesses" to "Business Revenue Earned from Referrals" on Scoreboard, placed next to referral incentives
+- [x] Add new metric: "Total Athletes Sent to Businesses" on Scoreboard
+- [x] Add new metric: "Total Business Partnerships Brokered" on Scoreboard

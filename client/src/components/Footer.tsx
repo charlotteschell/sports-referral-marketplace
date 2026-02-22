@@ -68,7 +68,7 @@ export default function Footer() {
             <h4 className="text-sm font-bold text-white mb-4">For Enthusiasts</h4>
             <ul className="space-y-2 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>
               <li><Link href="/directory"><span className="hover:text-white transition-colors cursor-pointer">Find Local Pros</span></Link></li>
-              <li><Link href="/referral-offers"><span className="hover:text-white transition-colors cursor-pointer">Consumer Offers</span></Link></li>
+              <li><Link href="/referral-offers"><span className="hover:text-white transition-colors cursor-pointer">Athlete Offers</span></Link></li>
               <li><Link href="/directory?sport=sport-vacations"><span className="hover:text-white transition-colors cursor-pointer">Sport Vacations</span></Link></li>
             </ul>
           </div>

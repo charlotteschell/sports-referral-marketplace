@@ -152,6 +152,7 @@ vi.mock("./db", () => ({
   getPlatformStats: vi.fn().mockResolvedValue({
     totalReferrals: 247, honoredReferrals: 189, totalIncentivesExchanged: 12450,
     consumerOffersClaimed: 156, consumerSavings: 4320, activeBusinesses: 42,
+    businessRevenueFromReferrals: 0, totalAthletesSentToBusinesses: 0, totalPartnershipsBrokered: 0,
   }),
   // Email verification mocks
   createEmailVerification: vi.fn().mockResolvedValue(undefined),

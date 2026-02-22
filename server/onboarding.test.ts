@@ -45,7 +45,7 @@ vi.mock("./db", () => ({
   getConsumerClaimsByUser: vi.fn().mockResolvedValue([]),
   getConsumerClaimsByBusiness: vi.fn().mockResolvedValue([]),
   getConsumerAnalytics: vi.fn().mockResolvedValue({ totalClaims: 0, redeemed: 0, pending: 0, totalSaved: 0 }),
-  getPlatformStats: vi.fn().mockResolvedValue({ totalReferrals: 0, honoredReferrals: 0, totalIncentivesExchanged: 0, consumerOffersClaimed: 0, consumerSavings: 0, activeBusinesses: 0 }),
+  getPlatformStats: vi.fn().mockResolvedValue({ totalReferrals: 0, honoredReferrals: 0, totalIncentivesExchanged: 0, consumerOffersClaimed: 0, consumerSavings: 0, activeBusinesses: 0, businessRevenueFromReferrals: 0, totalAthletesSentToBusinesses: 0, totalPartnershipsBrokered: 0 }),
   createEmailVerification: vi.fn().mockResolvedValue(undefined),
   verifyEmailCode: vi.fn().mockResolvedValue(true),
   isEmailVerified: vi.fn().mockResolvedValue(true),

@@ -159,7 +159,7 @@ function LaunchTimer() {
       <div className="flex items-center gap-2 mb-2">
         <Clock className="w-4 h-4 text-[oklch(0.55_0.15_45)]" />
         <span className="text-xs text-white/50 uppercase tracking-wider" style={{ textTransform: "none", letterSpacing: "0.1em" }}>
-          {isLaunched ? "Time since launch" : "Launching in"}
+          {isLaunched ? "Time since launch" : "Public launch in"}
         </span>
       </div>
       <div className="flex items-center gap-1 md:gap-3">
@@ -314,7 +314,7 @@ export default function Home() {
             </div>
             {/* Launch Countdown Timer */}
             <LaunchTimer />
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
               <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
                 <p className="text-2xl md:text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>{platformStats.totalReferrals}</p>
                 <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Total Referrals</p>
@@ -325,19 +325,27 @@ export default function Home() {
               </div>
               <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
                 <p className="text-2xl md:text-3xl font-bold text-emerald-400" style={{ fontFamily: "var(--font-heading)" }}>${platformStats.totalIncentivesExchanged}</p>
-                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Incentives Exchanged</p>
+                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Referral Incentives Earned</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                <p className="text-2xl md:text-3xl font-bold text-amber-400" style={{ fontFamily: "var(--font-heading)" }}>${platformStats.businessRevenueFromReferrals}</p>
+                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Business Revenue from Referrals</p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
                 <p className="text-2xl md:text-3xl font-bold text-blue-400" style={{ fontFamily: "var(--font-heading)" }}>{platformStats.consumerOffersClaimed}</p>
-                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Consumer Offers Claimed</p>
+                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Athlete Offers Claimed</p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
-                <p className="text-2xl md:text-3xl font-bold text-amber-400" style={{ fontFamily: "var(--font-heading)" }}>${platformStats.consumerSavings}</p>
-                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Consumer Savings</p>
+                <p className="text-2xl md:text-3xl font-bold text-cyan-400" style={{ fontFamily: "var(--font-heading)" }}>{platformStats.totalAthletesSentToBusinesses}</p>
+                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Athletes Sent to Businesses</p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
-                <p className="text-2xl md:text-3xl font-bold text-purple-400" style={{ fontFamily: "var(--font-heading)" }}>{platformStats.activeBusinesses}</p>
-                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Active Businesses</p>
+                <p className="text-2xl md:text-3xl font-bold text-purple-400" style={{ fontFamily: "var(--font-heading)" }}>{platformStats.totalPartnershipsBrokered}</p>
+                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Business Partnerships Brokered</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                <p className="text-2xl md:text-3xl font-bold text-amber-300" style={{ fontFamily: "var(--font-heading)" }}>${platformStats.consumerSavings}</p>
+                <p className="text-xs text-white/60 mt-1" style={{ textTransform: "none" }}>Athlete Savings</p>
               </div>
             </div>
           </div>
@@ -632,7 +640,7 @@ export default function Home() {
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-5">
                 <Users className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">Consumer Offers</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3">Athlete Offers</h3>
               <p className="text-muted-foreground leading-relaxed mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 For athletes who like saving money (so, all athletes). Browse deals from local pros — discounts, free sessions, package deals. No coupon clipping required.
               </p>
