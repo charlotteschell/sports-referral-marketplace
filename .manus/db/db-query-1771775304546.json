@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name, isClaimed, claimedByUserId, claimedAt, approvalStatus FROM businesses WHERE id = 56;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name, isClaimed, claimedByUserId, claimedAt, approvalStatus FROM businesses WHERE id = 56;",
+  "rows": [
+    {
+      "id": "56",
+      "name": "Score Nutrition",
+      "isClaimed": "1",
+      "claimedByUserId": "180773",
+      "claimedAt": "2026-02-22 15:48:19",
+      "approvalStatus": "pending"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tisClaimed\tclaimedByUserId\tclaimedAt\tapprovalStatus\n56\tScore Nutrition\t1\t180773\t2026-02-22 15:48:19\tpending\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

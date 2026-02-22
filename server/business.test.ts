@@ -346,13 +346,13 @@ describe("business.getBySlug", () => {
 describe("business.claim", () => {
   it("allows authenticated user to claim an unclaimed business", async () => {
     const caller = appRouter.createCaller(createAuthContext());
-    const result = await caller.business.claim({ businessId: 2, verificationEmail: "test@unclaimed-biz.com" });
+    const result = await caller.business.claim({ businessId: 2 });
     expect(result.success).toBe(true);
   });
 
   it("rejects claiming an already claimed business", async () => {
     const caller = appRouter.createCaller(createAuthContext());
-    await expect(caller.business.claim({ businessId: 1, verificationEmail: "test@test-cycling.com" })).rejects.toThrow("Business already claimed");
+    await expect(caller.business.claim({ businessId: 1 })).rejects.toThrow("Business already claimed");
   });
 
   it("rejects unauthenticated claim attempts", async () => {

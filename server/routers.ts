@@ -177,21 +177,19 @@ export const appRouter = router({
     claim: protectedProcedure
       .input(z.object({
         businessId: z.number(),
-        verificationEmail: z.string().email(),
       }))
       .mutation(async ({ input, ctx }) => {
         const biz = await db.getBusinessById(input.businessId);
         if (!biz) throw new TRPCError({ code: "NOT_FOUND", message: "Business not found" });
         if (biz.business.isClaimed) throw new TRPCError({ code: "CONFLICT", message: "Business already claimed" });
-        // Verify email was verified
-        const verified = await db.isEmailVerified(input.verificationEmail, 'claim');
-        if (!verified) throw new TRPCError({ code: "BAD_REQUEST", message: "Email not verified. Please verify your business email first." });
+        // User is already authenticated via OAuth — skip email verification
+        // Claim goes directly to admin approval
         await db.claimBusiness(input.businessId, ctx.user.id);
         // Notify admin about claim needing approval
         try {
           await notifyOwner({
             title: `Business Claim Pending: ${biz.business.name}`,
-            content: `A business has been claimed and needs your approval.\n\nBusiness: ${biz.business.name}\nClaimed by: ${ctx.user.name || ctx.user.email || 'Unknown'}\nVerification email: ${input.verificationEmail}\nCity: ${biz.business.city || 'N/A'}, ${biz.business.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
+            content: `A business has been claimed and needs your approval.\n\nBusiness: ${biz.business.name}\nClaimed by: ${ctx.user.name || ctx.user.email || 'Unknown'}\nUser email: ${ctx.user.email || 'N/A'}\nCity: ${biz.business.city || 'N/A'}, ${biz.business.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify owner:', e);

@@ -63,11 +63,8 @@ export default function BusinessProfile() {
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
 
-  // Email verification state for claiming
-  const [claimStep, setClaimStep] = useState<'idle' | 'email' | 'code' | 'verified'>('idle');
-  const [verificationEmail, setVerificationEmail] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [emailError, setEmailError] = useState('');
+  // Claim state
+  const [showClaimConfirm, setShowClaimConfirm] = useState(false);
 
   const { data, isLoading, error } = trpc.business.getBySlug.useQuery(
     { slug: params.slug || "" },
@@ -79,28 +76,10 @@ export default function BusinessProfile() {
     { enabled: !!data?.business.id }
   );
 
-  const sendCodeMutation = trpc.verification.sendCode.useMutation({
-    onSuccess: () => {
-      toast.success("Verification code sent! Check your email.");
-      setClaimStep('code');
-    },
-    onError: (err) => toast.error(err.message || "Failed to send verification code"),
-  });
-
-  const verifyCodeMutation = trpc.verification.verifyCode.useMutation({
-    onSuccess: () => {
-      toast.success("Email verified! You can now submit your claim.");
-      setClaimStep('verified');
-    },
-    onError: (err) => toast.error(err.message || "Invalid or expired code"),
-  });
-
   const claimMutation = trpc.business.claim.useMutation({
     onSuccess: (result) => {
       toast.success(result.message || "Claim submitted for approval!");
-      setClaimStep('idle');
-      setVerificationEmail('');
-      setVerificationCode('');
+      setShowClaimConfirm(false);
       utils.business.getBySlug.invalidate({ slug: params.slug });
     },
     onError: (err) => {
@@ -188,49 +167,9 @@ export default function BusinessProfile() {
     return null;
   }, [data?.business]);
 
-  // Extract domain from business website for email validation
-  const businessDomain = useMemo(() => {
-    if (!data?.business.website) return null;
-    try {
-      const url = new URL(data.business.website.startsWith('http') ? data.business.website : `https://${data.business.website}`);
-      return url.hostname.replace('www.', '');
-    } catch {
-      return null;
-    }
-  }, [data?.business.website]);
-
-  const handleSendCode = () => {
-    if (!verificationEmail) {
-      setEmailError('Please enter your email');
-      return;
-    }
-    // Validate email matches business domain if available
-    if (businessDomain) {
-      const emailDomain = verificationEmail.split('@')[1]?.toLowerCase();
-      if (emailDomain !== businessDomain.toLowerCase()) {
-        setEmailError(`Email must be from the business domain (@${businessDomain})`);
-        return;
-      }
-    }
-    setEmailError('');
-    sendCodeMutation.mutate({
-      email: verificationEmail,
-      businessId: data?.business.id,
-      verificationType: 'claim',
-    });
-  };
-
-  const handleVerifyCode = () => {
-    verifyCodeMutation.mutate({
-      email: verificationEmail,
-      code: verificationCode,
-      verificationType: 'claim',
-    });
-  };
-
   const handleSubmitClaim = () => {
     if (!data?.business.id) return;
-    claimMutation.mutate({ businessId: data.business.id, verificationEmail });
+    claimMutation.mutate({ businessId: data.business.id });
   };
 
   if (isLoading) {
@@ -439,14 +378,18 @@ export default function BusinessProfile() {
                   )}
                 </Button>
               )}
-              {(!isReallyVerified) && isAuthenticated && claimStep === 'idle' && (
+              {(!isReallyVerified) && isAuthenticated && (
                 <Button
-                  onClick={() => setClaimStep('email')}
+                  onClick={() => setShowClaimConfirm(true)}
                   className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white"
                   style={{ textTransform: "none" }}
+                  disabled={claimMutation.isPending}
                 >
-                  <Handshake className="w-4 h-4 mr-2" />
-                  Claim Business
+                  {claimMutation.isPending ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Claiming...</>
+                  ) : (
+                    <><Handshake className="w-4 h-4 mr-2" /> Claim Business</>
+                  )}
                 </Button>
               )}
               {(!isReallyVerified) && !isAuthenticated && (
@@ -492,126 +435,46 @@ export default function BusinessProfile() {
         </div>
       </section>
 
-      {/* Email Verification Flow for Claiming */}
-      {claimStep !== 'idle' && !isReallyVerified && isAuthenticated && (
-        <section className="bg-amber-50 dark:bg-amber-950/20 border-b border-amber-200 dark:border-amber-800">
-          <div className="container py-6">
-            <div className="max-w-lg mx-auto">
-              {claimStep === 'email' && (
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <Mail className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-1">Verify Your Business Email</h3>
-                      <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                        To claim this business, please enter an email address with the business domain
-                        {businessDomain && <> (<strong>@{businessDomain}</strong>)</>}.
-                        We'll send a verification code to confirm you own this business.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type="email"
-                      placeholder={businessDomain ? `you@${businessDomain}` : "your@business-email.com"}
-                      value={verificationEmail}
-                      onChange={(e) => { setVerificationEmail(e.target.value); setEmailError(''); }}
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={handleSendCode}
-                      disabled={sendCodeMutation.isPending}
-                      className="bg-amber-600 hover:bg-amber-700 text-white shrink-0"
-                      style={{ textTransform: "none" }}
-                    >
-                      {sendCodeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Code"}
-                    </Button>
-                  </div>
-                  {emailError && (
-                    <p className="text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" /> {emailError}
-                    </p>
-                  )}
-                  <Button variant="ghost" size="sm" onClick={() => setClaimStep('idle')} className="text-muted-foreground" style={{ textTransform: "none" }}>
-                    Cancel
-                  </Button>
-                </div>
-              )}
-
-              {claimStep === 'code' && (
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-1">Enter Verification Code</h3>
-                      <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                        We sent a 6-digit code to <strong>{verificationEmail}</strong>. Enter it below to verify your ownership.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      placeholder="Enter 6-digit code"
-                      value={verificationCode}
-                      onChange={(e) => setVerificationCode(e.target.value)}
-                      maxLength={6}
-                      className="flex-1 text-center text-lg tracking-widest font-mono"
-                    />
-                    <Button
-                      onClick={handleVerifyCode}
-                      disabled={verifyCodeMutation.isPending || verificationCode.length < 4}
-                      className="bg-amber-600 hover:bg-amber-700 text-white shrink-0"
-                      style={{ textTransform: "none" }}
-                    >
-                      {verifyCodeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => setClaimStep('email')} className="text-muted-foreground" style={{ textTransform: "none" }}>
-                      Use Different Email
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={handleSendCode} disabled={sendCodeMutation.isPending} className="text-muted-foreground" style={{ textTransform: "none" }}>
-                      Resend Code
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {claimStep === 'verified' && (
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-1">Email Verified!</h3>
-                      <p className="text-sm text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                        Your email has been verified. Click below to submit your claim. Please note that <strong>all claims are subject to admin approval</strong>. You'll receive a confirmation once your claim is reviewed.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleSubmitClaim}
-                      disabled={claimMutation.isPending}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                      style={{ textTransform: "none" }}
-                    >
-                      {claimMutation.isPending ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</>
-                      ) : (
-                        <><Handshake className="w-4 h-4 mr-2" /> Submit Claim for Approval</>
-                      )}
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setClaimStep('idle')} className="text-muted-foreground" style={{ textTransform: "none" }}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
+      {/* Claim Confirmation Dialog */}
+      <Dialog open={showClaimConfirm} onOpenChange={setShowClaimConfirm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Handshake className="w-5 h-5 text-[oklch(0.55_0.15_45)]" />
+              Claim {business.name}?
+            </DialogTitle>
+            <DialogDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
+              You're about to claim ownership of <strong>{business.name}</strong>. Your claim will be reviewed by our admin team to verify you are the rightful owner. You'll be notified once your claim is approved.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-4 text-sm text-amber-800 dark:text-amber-200" style={{ textTransform: "none", letterSpacing: "normal" }}>
+            <p className="font-medium mb-1">What happens next:</p>
+            <ul className="list-disc list-inside space-y-1 text-amber-700 dark:text-amber-300">
+              <li>Your claim is sent to our admin team for review</li>
+              <li>We'll verify your account matches this business</li>
+              <li>Once approved, you'll have full control of this listing</li>
+              <li>You can then manage offers, edit info, and upload your logo</li>
+            </ul>
           </div>
-        </section>
-      )}
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setShowClaimConfirm(false)} style={{ textTransform: "none" }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitClaim}
+              disabled={claimMutation.isPending}
+              className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white"
+              style={{ textTransform: "none" }}
+            >
+              {claimMutation.isPending ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</>
+              ) : (
+                <><Handshake className="w-4 h-4 mr-2" /> Yes, Claim This Business</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Content */}
       <section className="py-10">
@@ -764,12 +627,12 @@ export default function BusinessProfile() {
                       Is this your business? Claim it to unlock your full profile, post referral offers, and start getting customers from partner businesses. It's free. Like, actually free. No asterisks.
                     </p>
                     <p className="text-xs text-muted-foreground/70 mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                      We'll verify your email matches the business domain. Quick and painless.
+                      Your claim will be reviewed by our admin team. Quick and painless.
                     </p>
                     {isAuthenticated ? (
                       <Button
-                        onClick={() => setClaimStep('email')}
-                        disabled={claimStep !== 'idle'}
+                        onClick={() => setShowClaimConfirm(true)}
+                        disabled={claimMutation.isPending}
                         className="bg-primary text-primary-foreground"
                         style={{ textTransform: "none" }}
                       >

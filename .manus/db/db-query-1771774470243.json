@@ -1,0 +1,20 @@
+{
+  "query": "SELECT * FROM emailVerifications ORDER BY createdAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT * FROM emailVerifications ORDER BY createdAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "email": "charlotte+trailrun@rarelabs.ai",
+      "code": "115953",
+      "businessId": "62",
+      "verificationType": "claim",
+      "isVerified": "1",
+      "expiresAt": "2026-02-22 01:18:23",
+      "createdAt": "2026-02-22 01:03:22"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tcode\tbusinessId\tverificationType\tisVerified\texpiresAt\tcreatedAt\n1\tcharlotte+trailrun@rarelabs.ai\t115953\t62\tclaim\t1\t2026-02-22 01:18:23\t2026-02-22 01:03:22\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

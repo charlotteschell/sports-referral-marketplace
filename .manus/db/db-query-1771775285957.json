@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, name, email FROM users WHERE email LIKE '%carrie%' OR email LIKE '%score%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name, email FROM users WHERE email LIKE '%carrie%' OR email LIKE '%score%';",
+  "rows": [
+    {
+      "id": "180773",
+      "name": "carrie",
+      "email": "carrie@scorenutrition.ca"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\n180773\tcarrie\tcarrie@scorenutrition.ca\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

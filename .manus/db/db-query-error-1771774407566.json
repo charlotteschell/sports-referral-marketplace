@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, name, slug, claimedByUserId, claimedAt, isVerified FROM businesses WHERE name LIKE '%Score%' OR name LIKE '%score%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name, slug, claimedByUserId, claimedAt, isVerified FROM businesses WHERE name LIKE '%Score%' OR name LIKE '%score%';",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'isverified' in 'field list'"
+  ]
+}

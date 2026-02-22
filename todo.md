@@ -724,3 +724,10 @@
 - [x] Collapse into persistent expandable top banner after dismissal
 - [x] Integrate banner on every page (above Header)
 - [x] Use localStorage to track first-visit vs returning visitor state
+## Admin Panel Claim Visibility Bug
+- [x] Debug why claimed business (Score Nutrition) not showing in admin panel for approval
+  - Root cause: verification codes sent to admin via notifyOwner, NOT emailed to the claimant
+  - Users got stuck at "Send Code" step because code never arrived in their inbox
+- [x] Simplified claim flow: removed email verification step entirely (users already authenticated via OAuth)
+  - Claim now goes directly to admin approval with a confirmation dialog
+- [x] Manually completed Carrie's claim on Score Nutrition (user 180773, business 56, approvalStatus=pending)
