@@ -743,86 +743,31 @@
 - [x] Add University link to top navigation header
 - [x] Create article detail page for individual tutorials
 - [x] Added 6 business articles and 4 athlete articles (5 coming soon placeholders each)
-## Dual-Verification Referral Amount System
-- [ ] Schema: Add sender_confirmed_incentive_amount, receiver_confirmed_incentive_amount to referrals
-- [ ] Schema: Add receiver_confirmed_revenue_amount, athlete_confirmed_payment_amount to referrals
-- [ ] Schema: Add is_incentive_verified (true when both incentive amounts match) to referrals
-- [ ] Schema: Add is_revenue_verified (true when both revenue/payment amounts match) to referrals
-- [ ] Backend: When Business A (sender) confirms referral honored, ask for $ incentive amount received
-- [ ] Backend: When Business B (receiver) marks referral honored, ask for $ incentive amount paid
-- [ ] Backend: Only count referral as honored when both incentive amounts match
-- [ ] Backend: When Business B confirms revenue from referral, record revenue amount
-- [ ] Backend: When referred Athlete confirms payment, record payment amount
-- [ ] Backend: Only count revenue toward dashboards when both revenue/payment amounts match
-- [ ] Frontend: Add $ amount input fields to honor/confirm referral forms
-- [ ] Frontend: Add $ amount input to revenue confirmation form
-- [ ] Frontend: Add privacy tooltip: "This amount is only visible to you. Only aggregated platform totals are shown publicly."
-- [ ] Frontend: Update dashboards to use verified amounts only for scorecards
-- [ ] Update platform stats to use verified amounts
-## Admin Nav Dropdown
-- [x] Merge admin nav items into a single dropdown menu to shorten nav bar
-- [x] Keep nav bar clean and not too long for admin accounts
 
-## Contact Name for All Users
-- [x] Add contactName field to user schema
-- [x] Prompt users to enter their contact name on first login/signup
-- [x] Display contact name in nav bar instead of email username
-- [x] Display contact name everywhere users are referenced
+## Bug Fix: Athlete Dashboard SQL Error
+- [x] Fix HAVING without GROUP BY in recommended businesses query on /athlete-dashboard (wrapped in subquery)
 
-## Contact Name Privacy — Owner-Only Visibility
-- [x] contactName should only be visible to the account owner themselves
-- [x] Nav bar: show contactName only to the logged-in user (already correct)
-- [x] Dashboard greeting: show contactName only to the logged-in user (already correct)
-- [x] Ensure contactName is NOT exposed in any public API responses (verified: leaderboard uses business names, no public endpoint exposes user contactName)
-- [x] Ensure business names (not contact names) remain on all public-facing cards, profiles, directory listings
-- [x] Backend: exclude contactName from any public-facing tRPC responses (verified: auth.me only returns own user, userProfile.get is protected)
-- [x] Update tests to verify privacy (existing tests confirm protected access)
+## Bug Fix: Dashboard SQL Errors
+- [x] Fix HAVING without GROUP BY in recommended businesses query on /athlete-dashboard (wrapped in subquery)
+- [x] Fix "not valid JSON" error on /dashboard caused by server crash from SQL error
 
-## Nav Bar Alignment Fix
-- [x] Fix styling/alignment of referral offers link in nav bar when users are logged in
+## Re-implemented Features (lost from checkpoint)
+- [x] Admin nav dropdown (Dashboards with chevron)
+- [x] Contact name field on users table (schema + DB columns)
+- [x] ContactNamePrompt modal for first-time users
+- [x] Account Settings page with profile editing and account deletion
+- [x] contactName display in nav bar, dashboards, greetings
+- [x] notifyUser helper with preference-aware notification delivery
+- [x] getUserById helper in db.ts
+- [x] Email module (server/email.ts) with Resend integration
+- [x] Account deletion helpers (soft delete, admin delete/hide/restore)
+- [x] Admin user management procedures (listUsers, deleteUser, hideUser, restoreUser)
+- [x] Admin Users tab in AdminPanel
+- [x] Dual-verification badges on referral cards
+- [x] Verified Scorecard on business dashboard
+- [x] Business claim notification to user (notifyUser in claim procedure)
+- [x] contactName in userProfile.get return
+- [x] All tests updated and passing (162 tests)
 
-## Notification System Audit & Fix
-- [x] Audit all notification triggers across the codebase (in-app + email)
-- [x] Verify business claim notification is sent to the business owner (not just admin)
-- [x] List all events that should trigger notifications and to whom
-- [x] Verify in-app notifications are created correctly
-- [x] Verify email notifications are sent correctly (no email module exists yet — noted for future)
-- [x] Verify notification preferences (in_app_only, email_only, both, none) are respected via notifyUser helper
-- [x] Fix any missing or broken notification delivery (added 10+ notification triggers)
-- [x] Write tests for notification system (15 new tests, 162 total pass)
-
-## Account Deletion
-- [x] User self-service account deletion (Settings page at /account-settings)
-- [x] Keep previous activity data (referrals, claims, etc.) when user deletes their own account
-- [x] Show deleted user's activity as "Deleted Account" to other users
-- [x] Admin: delete or hide a user account from admin dashboard (Users tab)
-- [x] Admin: delete or hide all related businesses when deleting a user
-- [x] Admin: option to retain previous activity data (shown as "Deleted Account") or delete those as well
-- [x] Admin: confirmation dialog with data retention toggle before deletion
-- [x] Database: soft-delete user (mark as deleted, anonymize PII)
-- [x] Database: cascade hide/delete businesses owned by deleted user
-- [x] Write tests for account deletion (18 new tests, 180 total pass)
-
-## E2E Claim Flow Notification Test
-- [x] Test claim flow end-to-end in browser (APEX Coaching)
-- [x] Verify in-app notification appears on bell icon after claiming a business ("Claim submitted for APEX Coaching")
-- [x] Verify admin approval triggers notification back to the claiming user ("Your claim for APEX Coaching has been approved!")
-- [x] Fix any issues found during E2E testing (none — working correctly)
-
-## Email Delivery Integration
-- [x] Integrate email sending using Resend API (server/email.ts)
-- [x] Wire email delivery into the notifyUser helper for email_only and both preferences
-- [x] Send email notifications for key events (all notifyUser calls now attempt email)
-- [x] Graceful fallback to in-app only when no API key configured
-- [ ] REMINDER: User needs to set up Resend API key (RESEND_API_KEY) to activate email delivery
-- [ ] Write tests for email delivery
-
-## Dual-Verification Referral Amount System
-- [x] Add senderConfirmedAmount and receiverConfirmedAmount fields to referrals schema (already existed)
-- [x] Add verification status tracking (isIncentiveVerified, isRevenueVerified fields already in schema)
-- [x] Build backend procedures for sender/receiver to confirm referral amounts (honor, cashout, athleteConfirmPayment, businessConfirmClaimSavings)
-- [x] Build frontend UI for sender to confirm amount they paid (cashout dialog with amount field)
-- [x] Build frontend UI for receiver to confirm amount they received (honor dialog with incentive/revenue fields)
-- [x] Show verification status on referral cards (dual-verification badges: Verified, Sender Confirmed, Receiver Confirmed, Pending)
-- [x] Build verified scorecards showing confirmed/verified referral stats (Verified Scorecard card with progress bars)
-- [x] Write tests for dual-verification system (8 new tests, 188 total pass)
+## Pending Reminders
+- [ ] REMINDER: User needs to set up Resend API key (RESEND_API_KEY + RESEND_FROM_EMAIL) to activate email delivery

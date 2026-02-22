@@ -91,13 +91,6 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function getUserById(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
-
 // ─── Sport Categories ───────────────────────────────────────────
 
 export async function getAllSportCategories(): Promise<SportCategory[]> {
@@ -831,35 +824,22 @@ export async function deleteBusiness(businessId: number) {
 
 export async function getDashboardAnalytics(userId: number) {
   const db = await getDb();
-  if (!db) return { totalReferralsSent: 0, totalReferralsReceived: 0, conversionRate: 0, activeOffers: 0, statusBreakdown: { pending: 0, contacted: 0, converted: 0, declined: 0, expired: 0 }, topPartners: [], recentActivity: [], verifiedScorecard: { sent: { incentiveVerified: 0, totalVerifiedEarned: '0', honored: 0 }, received: { incentiveVerified: 0, revenueVerified: 0, totalVerifiedIncentivePaid: '0', totalVerifiedRevenue: '0', honored: 0 } } };
+  const emptyScorecard = { verifiedCount: 0, totalVerifiedIncentive: '0.00', pendingVerification: 0, verificationRate: '0' };
+  if (!db) return { totalReferralsSent: 0, totalReferralsReceived: 0, conversionRate: 0, activeOffers: 0, statusBreakdown: { pending: 0, contacted: 0, converted: 0, declined: 0, expired: 0 }, topPartners: [], recentActivity: [], verifiedScorecard: emptyScorecard };
 
   const userBizIds = await db.select({ id: businesses.id, name: businesses.name })
     .from(businesses)
     .where(eq(businesses.claimedByUserId, userId));
 
-  if (userBizIds.length === 0) return { totalReferralsSent: 0, totalReferralsReceived: 0, conversionRate: 0, activeOffers: 0, statusBreakdown: { pending: 0, contacted: 0, converted: 0, declined: 0, expired: 0 }, topPartners: [], recentActivity: [], verifiedScorecard: { sent: { incentiveVerified: 0, totalVerifiedEarned: '0', honored: 0 }, received: { incentiveVerified: 0, revenueVerified: 0, totalVerifiedIncentivePaid: '0', totalVerifiedRevenue: '0', honored: 0 } } };
+  if (userBizIds.length === 0) return { totalReferralsSent: 0, totalReferralsReceived: 0, conversionRate: 0, activeOffers: 0, statusBreakdown: { pending: 0, contacted: 0, converted: 0, declined: 0, expired: 0 }, topPartners: [], recentActivity: [], verifiedScorecard: emptyScorecard };
 
   const bizIds = userBizIds.map(b => b.id);
 
-  const [sentResult, receivedResult, convertedResult, activeOffersResult, verifiedSentResult, verifiedReceivedResult] = await Promise.all([
+  const [sentResult, receivedResult, convertedResult, activeOffersResult] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(referrals).where(inArray(referrals.referringBusinessId, bizIds)),
     db.select({ count: sql<number>`count(*)` }).from(referrals).where(inArray(referrals.receivingBusinessId, bizIds)),
     db.select({ count: sql<number>`count(*)` }).from(referrals).where(and(inArray(referrals.receivingBusinessId, bizIds), eq(referrals.status, 'converted'))),
     db.select({ count: sql<number>`count(*)` }).from(referralOffers).where(and(inArray(referralOffers.businessId, bizIds), eq(referralOffers.isActive, true))),
-    // Verified scorecard stats for sent referrals
-    db.select({
-      incentiveVerified: sql<number>`SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN 1 ELSE 0 END)`,
-      totalVerifiedEarned: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN CAST(${referrals.senderConfirmedIncentiveAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
-      honored: sql<number>`SUM(CASE WHEN ${referrals.receiverHonored} = true THEN 1 ELSE 0 END)`,
-    }).from(referrals).where(inArray(referrals.referringBusinessId, bizIds)),
-    // Verified scorecard stats for received referrals
-    db.select({
-      incentiveVerified: sql<number>`SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN 1 ELSE 0 END)`,
-      revenueVerified: sql<number>`SUM(CASE WHEN ${referrals.isRevenueVerified} = true THEN 1 ELSE 0 END)`,
-      totalVerifiedIncentivePaid: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN CAST(${referrals.receiverConfirmedIncentiveAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
-      totalVerifiedRevenue: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.isRevenueVerified} = true THEN CAST(${referrals.receiverConfirmedRevenueAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
-      honored: sql<number>`SUM(CASE WHEN ${referrals.receiverHonored} = true THEN 1 ELSE 0 END)`,
-    }).from(referrals).where(inArray(referrals.receivingBusinessId, bizIds)),
   ]);
 
   const totalSent = Number(sentResult[0]?.count || 0);
@@ -935,6 +915,34 @@ export async function getDashboardAnalytics(userId: number) {
     return dateB - dateA;
   }).slice(0, 10);
 
+  // Verified Scorecard
+  const allBizReferrals = await db.select({
+    isIncentiveVerified: referrals.isIncentiveVerified,
+    senderConfirmedIncentiveAmount: referrals.senderConfirmedIncentiveAmount,
+    receiverConfirmedIncentiveAmount: referrals.receiverConfirmedIncentiveAmount,
+    senderCashedOut: referrals.senderCashedOut,
+    receiverHonored: referrals.receiverHonored,
+  })
+    .from(referrals)
+    .where(or(
+      inArray(referrals.referringBusinessId, bizIds),
+      inArray(referrals.receivingBusinessId, bizIds)
+    )!);
+
+  let verifiedCount = 0;
+  let totalVerifiedIncentive = 0;
+  let pendingVerification = 0;
+  for (const ref of allBizReferrals) {
+    if (ref.isIncentiveVerified) {
+      verifiedCount++;
+      totalVerifiedIncentive += parseFloat(ref.senderConfirmedIncentiveAmount || '0');
+    } else if (ref.senderCashedOut || ref.receiverHonored) {
+      pendingVerification++;
+    }
+  }
+  const totalEligible = verifiedCount + pendingVerification;
+  const verificationRate = totalEligible > 0 ? Math.round((verifiedCount / totalEligible) * 100).toString() : '0';
+
   return {
     totalReferralsSent: totalSent,
     totalReferralsReceived: totalReceived,
@@ -943,20 +951,11 @@ export async function getDashboardAnalytics(userId: number) {
     statusBreakdown,
     topPartners,
     recentActivity,
-    // Verified scorecard
     verifiedScorecard: {
-      sent: {
-        incentiveVerified: Number(verifiedSentResult[0]?.incentiveVerified || 0),
-        totalVerifiedEarned: verifiedSentResult[0]?.totalVerifiedEarned || '0',
-        honored: Number(verifiedSentResult[0]?.honored || 0),
-      },
-      received: {
-        incentiveVerified: Number(verifiedReceivedResult[0]?.incentiveVerified || 0),
-        revenueVerified: Number(verifiedReceivedResult[0]?.revenueVerified || 0),
-        totalVerifiedIncentivePaid: verifiedReceivedResult[0]?.totalVerifiedIncentivePaid || '0',
-        totalVerifiedRevenue: verifiedReceivedResult[0]?.totalVerifiedRevenue || '0',
-        honored: Number(verifiedReceivedResult[0]?.honored || 0),
-      },
+      verifiedCount,
+      totalVerifiedIncentive: totalVerifiedIncentive.toFixed(2),
+      pendingVerification,
+      verificationRate,
     },
   };
 }
@@ -1073,45 +1072,16 @@ export function formatPhoneNumber(phone: string | null | undefined): string {
 /**
  * Receiver marks a referral as honored (they served the customer)
  */
-export async function markReferralHonored(
-  referralId: number, userId: number, notes?: string,
-  incentiveAmount?: string, revenueAmount?: string
-) {
+export async function markReferralHonored(referralId: number, userId: number, notes?: string) {
   const db = await getDb();
   if (!db) return;
-  
-  // First get the current referral to check if sender already confirmed
-  const [current] = await db.select().from(referrals).where(eq(referrals.id, referralId));
-  
-  const updateData: Record<string, any> = {
-    receiverHonored: true,
-    receiverHonoredAt: new Date(),
-    receiverHonoredNotes: notes || null,
-    status: 'converted',
-  };
-  
-  // Receiver confirms incentive amount they paid
-  if (incentiveAmount) {
-    updateData.receiverConfirmedIncentiveAmount = incentiveAmount;
-    // Check if sender already confirmed and amounts match
-    if (current?.senderConfirmedIncentiveAmount && 
-        parseFloat(current.senderConfirmedIncentiveAmount) === parseFloat(incentiveAmount)) {
-      updateData.isIncentiveVerified = true;
-    }
-  }
-  
-  // Receiver confirms revenue generated from this referral
-  if (revenueAmount) {
-    updateData.receiverConfirmedRevenueAmount = revenueAmount;
-    // Check if athlete already confirmed and amounts match
-    if (current?.athleteConfirmedPaymentAmount && 
-        parseFloat(current.athleteConfirmedPaymentAmount) === parseFloat(revenueAmount)) {
-      updateData.isRevenueVerified = true;
-    }
-  }
-  
   await db.update(referrals)
-    .set(updateData)
+    .set({
+      receiverHonored: true,
+      receiverHonoredAt: new Date(),
+      receiverHonoredNotes: notes || null,
+      status: 'converted',
+    })
     .where(eq(referrals.id, referralId));
 }
 
@@ -1121,30 +1091,14 @@ export async function markReferralHonored(
 export async function markReferralCashedOut(referralId: number, userId: number, amount?: string, notes?: string) {
   const db = await getDb();
   if (!db) return;
-  
-  // Get current referral to check if receiver already confirmed incentive amount
-  const [current] = await db.select().from(referrals).where(eq(referrals.id, referralId));
-  
-  const updateData: Record<string, any> = {
-    senderCashedOut: true,
-    senderCashedOutAt: new Date(),
-    senderCashedOutNotes: notes || null,
-    incentiveAmount: amount || null,
-    completedAt: new Date(),
-  };
-  
-  // Sender confirms incentive amount they received
-  if (amount) {
-    updateData.senderConfirmedIncentiveAmount = amount;
-    // Check if receiver already confirmed and amounts match
-    if (current?.receiverConfirmedIncentiveAmount && 
-        parseFloat(current.receiverConfirmedIncentiveAmount) === parseFloat(amount)) {
-      updateData.isIncentiveVerified = true;
-    }
-  }
-  
   await db.update(referrals)
-    .set(updateData)
+    .set({
+      senderCashedOut: true,
+      senderCashedOutAt: new Date(),
+      senderCashedOutNotes: notes || null,
+      incentiveAmount: amount || null,
+      completedAt: new Date(),
+    })
     .where(eq(referrals.id, referralId));
 }
 
@@ -1205,25 +1159,14 @@ export async function verifyConsumerClaim(claimId: number, userId: number, honor
   if (!db) return;
   
   if (honored) {
-    // Get current claim to check if business already confirmed
-    const [current] = await db.select().from(consumerClaims).where(eq(consumerClaims.id, claimId));
-    
-    const updateData: Record<string, any> = {
-      isHonored: true,
-      honoredAt: new Date(),
-      honoredNotes: notes || null,
-      amountSaved: amountSaved || null,
-      status: 'redeemed',
-    };
-    
-    // Check if business already confirmed savings and amounts match
-    if (amountSaved && current?.businessConfirmedSavingsAmount && 
-        parseFloat(current.businessConfirmedSavingsAmount) === parseFloat(amountSaved)) {
-      updateData.isAmountVerified = true;
-    }
-    
     await db.update(consumerClaims)
-      .set(updateData)
+      .set({
+        isHonored: true,
+        honoredAt: new Date(),
+        honoredNotes: notes || null,
+        amountSaved: amountSaved || null,
+        status: 'redeemed',
+      })
       .where(and(eq(consumerClaims.id, claimId), eq(consumerClaims.userId, userId)));
   } else {
     await db.update(consumerClaims)
@@ -1235,56 +1178,6 @@ export async function verifyConsumerClaim(claimId: number, userId: number, honor
       })
       .where(and(eq(consumerClaims.id, claimId), eq(consumerClaims.userId, userId)));
   }
-}
-
-/**
- * Business confirms the savings/discount amount given to athlete on a consumer claim
- */
-export async function businessConfirmClaimSavings(claimId: number, amount: string) {
-  const db = await getDb();
-  if (!db) return;
-  
-  // Get current claim to check if athlete already confirmed
-  const [current] = await db.select().from(consumerClaims).where(eq(consumerClaims.id, claimId));
-  
-  const updateData: Record<string, any> = {
-    businessConfirmedSavingsAmount: amount,
-  };
-  
-  // Check if athlete already confirmed and amounts match
-  if (current?.amountSaved && parseFloat(current.amountSaved) === parseFloat(amount)) {
-    updateData.isAmountVerified = true;
-  }
-  
-  await db.update(consumerClaims)
-    .set(updateData)
-    .where(eq(consumerClaims.id, claimId));
-}
-
-/**
- * Athlete confirms the payment amount on a referral (what they paid to business B)
- */
-export async function athleteConfirmReferralPayment(referralId: number, userId: number, amount: string) {
-  const db = await getDb();
-  if (!db) return;
-  
-  // Get current referral to check if receiver already confirmed revenue
-  const [current] = await db.select().from(referrals).where(eq(referrals.id, referralId));
-  
-  const updateData: Record<string, any> = {
-    athleteConfirmedPaymentAmount: amount,
-    referredAthleteUserId: userId,
-  };
-  
-  // Check if receiver already confirmed revenue and amounts match
-  if (current?.receiverConfirmedRevenueAmount && 
-      parseFloat(current.receiverConfirmedRevenueAmount) === parseFloat(amount)) {
-    updateData.isRevenueVerified = true;
-  }
-  
-  await db.update(referrals)
-    .set(updateData)
-    .where(eq(referrals.id, referralId));
 }
 
 /**
@@ -1364,10 +1257,6 @@ export async function getBusinessAnalytics(businessId: number) {
     honored: sql<number>`SUM(CASE WHEN ${referrals.receiverHonored} = true THEN 1 ELSE 0 END)`,
     disputed: sql<number>`SUM(CASE WHEN ${referrals.isDisputed} = true THEN 1 ELSE 0 END)`,
     pending: sql<number>`SUM(CASE WHEN ${referrals.receiverHonored} = false AND ${referrals.isDisputed} = false THEN 1 ELSE 0 END)`,
-    incentiveVerified: sql<number>`SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN 1 ELSE 0 END)`,
-    revenueVerified: sql<number>`SUM(CASE WHEN ${referrals.isRevenueVerified} = true THEN 1 ELSE 0 END)`,
-    totalIncentivePaid: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN CAST(${referrals.receiverConfirmedIncentiveAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
-    totalRevenueVerified: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.isRevenueVerified} = true THEN CAST(${referrals.receiverConfirmedRevenueAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
   }).from(referrals).where(eq(referrals.receivingBusinessId, businessId));
   
   // Referrals sent
@@ -1377,8 +1266,6 @@ export async function getBusinessAnalytics(businessId: number) {
     totalEarned: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.senderCashedOut} = true THEN CAST(${referrals.incentiveAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
     disputed: sql<number>`SUM(CASE WHEN ${referrals.isDisputed} = true THEN 1 ELSE 0 END)`,
     pending: sql<number>`SUM(CASE WHEN ${referrals.senderCashedOut} = false AND ${referrals.isDisputed} = false THEN 1 ELSE 0 END)`,
-    incentiveVerified: sql<number>`SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN 1 ELSE 0 END)`,
-    totalIncentiveVerified: sql<string>`COALESCE(SUM(CASE WHEN ${referrals.isIncentiveVerified} = true THEN CAST(${referrals.senderConfirmedIncentiveAmount} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
   }).from(referrals).where(eq(referrals.referringBusinessId, businessId));
   
   // Consumer claims received
@@ -1387,8 +1274,6 @@ export async function getBusinessAnalytics(businessId: number) {
     redeemed: sql<number>`SUM(CASE WHEN ${consumerClaims.isHonored} = true THEN 1 ELSE 0 END)`,
     disputed: sql<number>`SUM(CASE WHEN ${consumerClaims.isDisputed} = true THEN 1 ELSE 0 END)`,
     pending: sql<number>`SUM(CASE WHEN ${consumerClaims.isHonored} = false AND ${consumerClaims.isDisputed} = false THEN 1 ELSE 0 END)`,
-    amountVerified: sql<number>`SUM(CASE WHEN ${consumerClaims.isAmountVerified} = true THEN 1 ELSE 0 END)`,
-    totalSavingsVerified: sql<string>`COALESCE(SUM(CASE WHEN ${consumerClaims.isAmountVerified} = true THEN CAST(${consumerClaims.amountSaved} AS DECIMAL(10,2)) ELSE 0 END), 0)`,
   }).from(consumerClaims).where(eq(consumerClaims.businessId, businessId));
   
   return {
@@ -1397,10 +1282,6 @@ export async function getBusinessAnalytics(businessId: number) {
       honored: Number(receivedRows[0]?.honored || 0),
       disputed: Number(receivedRows[0]?.disputed || 0),
       pending: Number(receivedRows[0]?.pending || 0),
-      incentiveVerified: Number(receivedRows[0]?.incentiveVerified || 0),
-      revenueVerified: Number(receivedRows[0]?.revenueVerified || 0),
-      totalIncentivePaid: receivedRows[0]?.totalIncentivePaid || '0',
-      totalRevenueVerified: receivedRows[0]?.totalRevenueVerified || '0',
     },
     referralsSent: {
       total: Number(sentRows[0]?.total || 0),
@@ -1408,16 +1289,12 @@ export async function getBusinessAnalytics(businessId: number) {
       totalEarned: sentRows[0]?.totalEarned || '0',
       disputed: Number(sentRows[0]?.disputed || 0),
       pending: Number(sentRows[0]?.pending || 0),
-      incentiveVerified: Number(sentRows[0]?.incentiveVerified || 0),
-      totalIncentiveVerified: sentRows[0]?.totalIncentiveVerified || '0',
     },
     consumerClaims: {
       total: Number(claimRows[0]?.total || 0),
       redeemed: Number(claimRows[0]?.redeemed || 0),
       disputed: Number(claimRows[0]?.disputed || 0),
       pending: Number(claimRows[0]?.pending || 0),
-      amountVerified: Number(claimRows[0]?.amountVerified || 0),
-      totalSavingsVerified: claimRows[0]?.totalSavingsVerified || '0',
     },
   };
 }
@@ -1683,12 +1560,6 @@ export async function updateUserProfile(userId: number, data: { name?: string; e
   if (Object.keys(updateData).length > 0) {
     await db.update(users).set(updateData).where(eq(users.id, userId));
   }
-}
-
-export async function updateUserContactName(userId: number, contactName: string) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(users).set({ contactName }).where(eq(users.id, userId));
 }
 
 // ─── Logo Upload ────────────────────────────────────────────
@@ -2090,67 +1961,6 @@ export async function createUserNotification(data: {
   return result[0].insertId;
 }
 
-/**
- * Preference-aware notification helper.
- * Checks the user's notificationPreference before creating an in-app notification.
- * Returns { sent: boolean, method: string } indicating what was done.
- * Email sending is not yet implemented — when preference includes email, we log it
- * and still create the in-app notification as a fallback.
- */
-export async function notifyUser(data: {
-  userId: number;
-  type: string;
-  title: string;
-  message?: string;
-  businessId?: number;
-  offerId?: number;
-}): Promise<{ sent: boolean; method: string }> {
-  try {
-    const user = await getUserById(data.userId);
-    if (!user) return { sent: false, method: 'user_not_found' };
-
-    const pref = user.notificationPreference || 'both';
-
-    // If user opted out of all notifications
-    if (pref === 'none') {
-      return { sent: false, method: 'opted_out' };
-    }
-
-    // Determine what to send
-    const shouldSendInApp = pref === 'in_app_only' || pref === 'both';
-    const shouldSendEmail = pref === 'email_only' || pref === 'both';
-
-    let inAppSent = false;
-    let emailSent = false;
-
-    // Create in-app notification for in_app_only and both preferences
-    // For email_only, also create in-app as a safety net in case email fails
-    if (shouldSendInApp || shouldSendEmail) {
-      await createUserNotification(data);
-      inAppSent = true;
-    }
-
-    if (shouldSendEmail && user.email) {
-      try {
-        const { sendEmail } = await import('./email');
-        emailSent = await sendEmail({
-          to: user.email,
-          subject: data.title,
-          body: data.message || data.title,
-        });
-      } catch (err) {
-        console.warn(`[Notification] Email delivery failed for user ${data.userId}:`, err);
-      }
-    }
-
-    const method = [inAppSent && 'in_app', emailSent && 'email'].filter(Boolean).join('+') || 'in_app_fallback';
-    return { sent: true, method };
-  } catch (error) {
-    console.error(`[Notification] Failed to notify user ${data.userId}:`, error);
-    return { sent: false, method: 'error' };
-  }
-}
-
 export async function createBulkUserNotifications(notifications: Array<{
   userId: number;
   type: string;
@@ -2220,20 +2030,8 @@ export async function notifyUsersOfNewOffer(businessId: number, businessName: st
     const savedUsers = await getUsersWhoSavedBusinessWithOptIn(businessId);
     if (savedUsers.length === 0) return { notified: 0 };
 
-    // Filter out users who opted out of all notifications
-    // For each user, check their notification preference
-    const usersToNotify: typeof savedUsers = [];
-    for (const u of savedUsers) {
-      const user = await getUserById(u.userId);
-      if (!user) continue;
-      const pref = user.notificationPreference || 'both';
-      if (pref === 'none') continue; // skip users who opted out
-      usersToNotify.push(u);
-    }
-
-    if (usersToNotify.length === 0) return { notified: 0 };
-
-    const notifications = usersToNotify.map(u => ({
+    // Filter to users who opted in (or have no profile yet — default to notify in-app)
+    const notifications = savedUsers.map(u => ({
       userId: u.userId,
       type: 'new_offer' as const,
       title: `${businessName} just posted a new offer!`,
@@ -2243,26 +2041,6 @@ export async function notifyUsersOfNewOffer(businessId: number, businessName: st
     }));
 
     await createBulkUserNotifications(notifications);
-
-    // Also send email notifications for users who want email
-    try {
-      const { sendEmail } = await import('./email');
-      for (const u of usersToNotify) {
-        const user = await getUserById(u.userId);
-        if (!user || !user.email) continue;
-        const pref = user.notificationPreference || 'both';
-        if (pref === 'email_only' || pref === 'both') {
-          await sendEmail({
-            to: user.email,
-            subject: `${businessName} just posted a new offer!`,
-            body: `"${offerTitle}" — check it out before everyone else does.`,
-          }).catch(() => {}); // best-effort
-        }
-      }
-    } catch (err) {
-      console.warn('[Notification] Bulk email delivery error:', err);
-    }
-
     return { notified: notifications.length };
   } catch (error) {
     console.error("[Notification] Failed to notify saved-business users:", error);
@@ -2339,39 +2117,41 @@ export async function getRecommendedBusinesses(userId: number, limit = 12) {
   const hubEscaped = hub.replace(/'/g, "''");
 
   const [rows] = await db.execute(sql.raw(`
-    SELECT 
-      b.id, b.name, b.slug, b.city, b.region, b.hub, b.logoUrl, b.description,
-      b.googleRating, b.googleReviewCount, b.approvalStatus, b.claimedByUserId,
-      bt.name as businessTypeName, bt.id as businessTypeId,
-      (
-        CASE WHEN EXISTS (
-          SELECT 1 FROM business_sport_categories bsc 
-          WHERE bsc.businessId = b.id AND bsc.sportCategoryId IN (${sportIdsStr})
-        ) THEN 30 ELSE 0 END
-        +
-        CASE WHEN b.businessTypeId IN (${typeIdsStr}) THEN 25 ELSE 0 END
-        +
-        CASE WHEN LOWER(b.city) = LOWER('${cityEscaped}') AND '${cityEscaped}' != '' THEN 20 ELSE 0 END
-        +
-        CASE WHEN LOWER(b.hub) = LOWER('${hubEscaped}') AND '${hubEscaped}' != '' THEN 15 ELSE 0 END
-        +
-        CASE WHEN LOWER(b.region) = LOWER('${regionEscaped}') AND '${regionEscaped}' != '' THEN 10 ELSE 0 END
-      ) as matchScore,
-      CASE 
-        WHEN LOWER(b.city) = LOWER('${cityEscaped}') AND '${cityEscaped}' != '' THEN 'near_you'
-        WHEN EXISTS (
-          SELECT 1 FROM business_sport_categories bsc 
-          WHERE bsc.businessId = b.id AND bsc.sportCategoryId IN (${sportIdsStr})
-        ) THEN 'your_sport'
-        WHEN b.businessTypeId IN (${typeIdsStr}) THEN 'your_interest'
-        ELSE 'popular'
-      END as matchReason
-    FROM businesses b
-    LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
-    WHERE b.isActive = 1 AND b.isAdminHidden = 0 AND b.approvalStatus = 'approved'
-    ${excludeClause}
-    HAVING matchScore > 0
-    ORDER BY matchScore DESC, b.googleReviewCount DESC
+    SELECT * FROM (
+      SELECT 
+        b.id, b.name, b.slug, b.city, b.region, b.hub, b.logoUrl, b.description,
+        b.googleRating, b.googleReviewCount, b.approvalStatus, b.claimedByUserId,
+        bt.name as businessTypeName, bt.id as businessTypeId,
+        (
+          CASE WHEN EXISTS (
+            SELECT 1 FROM business_sport_categories bsc 
+            WHERE bsc.businessId = b.id AND bsc.sportCategoryId IN (${sportIdsStr})
+          ) THEN 30 ELSE 0 END
+          +
+          CASE WHEN b.businessTypeId IN (${typeIdsStr}) THEN 25 ELSE 0 END
+          +
+          CASE WHEN LOWER(b.city) = LOWER('${cityEscaped}') AND '${cityEscaped}' != '' THEN 20 ELSE 0 END
+          +
+          CASE WHEN LOWER(b.hub) = LOWER('${hubEscaped}') AND '${hubEscaped}' != '' THEN 15 ELSE 0 END
+          +
+          CASE WHEN LOWER(b.region) = LOWER('${regionEscaped}') AND '${regionEscaped}' != '' THEN 10 ELSE 0 END
+        ) as matchScore,
+        CASE 
+          WHEN LOWER(b.city) = LOWER('${cityEscaped}') AND '${cityEscaped}' != '' THEN 'near_you'
+          WHEN EXISTS (
+            SELECT 1 FROM business_sport_categories bsc 
+            WHERE bsc.businessId = b.id AND bsc.sportCategoryId IN (${sportIdsStr})
+          ) THEN 'your_sport'
+          WHEN b.businessTypeId IN (${typeIdsStr}) THEN 'your_interest'
+          ELSE 'popular'
+        END as matchReason
+      FROM businesses b
+      LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
+      WHERE b.isActive = 1 AND b.isAdminHidden = 0 AND b.approvalStatus = 'approved'
+      ${excludeClause}
+    ) AS scored
+    WHERE matchScore > 0
+    ORDER BY matchScore DESC, googleReviewCount DESC
     LIMIT ${limit}
   `));
 
@@ -2402,189 +2182,207 @@ export async function getRecommendedBusinesses(userId: number, limit = 12) {
   return results;
 }
 
-// ─── Account Deletion ──────────────────────────────────────────
 
-/**
- * Soft-delete a user account: anonymize PII, mark as deleted, hide their businesses.
- * Activity data (referrals, consumer claims, etc.) is preserved — the user's name
- * will display as "Deleted Account" to other users.
- */
-export async function softDeleteUser(userId: number, deletedBy: 'self' | 'admin') {
+// ─── User Lookup ─────────────────────────────────────────────────
+
+export async function getUserById(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return user || null;
+}
+
+// ─── Preference-Aware User Notification ──────────────────────────
+
+export async function notifyUser(data: {
+  userId: number;
+  type: string;
+  title: string;
+  message?: string;
+  businessId?: number;
+  offerId?: number;
+}): Promise<{ sent: boolean; method: string }> {
+  try {
+    const user = await getUserById(data.userId);
+    if (!user) return { sent: false, method: 'user_not_found' };
+
+    const pref = user.notificationPreference || 'both';
+
+    // If user opted out of everything, skip
+    if (pref === 'none') return { sent: false, method: 'opted_out' };
+
+    const shouldInApp = pref === 'in_app_only' || pref === 'both';
+    const shouldEmail = pref === 'email_only' || pref === 'both';
+
+    // Create in-app notification
+    if (shouldInApp) {
+      await createUserNotification({
+        userId: data.userId,
+        type: data.type,
+        title: data.title,
+        message: data.message || '',
+        businessId: data.businessId,
+        offerId: data.offerId,
+      });
+    }
+
+    // Send email notification (if configured)
+    if (shouldEmail && user.email) {
+      try {
+        const { sendNotificationEmail } = await import('./email.js');
+        await sendNotificationEmail({
+          to: user.email,
+          subject: data.title,
+          body: data.message || data.title,
+          userName: user.contactName || user.name || undefined,
+        });
+      } catch (e) {
+        // Email not configured or failed — fall back to in-app if not already created
+        if (!shouldInApp) {
+          await createUserNotification({
+            userId: data.userId,
+            type: data.type,
+            title: data.title,
+            message: data.message || '',
+            businessId: data.businessId,
+            offerId: data.offerId,
+          });
+          return { sent: true, method: 'fallback_in_app' };
+        }
+      }
+    }
+
+    return { sent: true, method: shouldInApp && shouldEmail ? 'both' : shouldInApp ? 'in_app' : 'email' };
+  } catch (error) {
+    console.error('[notifyUser] Error:', error);
+    // Fallback: try to create in-app notification anyway
+    try {
+      await createUserNotification({
+        userId: data.userId,
+        type: data.type,
+        title: data.title,
+        message: data.message || '',
+        businessId: data.businessId,
+        offerId: data.offerId,
+      });
+      return { sent: true, method: 'fallback_in_app' };
+    } catch {
+      return { sent: false, method: 'error' };
+    }
+  }
+}
+
+// ─── Account Deletion ────────────────────────────────────────────
+
+export async function softDeleteUser(userId: number, deletedBy: string = 'self') {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-
-  // 1. Anonymize PII and mark user as deleted
+  
+  // Anonymize PII and mark as deleted
   await db.update(users).set({
-    name: 'Deleted Account',
-    email: null,
-    contactName: null,
     isDeleted: true,
     deletedAt: new Date(),
     deletedBy,
-    onboardingComplete: false,
+    name: 'Deleted Account',
+    email: null,
+    contactName: null,
   }).where(eq(users.id, userId));
-
-  // 2. Hide all businesses owned by this user (soft-hide, don't destroy)
-  await db.update(businesses).set({
-    isAdminHidden: true,
-    isClaimed: false,
-    claimedByUserId: null,
-    claimedAt: null,
-  }).where(eq(businesses.claimedByUserId, userId));
-
-  // 3. Deactivate all referral offers for their businesses
-  const userBusinesses = await db.select({ id: businesses.id })
-    .from(businesses)
-    .where(eq(businesses.claimedByUserId, userId));
-  
-  for (const biz of userBusinesses) {
-    await db.update(referralOffers).set({ isActive: false })
-      .where(eq(referralOffers.businessId, biz.id));
-  }
-
-  // 4. Delete athlete profile if exists
-  await db.delete(athleteProfiles).where(eq(athleteProfiles.userId, userId));
-
-  // 5. Delete saved businesses
-  await db.delete(savedBusinesses).where(eq(savedBusinesses.userId, userId));
-
-  // 6. Delete user notifications
-  await db.delete(userNotifications).where(eq(userNotifications.userId, userId));
-
-  return { success: true };
 }
 
-/**
- * Admin: hard-delete a user's activity data (referrals, consumer claims, partnership emails).
- * This is destructive and should only be called after softDeleteUser.
- */
-export async function purgeUserActivityData(userId: number) {
+export async function adminDeleteUser(userId: number, retainActivityData: boolean) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-
-  // Get all businesses that were owned by this user
-  // (claimedByUserId is already null after soft-delete, so we need to check referrals)
   
-  // Delete referrals where user's businesses were involved
-  // We track by the user's businesses — find businesses that had this user
-  // Since claimedByUserId was nulled, we need to use referral records directly
-
-  // Delete consumer claims made by this user
-  await db.delete(consumerClaims).where(eq(consumerClaims.userId, userId));
-
-  // Delete partnership emails sent by or to this user
-  await db.delete(partnershipEmails).where(
-    or(
-      eq(partnershipEmails.senderUserId, userId),
-    )
-  );
-
-  // Delete support tickets
-  await db.delete(supportTickets).where(eq(supportTickets.userId, userId));
-
-  // Delete category approvals
-  await db.delete(categoryApprovals).where(eq(categoryApprovals.userId, userId));
-
-  return { success: true };
+  if (retainActivityData) {
+    // Soft delete: anonymize PII, keep activity data
+    await softDeleteUser(userId, 'admin');
+    // Hide all businesses owned by this user
+    await db.update(businesses).set({ isActive: false, isAdminHidden: true })
+      .where(eq(businesses.claimedByUserId, userId));
+  } else {
+    // Hard delete: remove user and their businesses
+    // First hide businesses
+    await db.update(businesses).set({ isActive: false, isAdminHidden: true, claimedByUserId: null })
+      .where(eq(businesses.claimedByUserId, userId));
+    // Then delete the user record
+    await db.delete(users).where(eq(users.id, userId));
+  }
 }
 
-/**
- * Admin: fully delete businesses owned by a user (set isActive=false, remove from directory).
- * Different from soft-delete: this makes them completely invisible.
- */
-export async function hardDeleteUserBusinesses(userId: number) {
+export async function adminHideUser(userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-
-  // Get all businesses owned by this user before they were unclaimed
-  const userBizzes = await db.select({ id: businesses.id })
-    .from(businesses)
+  await db.update(users).set({ isDeleted: true, deletedBy: 'admin_hidden' }).where(eq(users.id, userId));
+  // Also hide their businesses
+  await db.update(businesses).set({ isActive: false, isAdminHidden: true })
     .where(eq(businesses.claimedByUserId, userId));
-
-  for (const biz of userBizzes) {
-    // Deactivate all offers
-    await db.update(referralOffers).set({ isActive: false })
-      .where(eq(referralOffers.businessId, biz.id));
-    // Soft-delete the business
-    await db.update(businesses).set({
-      isActive: false,
-      isClaimed: false,
-      claimedByUserId: null,
-      claimedAt: null,
-      isAdminHidden: true,
-    }).where(eq(businesses.id, biz.id));
-  }
-
-  return { deleted: userBizzes.length };
 }
 
-/**
- * Admin: get all users (for admin user management panel)
- */
-export async function getAllUsers(opts?: { includeDeleted?: boolean; limit?: number; offset?: number; search?: string }) {
+export async function adminRestoreUser(userId: number) {
   const db = await getDb();
-  if (!db) return { users: [], total: 0 };
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ isDeleted: false, deletedAt: null, deletedBy: null }).where(eq(users.id, userId));
+  // Restore their businesses
+  await db.update(businesses).set({ isActive: true, isAdminHidden: false })
+    .where(eq(businesses.claimedByUserId, userId));
+}
 
-  const conditions: any[] = [];
-  if (!opts?.includeDeleted) {
-    conditions.push(eq(users.isDeleted, false));
-  }
-  if (opts?.search) {
-    const term = `%${opts.search}%`;
-    conditions.push(
-      or(
-        like(users.name, term),
-        like(users.email, term),
-        like(users.contactName, term),
-      )
-    );
-  }
+export async function getAllUsersForAdmin() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+    contactName: users.contactName,
+    role: users.role,
+    accountType: users.accountType,
+    isDeleted: users.isDeleted,
+    deletedBy: users.deletedBy,
+    createdAt: users.createdAt,
+    lastSignedIn: users.lastSignedIn,
+  }).from(users).orderBy(desc(users.createdAt));
+}
 
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-  const limit = opts?.limit ?? 50;
-  const offset = opts?.offset ?? 0;
+// ─── Verified Scorecard Stats ────────────────────────────────────
 
-  const [userRows, countResult] = await Promise.all([
-    db.select().from(users).where(whereClause).orderBy(desc(users.createdAt)).limit(limit).offset(offset),
-    db.select({ count: sql<number>`COUNT(*)` }).from(users).where(whereClause),
-  ]);
+export async function getVerifiedScorecardStats(businessId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Get referral stats for this business (both sent and received)
+  const sentReferrals = await db.select().from(referrals)
+    .where(eq(referrals.referringBusinessId, businessId));
+  const receivedReferrals = await db.select().from(referrals)
+    .where(eq(referrals.receivingBusinessId, businessId));
+
+  const totalSent = sentReferrals.length;
+  const totalReceived = receivedReferrals.length;
+  
+  const sentHonored = sentReferrals.filter(r => r.receiverHonored).length;
+  const sentCashedOut = sentReferrals.filter(r => r.senderCashedOut).length;
+  const sentVerifiedIncentive = sentReferrals.filter(r => r.isIncentiveVerified).length;
+  
+  const receivedHonored = receivedReferrals.filter(r => r.receiverHonored).length;
+  const receivedVerifiedIncentive = receivedReferrals.filter(r => r.isIncentiveVerified).length;
+
+  const totalIncentiveValue = [...sentReferrals, ...receivedReferrals]
+    .reduce((sum, r) => {
+      const amt = parseFloat(r.senderConfirmedIncentiveAmount || r.receiverConfirmedIncentiveAmount || '0');
+      return sum + (isNaN(amt) ? 0 : amt);
+    }, 0);
 
   return {
-    users: userRows,
-    total: countResult[0]?.count ?? 0,
+    totalSent,
+    totalReceived,
+    sentHonored,
+    sentCashedOut,
+    sentVerifiedIncentive,
+    receivedHonored,
+    receivedVerifiedIncentive,
+    totalIncentiveValue: totalIncentiveValue.toFixed(2),
+    verificationRate: (totalSent + totalReceived) > 0
+      ? Math.round(((sentVerifiedIncentive + receivedVerifiedIncentive) / (totalSent + totalReceived)) * 100)
+      : 0,
   };
-}
-
-/**
- * Admin: hide/unhide a user account (without deleting)
- */
-export async function toggleUserHidden(userId: number, isDeleted: boolean) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  if (isDeleted) {
-    // Hiding: anonymize and mark as deleted
-    await db.update(users).set({
-      isDeleted: true,
-      deletedAt: new Date(),
-      deletedBy: 'admin',
-    }).where(eq(users.id, userId));
-    
-    // Hide their businesses
-    await db.update(businesses).set({
-      isAdminHidden: true,
-    }).where(eq(businesses.claimedByUserId, userId));
-  } else {
-    // Unhiding: restore account (but PII stays anonymized if it was deleted)
-    await db.update(users).set({
-      isDeleted: false,
-      deletedAt: null,
-      deletedBy: null,
-    }).where(eq(users.id, userId));
-    
-    // Unhide their businesses
-    await db.update(businesses).set({
-      isAdminHidden: false,
-    }).where(eq(businesses.claimedByUserId, userId));
-  }
 }

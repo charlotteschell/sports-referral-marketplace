@@ -94,14 +94,8 @@ export default function SubmitBusiness() {
     setBrandsCarried(brandsList.filter(b => b !== brand).join(", "));
   };
 
-  const setContactNameMut = trpc.userProfile.setContactName.useMutation();
-
   const submitMutation = trpc.submission.submit.useMutation({
     onSuccess: () => {
-      // Also save the contact name as the user's display name across the platform
-      if (contactName.trim()) {
-        setContactNameMut.mutate({ contactName: contactName.trim() });
-      }
       setSubmitted(true);
       toast.success("Your business has been submitted for review!");
     },

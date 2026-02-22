@@ -24,7 +24,7 @@ import {
   Loader2, BarChart3, Users, Percent, Clock, CheckCircle2,
   XCircle, AlertTriangle, Trash2, Unlink, ExternalLink,
   Palmtree, Activity, ArrowUpRight, ArrowDownRight, Eye, EyeOff,
-  Settings, Bell, BellRing, BellOff, Mail, Save, X as XIcon, User, Info
+  Settings, Bell, BellRing, BellOff, Mail, Save, X as XIcon, User
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useMemo, useEffect } from "react";
@@ -33,7 +33,6 @@ import {
   DialogHeader, DialogTitle, DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { PrivacyTooltip } from "@/components/PrivacyTooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -212,9 +211,6 @@ export default function Dashboard() {
   const [disputeReason, setDisputeReason] = useState("");
   const [verifyAmount, setVerifyAmount] = useState("");
   const [verifyNotes, setVerifyNotes] = useState("");
-  const [honorIncentiveAmount, setHonorIncentiveAmount] = useState("");
-  const [honorRevenueAmount, setHonorRevenueAmount] = useState("");
-  const [honorNotes, setHonorNotes] = useState("");
 
   if (loading) {
     return (
@@ -243,7 +239,7 @@ export default function Dashboard() {
                 Dashboard
               </h1>
               <p className="text-white/70" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Welcome back, {(user?.contactName || user?.name)?.split(' ')[0] || "there"}. Here's what's happening with your referrals and businesses.
+                Welcome back, {user?.contactName || user?.name || "there"}. Here's what's happening with your referrals and businesses.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -327,81 +323,45 @@ export default function Dashboard() {
           </div>
 
           {/* Verified Scorecard */}
-          {analytics?.verifiedScorecard && (analytics.verifiedScorecard.sent.honored > 0 || analytics.verifiedScorecard.received.honored > 0) && (
-            <Card className="mb-8 border-blue-200/30 bg-gradient-to-r from-blue-950/20 to-purple-950/20">
+          {analytics?.verifiedScorecard && (
+            <Card className="mb-8 border-blue-200/50 bg-gradient-to-r from-blue-50/50 to-transparent">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <Shield className="w-5 h-5 text-blue-400" />
+                  <Shield className="w-5 h-5 text-blue-600" />
                   Verified Scorecard
                 </CardTitle>
                 <CardDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
-                  Dual-verified referral stats — amounts confirmed by both sender and receiver
+                  Dual-verified referral amounts confirmed by both sender and receiver
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Sent Referrals Scorecard */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
-                      <ArrowUpRight className="w-4 h-4" /> As Referrer (Sent)
-                    </h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="p-3 rounded-lg bg-green-500/10 text-center">
-                        <p className="text-xl font-bold text-green-400">{analytics.verifiedScorecard.sent.honored}</p>
-                        <p className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>Honored</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-blue-500/10 text-center">
-                        <p className="text-xl font-bold text-blue-400">{analytics.verifiedScorecard.sent.incentiveVerified}</p>
-                        <p className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>Verified</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-emerald-500/10 text-center">
-                        <p className="text-xl font-bold text-emerald-400">${parseFloat(analytics.verifiedScorecard.sent.totalVerifiedEarned).toFixed(0)}</p>
-                        <p className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>Verified Earned</p>
-                      </div>
-                    </div>
-                    {analytics.verifiedScorecard.sent.honored > 0 && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
-                        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className="h-full bg-blue-500 rounded-full transition-all"
-                            style={{ width: `${Math.round((analytics.verifiedScorecard.sent.incentiveVerified / analytics.verifiedScorecard.sent.honored) * 100)}%` }}
-                          />
-                        </div>
-                        <span>{Math.round((analytics.verifiedScorecard.sent.incentiveVerified / analytics.verifiedScorecard.sent.honored) * 100)}% verified</span>
-                      </div>
-                    )}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-3 bg-white/60 rounded-lg">
+                    <p className="text-2xl font-bold text-blue-700" style={{ fontFamily: "var(--font-heading)" }}>
+                      {analytics.verifiedScorecard.verifiedCount || 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1" style={{ textTransform: "none" }}>Verified Referrals</p>
                   </div>
-
-                  {/* Received Referrals Scorecard */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-[oklch(0.55_0.15_45)] flex items-center gap-2">
-                      <ArrowDownRight className="w-4 h-4" /> As Receiver
-                    </h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="p-3 rounded-lg bg-green-500/10 text-center">
-                        <p className="text-xl font-bold text-green-400">{analytics.verifiedScorecard.received.honored}</p>
-                        <p className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>Honored</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-blue-500/10 text-center">
-                        <p className="text-xl font-bold text-blue-400">{analytics.verifiedScorecard.received.incentiveVerified}</p>
-                        <p className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>Incentive Verified</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-purple-500/10 text-center">
-                        <p className="text-xl font-bold text-purple-400">${parseFloat(analytics.verifiedScorecard.received.totalVerifiedRevenue).toFixed(0)}</p>
-                        <p className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>Verified Revenue</p>
-                      </div>
+                  <div className="text-center p-3 bg-white/60 rounded-lg">
+                    <p className="text-2xl font-bold text-emerald-700" style={{ fontFamily: "var(--font-heading)" }}>
+                      ${analytics.verifiedScorecard.totalVerifiedIncentive || '0.00'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1" style={{ textTransform: "none" }}>Verified Incentives</p>
+                  </div>
+                  <div className="text-center p-3 bg-white/60 rounded-lg">
+                    <p className="text-2xl font-bold text-amber-700" style={{ fontFamily: "var(--font-heading)" }}>
+                      {analytics.verifiedScorecard.pendingVerification || 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1" style={{ textTransform: "none" }}>Pending Verification</p>
+                  </div>
+                  <div className="text-center p-3 bg-white/60 rounded-lg">
+                    <p className="text-2xl font-bold text-blue-700" style={{ fontFamily: "var(--font-heading)" }}>
+                      {analytics.verifiedScorecard.verificationRate || '0'}%
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1" style={{ textTransform: "none" }}>Verification Rate</p>
+                    <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-600 rounded-full transition-all" style={{ width: `${analytics.verifiedScorecard.verificationRate || 0}%` }} />
                     </div>
-                    {analytics.verifiedScorecard.received.honored > 0 && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground" style={{ textTransform: "none" }}>
-                        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className="h-full bg-purple-500 rounded-full transition-all"
-                            style={{ width: `${Math.round((analytics.verifiedScorecard.received.revenueVerified / analytics.verifiedScorecard.received.honored) * 100)}%` }}
-                          />
-                        </div>
-                        <span>{Math.round((analytics.verifiedScorecard.received.revenueVerified / analytics.verifiedScorecard.received.honored) * 100)}% revenue verified</span>
-                      </div>
-                    )}
                   </div>
                 </div>
               </CardContent>
@@ -655,20 +615,6 @@ export default function Dashboard() {
                                   <Clock className="w-3 h-3 mr-1" /> Awaiting honor confirmation
                                 </Badge>
                               )}
-                              {/* Dual-verification: incentive amount */}
-                              {r.isIncentiveVerified ? (
-                                <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs" style={{ textTransform: "none" }}>
-                                  <Shield className="w-3 h-3 mr-1" /> Incentive verified ${r.senderConfirmedIncentiveAmount ? `$${r.senderConfirmedIncentiveAmount}` : ''}
-                                </Badge>
-                              ) : r.senderConfirmedIncentiveAmount && !r.receiverConfirmedIncentiveAmount ? (
-                                <Badge className="bg-amber-100 text-amber-800 text-xs" style={{ textTransform: "none" }}>
-                                  <Clock className="w-3 h-3 mr-1" /> You confirmed ${`$${r.senderConfirmedIncentiveAmount}`} — awaiting receiver
-                                </Badge>
-                              ) : !r.senderConfirmedIncentiveAmount && r.receiverConfirmedIncentiveAmount ? (
-                                <Badge className="bg-amber-100 text-amber-800 text-xs" style={{ textTransform: "none" }}>
-                                  <Info className="w-3 h-3 mr-1" /> Receiver says ${`$${r.receiverConfirmedIncentiveAmount}`} — confirm your amount
-                                </Badge>
-                              ) : null}
                               {r.senderCashedOut ? (
                                 <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs" style={{ textTransform: "none" }}>
                                   <CheckCircle2 className="w-3 h-3 mr-1" /> Cashed out{r.incentiveAmount ? ` $${r.incentiveAmount}` : ''}
@@ -689,9 +635,8 @@ export default function Dashboard() {
                                     </DialogHeader>
                                     <div className="space-y-4">
                                       <div>
-                                        <Label style={{ textTransform: "none" }} className="flex items-center">Amount received ($) <PrivacyTooltip /></Label>
-                                        <Input type="number" step="0.01" placeholder="e.g. 25.00" value={cashoutAmount} onChange={e => setCashoutAmount(e.target.value)} />
-                                        <p className="text-xs text-white/40 mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>The incentive amount you received from the business you referred to</p>
+                                        <Label style={{ textTransform: "none" }}>Amount received ($)</Label>
+                                        <Input type="number" placeholder="e.g. 25.00" value={cashoutAmount} onChange={e => setCashoutAmount(e.target.value)} />
                                       </div>
                                       <div>
                                         <Label style={{ textTransform: "none" }}>Notes (optional)</Label>
@@ -715,6 +660,22 @@ export default function Dashboard() {
                                   <AlertTriangle className="w-3 h-3 mr-1" /> Disputed
                                 </Badge>
                               )}
+                              {/* Dual-verification badge */}
+                              {r.senderCashedOut && r.receiverHonored ? (
+                                r.senderConfirmedIncentiveAmount && r.receiverConfirmedIncentiveAmount && r.isIncentiveVerified ? (
+                                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs" style={{ textTransform: "none" }}>
+                                    <Shield className="w-3 h-3 mr-1" /> Verified ${r.senderConfirmedIncentiveAmount}
+                                  </Badge>
+                                ) : r.senderConfirmedIncentiveAmount ? (
+                                  <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs" style={{ textTransform: "none" }}>
+                                    <Shield className="w-3 h-3 mr-1" /> You confirmed ${r.senderConfirmedIncentiveAmount}
+                                  </Badge>
+                                ) : r.receiverConfirmedIncentiveAmount ? (
+                                  <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs" style={{ textTransform: "none" }}>
+                                    <Shield className="w-3 h-3 mr-1" /> Receiver confirmed ${r.receiverConfirmedIncentiveAmount}
+                                  </Badge>
+                                ) : null
+                              ) : null}
                               {!r.isDisputed && !r.senderCashedOut && (
                                 <Dialog>
                                   <DialogTrigger asChild>
@@ -805,85 +766,39 @@ export default function Dashboard() {
                                   <CheckCircle2 className="w-3 h-3 mr-1" /> You honored this referral
                                 </Badge>
                               ) : !r.isDisputed ? (
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button size="sm" className="bg-green-600 text-white h-7 text-xs hover:bg-green-700" style={{ textTransform: "none" }}>
-                                      <CheckCircle2 className="w-3 h-3 mr-1" /> Honor Referral
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent>
-                                    <DialogHeader>
-                                      <DialogTitle>Honor This Referral</DialogTitle>
-                                      <DialogDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
-                                        Confirm that you honored this referral from {item.referringBusiness?.name}. Please enter the amounts below.
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="space-y-4">
-                                      <div>
-                                        <Label style={{ textTransform: "none" }} className="flex items-center">Incentive amount paid to referrer ($) <PrivacyTooltip /></Label>
-                                        <Input type="number" step="0.01" placeholder="e.g. 25.00" value={honorIncentiveAmount} onChange={e => setHonorIncentiveAmount(e.target.value)} />
-                                        <p className="text-xs text-white/40 mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>The incentive/commission you paid to the referring business</p>
-                                      </div>
-                                      <div>
-                                        <Label style={{ textTransform: "none" }} className="flex items-center">Revenue generated from this referral ($) <PrivacyTooltip /></Label>
-                                        <Input type="number" step="0.01" placeholder="e.g. 150.00" value={honorRevenueAmount} onChange={e => setHonorRevenueAmount(e.target.value)} />
-                                        <p className="text-xs text-white/40 mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>The total sales/revenue you earned from this referred customer</p>
-                                      </div>
-                                      <div>
-                                        <Label style={{ textTransform: "none" }}>Notes (optional)</Label>
-                                        <Textarea placeholder="Any additional details..." value={honorNotes} onChange={e => setHonorNotes(e.target.value)} />
-                                      </div>
-                                    </div>
-                                    <DialogFooter>
-                                      <Button className="bg-green-600 text-white hover:bg-green-700" style={{ textTransform: "none" }}
-                                        onClick={() => { honorMutation.mutate({ referralId: item.referral.id, incentiveAmount: honorIncentiveAmount, revenueAmount: honorRevenueAmount, notes: honorNotes }); setHonorIncentiveAmount(''); setHonorRevenueAmount(''); setHonorNotes(''); }}
-                                        disabled={honorMutation.isPending}
-                                      >
-                                        {honorMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                        Confirm Honor
-                                      </Button>
-                                    </DialogFooter>
-                                  </DialogContent>
-                                </Dialog>
+                                <Button size="sm" className="bg-green-600 text-white h-7 text-xs hover:bg-green-700" style={{ textTransform: "none" }}
+                                  onClick={() => honorMutation.mutate({ referralId: item.referral.id })}
+                                  disabled={honorMutation.isPending}>
+                                  {honorMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <CheckCircle2 className="w-3 h-3 mr-1" />}
+                                  Honor Referral
+                                </Button>
                               ) : null}
                               {r.senderCashedOut && (
                                 <Badge className="bg-emerald-100 text-emerald-800 text-xs" style={{ textTransform: "none" }}>
                                   <CheckCircle2 className="w-3 h-3 mr-1" /> Sender cashed out{r.incentiveAmount ? ` $${r.incentiveAmount}` : ''}
                                 </Badge>
                               )}
-                              {/* Dual-verification: incentive amount */}
-                              {r.isIncentiveVerified ? (
-                                <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs" style={{ textTransform: "none" }}>
-                                  <Shield className="w-3 h-3 mr-1" /> Incentive verified {r.receiverConfirmedIncentiveAmount ? `$${r.receiverConfirmedIncentiveAmount}` : ''}
-                                </Badge>
-                              ) : r.receiverConfirmedIncentiveAmount && !r.senderConfirmedIncentiveAmount ? (
-                                <Badge className="bg-amber-100 text-amber-800 text-xs" style={{ textTransform: "none" }}>
-                                  <Clock className="w-3 h-3 mr-1" /> You confirmed {`$${r.receiverConfirmedIncentiveAmount}`} — awaiting sender
-                                </Badge>
-                              ) : !r.receiverConfirmedIncentiveAmount && r.senderConfirmedIncentiveAmount ? (
-                                <Badge className="bg-amber-100 text-amber-800 text-xs" style={{ textTransform: "none" }}>
-                                  <Info className="w-3 h-3 mr-1" /> Sender says {`$${r.senderConfirmedIncentiveAmount}`} — confirm your amount
-                                </Badge>
-                              ) : null}
-                              {/* Dual-verification: revenue amount */}
-                              {r.isRevenueVerified ? (
-                                <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-xs" style={{ textTransform: "none" }}>
-                                  <Shield className="w-3 h-3 mr-1" /> Revenue verified {r.receiverConfirmedRevenueAmount ? `$${r.receiverConfirmedRevenueAmount}` : ''}
-                                </Badge>
-                              ) : r.receiverConfirmedRevenueAmount && !r.athleteConfirmedPaymentAmount ? (
-                                <Badge className="bg-amber-100 text-amber-800 text-xs" style={{ textTransform: "none" }}>
-                                  <Clock className="w-3 h-3 mr-1" /> Revenue {`$${r.receiverConfirmedRevenueAmount}`} — awaiting athlete confirmation
-                                </Badge>
-                              ) : !r.receiverConfirmedRevenueAmount && r.athleteConfirmedPaymentAmount ? (
-                                <Badge className="bg-amber-100 text-amber-800 text-xs" style={{ textTransform: "none" }}>
-                                  <Info className="w-3 h-3 mr-1" /> Athlete says {`$${r.athleteConfirmedPaymentAmount}`} — confirm your revenue
-                                </Badge>
-                              ) : null}
                               {r.isDisputed && (
                                 <Badge className="bg-red-100 text-red-800 text-xs" style={{ textTransform: "none" }}>
                                   <AlertTriangle className="w-3 h-3 mr-1" /> Disputed
                                 </Badge>
                               )}
+                              {/* Dual-verification badge (received) */}
+                              {r.senderCashedOut && r.receiverHonored ? (
+                                r.senderConfirmedIncentiveAmount && r.receiverConfirmedIncentiveAmount && r.isIncentiveVerified ? (
+                                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs" style={{ textTransform: "none" }}>
+                                    <Shield className="w-3 h-3 mr-1" /> Verified ${r.receiverConfirmedIncentiveAmount}
+                                  </Badge>
+                                ) : r.receiverConfirmedIncentiveAmount ? (
+                                  <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs" style={{ textTransform: "none" }}>
+                                    <Shield className="w-3 h-3 mr-1" /> You confirmed ${r.receiverConfirmedIncentiveAmount}
+                                  </Badge>
+                                ) : r.senderConfirmedIncentiveAmount ? (
+                                  <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs" style={{ textTransform: "none" }}>
+                                    <Shield className="w-3 h-3 mr-1" /> Sender confirmed ${r.senderConfirmedIncentiveAmount}
+                                  </Badge>
+                                ) : null
+                              ) : null}
                               {!r.isDisputed && !r.receiverHonored && (
                                 <Dialog>
                                   <DialogTrigger asChild>

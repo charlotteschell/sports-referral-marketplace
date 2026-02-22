@@ -178,7 +178,7 @@ export const appRouter = router({
         try {
           await notifyOwner({
             title: `New Business Added: ${input.name}`,
-            content: `A new business has been added and needs your approval.\n\nBusiness: ${input.name}\nAdded by: ${(ctx.user.contactName || ctx.user.name) || ctx.user.email || 'Unknown'}\nCity: ${input.city || 'N/A'}, ${input.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
+            content: `A new business has been added and needs your approval.\n\nBusiness: ${input.name}\nAdded by: ${ctx.user.name || ctx.user.email || 'Unknown'}\nCity: ${input.city || 'N/A'}, ${input.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify owner:', e);
@@ -201,19 +201,22 @@ export const appRouter = router({
         try {
           await notifyOwner({
             title: `Business Claim Pending: ${biz.business.name}`,
-            content: `A business has been claimed and needs your approval.\n\nBusiness: ${biz.business.name}\nClaimed by: ${(ctx.user.contactName || ctx.user.name) || ctx.user.email || 'Unknown'}\nUser email: ${ctx.user.email || 'N/A'}\nCity: ${biz.business.city || 'N/A'}, ${biz.business.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
+            content: `A business has been claimed and needs your approval.\n\nBusiness: ${biz.business.name}\nClaimed by: ${ctx.user.name || ctx.user.email || 'Unknown'}\nUser email: ${ctx.user.email || 'N/A'}\nCity: ${biz.business.city || 'N/A'}, ${biz.business.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify owner:', e);
         }
-        // Notify the claiming user with an in-app confirmation
-        db.notifyUser({
-          userId: ctx.user.id,
-          type: 'claim_submitted',
-          title: `Claim submitted for ${biz.business.name}`,
-          message: `Your claim is pending admin approval. We'll notify you once it's reviewed.`,
-          businessId: input.businessId,
-        }).catch(e => console.warn('[Notification] Failed to notify claiming user:', e));
+        // Notify the claiming user
+        try {
+          await db.notifyUser({
+            userId: ctx.user.id,
+            title: 'Claim Submitted',
+            message: `Your claim for ${biz.business.name} has been submitted and is pending admin approval.`,
+            type: 'claim_submitted',
+          });
+        } catch (e) {
+          console.warn('[Notification] Failed to notify user about claim:', e);
+        }
         return { success: true, message: 'Your claim has been submitted for admin approval. You will be notified once approved.' };
       }),
 
@@ -541,27 +544,6 @@ export const appRouter = router({
               await db.setBusinessBusinessTypes(newBizId, [s.businessTypeId]);
             }
           }
-          // Notify the submitter that their business was approved
-          if (s.submittedByUserId) {
-            db.notifyUser({
-              userId: s.submittedByUserId,
-              type: 'submission_approved',
-              title: `Your business "${s.businessName}" has been approved!`,
-              message: `Congratulations! ${s.businessName} is now live in the directory. You can manage your listing, create referral offers, and start building partnerships.`,
-              businessId: newBizId || undefined,
-            }).catch(e => console.warn('[Notification] Failed to notify submission submitter:', e));
-          }
-        } else {
-          // Rejected - notify the submitter
-          const s = submission.submission;
-          if (s.submittedByUserId) {
-            db.notifyUser({
-              userId: s.submittedByUserId,
-              type: 'submission_rejected',
-              title: `Your business submission "${s.businessName}" was not approved`,
-              message: `Unfortunately, your submission was not approved.${input.reviewNotes ? ' Reason: ' + input.reviewNotes : ''} Please contact support if you have questions.`,
-            }).catch(e => console.warn('[Notification] Failed to notify submission submitter:', e));
-          }
         }
         return { success: true };
       }),
@@ -595,24 +577,7 @@ export const appRouter = router({
         notes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        // Get business details before updating (to find the claiming user)
-        const biz = await db.getBusinessById(input.businessId);
         await db.approveOrRejectBusiness(input.businessId, input.status, input.notes);
-        // Notify the business owner about the approval/rejection
-        if (biz?.business.claimedByUserId) {
-          const isApproved = input.status === 'approved';
-          db.notifyUser({
-            userId: biz.business.claimedByUserId,
-            type: isApproved ? 'claim_approved' : 'claim_rejected',
-            title: isApproved
-              ? `Your claim for ${biz.business.name} has been approved!`
-              : `Your claim for ${biz.business.name} was not approved`,
-            message: isApproved
-              ? `Congratulations! You can now manage your business listing, create referral offers, and start building partnerships.`
-              : `Your claim was not approved.${input.notes ? ' Reason: ' + input.notes : ''} Please contact support if you believe this is an error.`,
-            businessId: input.businessId,
-          }).catch(e => console.warn('[Notification] Failed to notify business owner:', e));
-        }
         return { success: true };
       }),
 
@@ -640,65 +605,31 @@ export const appRouter = router({
       }),
 
     // Admin: list all users
-    allUsers: adminProcedure
-      .input(z.object({
-        includeDeleted: z.boolean().optional(),
-        limit: z.number().min(1).max(100).optional(),
-        offset: z.number().min(0).optional(),
-        search: z.string().optional(),
-      }).optional())
-      .query(async ({ input }) => {
-        return db.getAllUsers(input ?? undefined);
+    listUsers: adminProcedure.query(async () => {
+      return db.getAllUsersForAdmin();
+    }),
+
+    // Admin: hide a user (soft-hide, can be restored)
+    hideUser: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.adminHideUser(input.userId);
+        return { success: true };
       }),
 
-    // Admin: delete a user account
+    // Admin: restore a hidden user
+    restoreUser: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.adminRestoreUser(input.userId);
+        return { success: true };
+      }),
+
+    // Admin: delete a user (with data retention option)
     deleteUser: adminProcedure
-      .input(z.object({
-        userId: z.number(),
-        retainActivityData: z.boolean().default(true),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        // Prevent admin from deleting themselves
-        if (input.userId === ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'You cannot delete your own admin account.' });
-        }
-        const targetUser = await db.getUserById(input.userId);
-        if (!targetUser) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
-        if (targetUser.isDeleted) throw new TRPCError({ code: 'CONFLICT', message: 'User is already deleted' });
-
-        // Step 1: Soft-delete (anonymize PII, hide businesses)
-        await db.softDeleteUser(input.userId, 'admin');
-
-        // Step 2: If admin chose to NOT retain activity data, purge it
-        if (!input.retainActivityData) {
-          await db.purgeUserActivityData(input.userId);
-        }
-
-        try {
-          await notifyOwner({
-            title: `Admin deleted user: ${targetUser.contactName || targetUser.name || targetUser.email || 'Unknown'}`,
-            content: `Admin ${ctx.user.contactName || ctx.user.name} deleted user account.\n\nDeleted User ID: ${input.userId}\nName: ${targetUser.contactName || targetUser.name || 'N/A'}\nEmail: ${targetUser.email || 'N/A'}\nActivity data ${input.retainActivityData ? 'retained (shown as Deleted Account)' : 'purged'}`,
-          });
-        } catch (e) {
-          console.warn('[Notification] Failed to notify owner about admin user deletion:', e);
-        }
-
-        return { success: true, message: input.retainActivityData
-          ? 'User deleted. Activity data preserved as "Deleted Account".'
-          : 'User and all activity data permanently deleted.' };
-      }),
-
-    // Admin: hide/unhide a user account (without full deletion)
-    toggleUserVisibility: adminProcedure
-      .input(z.object({
-        userId: z.number(),
-        isHidden: z.boolean(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        if (input.userId === ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'You cannot hide your own admin account.' });
-        }
-        await db.toggleUserHidden(input.userId, input.isHidden);
+      .input(z.object({ userId: z.number(), retainActivityData: z.boolean() }))
+      .mutation(async ({ input }) => {
+        await db.adminDeleteUser(input.userId, input.retainActivityData);
         return { success: true };
       }),
   }),
@@ -722,17 +653,6 @@ export const appRouter = router({
           ...input,
           referringUserId: ctx.user.id,
         });
-        // Notify the receiving business owner about the new referral
-        const receivingBiz = await db.getBusinessById(input.receivingBusinessId);
-        if (receivingBiz?.business.claimedByUserId) {
-          db.notifyUser({
-            userId: receivingBiz.business.claimedByUserId,
-            type: 'referral_received',
-            title: `New referral from ${biz!.business.name}!`,
-            message: `${biz!.business.name} sent you a customer referral${input.customerName ? ' for ' + input.customerName : ''}. Check your dashboard to follow up.`,
-            businessId: input.receivingBusinessId,
-          }).catch(e => console.warn('[Notification] Failed to notify receiving business:', e));
-        }
         return { id };
       }),
 
@@ -766,8 +686,6 @@ export const appRouter = router({
       .input(z.object({
         referralId: z.number(),
         notes: z.string().optional(),
-        incentiveAmount: z.string().optional(),
-        revenueAmount: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const ref = await db.getReferralById(input.referralId);
@@ -775,20 +693,9 @@ export const appRouter = router({
         // Check user owns the receiving business
         const biz = await db.getBusinessById(ref.receivingBusinessId);
         assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
-        await db.markReferralHonored(input.referralId, ctx.user.id, input.notes, input.incentiveAmount, input.revenueAmount);
+        await db.markReferralHonored(input.referralId, ctx.user.id, input.notes);
         // Increment platform stats
         await db.incrementPlatformStat('total_referrals_honored');
-        // Notify the sending business owner that their referral was honored
-        const sendingBiz = await db.getBusinessById(ref.referringBusinessId);
-        if (sendingBiz?.business.claimedByUserId) {
-          db.notifyUser({
-            userId: sendingBiz.business.claimedByUserId,
-            type: 'referral_honored',
-            title: `Your referral was honored by ${biz!.business.name}!`,
-            message: `Great news! ${biz!.business.name} confirmed they honored your referral.${input.incentiveAmount ? ' Incentive: $' + input.incentiveAmount : ''} Check your dashboard for details.`,
-            businessId: ref.referringBusinessId,
-          }).catch(e => console.warn('[Notification] Failed to notify sending business:', e));
-        }
         return { success: true };
       }),
 
@@ -831,42 +738,6 @@ export const appRouter = router({
           throw new TRPCError({ code: 'FORBIDDEN' });
         }
         await db.disputeReferral(input.referralId, ctx.user.id, input.reason);
-        // Notify the other party about the dispute
-        const otherPartyUserId = isSender ? recvBiz?.business.claimedByUserId : sendBiz?.business.claimedByUserId;
-        const disputerBizName = isSender ? sendBiz?.business.name : recvBiz?.business.name;
-        const otherBizId = isSender ? ref.receivingBusinessId : ref.referringBusinessId;
-        if (otherPartyUserId) {
-          db.notifyUser({
-            userId: otherPartyUserId,
-            type: 'referral_disputed',
-            title: `A referral has been disputed`,
-            message: `${disputerBizName || 'A partner'} has raised a dispute on a referral. Please review the details in your dashboard.`,
-            businessId: otherBizId,
-          }).catch(e => console.warn('[Notification] Failed to notify dispute:', e));
-        }
-        // Also notify admin
-        try {
-          await notifyOwner({
-            title: `Referral Dispute Filed`,
-            content: `A referral dispute has been filed.\n\nReferral #${input.referralId}\nDisputed by: User #${ctx.user.id}\nReason: ${input.reason}\n\nPlease review in the Admin Panel.`,
-          });
-        } catch (e) {
-          console.warn('[Notification] Failed to notify owner about dispute:', e);
-        }
-        return { success: true };
-      }),
-
-    // Athlete confirms the payment amount on a referral
-    athleteConfirmPayment: protectedProcedure
-      .input(z.object({
-        referralId: z.number(),
-        amount: z.string().min(1),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        // Any authenticated user (athlete) can confirm their payment
-        const ref = await db.getReferralById(input.referralId);
-        if (!ref) throw new TRPCError({ code: 'NOT_FOUND' });
-        await db.athleteConfirmReferralPayment(input.referralId, ctx.user.id, input.amount);
         return { success: true };
       }),
 
@@ -923,18 +794,6 @@ export const appRouter = router({
         });
         // Increment platform stats
         await db.incrementPlatformStat('total_consumer_claims');
-        // Notify the business owner about the new consumer claim
-        const claimedBiz = await db.getBusinessById(input.businessId);
-        if (claimedBiz?.business.claimedByUserId) {
-          db.notifyUser({
-            userId: claimedBiz.business.claimedByUserId,
-            type: 'consumer_claim',
-            title: `Someone claimed your offer!`,
-            message: `An athlete just claimed your consumer offer "${offer.title || 'offer'}". Check your dashboard to see the claim details.`,
-            businessId: input.businessId,
-            offerId: input.referralOfferId,
-          }).catch(e => console.warn('[Notification] Failed to notify business about consumer claim:', e));
-        }
         return result;
       }),
 
@@ -952,41 +811,6 @@ export const appRouter = router({
         if (input.honored && input.amountSaved) {
           await db.incrementPlatformStat('total_consumer_savings', Math.round(parseFloat(input.amountSaved) || 0));
         }
-        // Notify the business owner about the verification
-        // We need to find which business this claim belongs to
-        const claims = await db.getConsumerClaimsByUser(ctx.user.id);
-        const claim = claims.find((c: any) => c.claim?.id === input.claimId || c.id === input.claimId);
-        const bizId = (claim as any)?.claim?.businessId || (claim as any)?.businessId;
-        if (bizId) {
-          const verifiedBiz = await db.getBusinessById(bizId);
-          if (verifiedBiz?.business.claimedByUserId) {
-            db.notifyUser({
-              userId: verifiedBiz.business.claimedByUserId,
-              type: input.honored ? 'claim_verified_honored' : 'claim_verified_not_honored',
-              title: input.honored
-                ? `An athlete confirmed your offer was honored!`
-                : `An athlete reported your offer was not honored`,
-              message: input.honored
-                ? `Great job! A customer confirmed they received the discount.${input.amountSaved ? ' Amount saved: $' + input.amountSaved : ''}`
-                : `A customer reported the offer was not honored.${input.notes ? ' Notes: ' + input.notes : ''} Please review in your dashboard.`,
-              businessId: bizId,
-            }).catch(e => console.warn('[Notification] Failed to notify business about verification:', e));
-          }
-        }
-        return { success: true };
-      }),
-
-    // Business confirms the savings/discount amount given to athlete
-    businessConfirmSavings: protectedProcedure
-      .input(z.object({
-        claimId: z.number(),
-        amount: z.string().min(1),
-        businessId: z.number(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const biz = await db.getBusinessById(input.businessId);
-        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
-        await db.businessConfirmClaimSavings(input.claimId, input.amount);
         return { success: true };
       }),
 
@@ -1044,7 +868,7 @@ export const appRouter = router({
         try {
           await notifyOwner({
             title: `Partnership Email: ${input.subject}`,
-            content: `A partnership email was sent.\n\nFrom: ${(ctx.user.contactName || ctx.user.name) || ctx.user.email || 'User #' + ctx.user.id}\nTo: ${biz.business.name} (${recipientEmail})\nSubject: ${input.subject}\n\nMessage:\n${input.message}`,
+            content: `A partnership email was sent.\n\nFrom: ${ctx.user.name || ctx.user.email || 'User #' + ctx.user.id}\nTo: ${biz.business.name} (${recipientEmail})\nSubject: ${input.subject}\n\nMessage:\n${input.message}`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify owner:', e);
@@ -1070,14 +894,14 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const result = await db.createSupportTicket({
           userId: ctx.user.id,
-          userName: ctx.user.contactName || ctx.user.name || undefined,
+          userName: ctx.user.name || undefined,
           userEmail: ctx.user.email || 'unknown@sportconnect.com',
           ...input,
         });
         try {
           await notifyOwner({
             title: `Support Ticket: ${input.title}`,
-            content: `New support ticket submitted.\n\nFrom: ${(ctx.user.contactName || ctx.user.name) || ctx.user.email || 'User #' + ctx.user.id}\nType: ${input.ticketType}\nTitle: ${input.title}\n\nDescription:\n${input.description}`,
+            content: `New support ticket submitted.\n\nFrom: ${ctx.user.name || ctx.user.email || 'User #' + ctx.user.id}\nType: ${input.ticketType}\nTitle: ${input.title}\n\nDescription:\n${input.description}`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify owner:', e);
@@ -1105,24 +929,7 @@ export const appRouter = router({
         const ticket = await db.getSupportTicketById(input.id);
         if (!ticket) throw new TRPCError({ code: 'NOT_FOUND' });
         await db.updateSupportTicketStatus(input.id, input.status, input.adminNotes);
-        // Notify the ticket submitter about the status change
-        if (ticket.userId) {
-          const statusLabels: Record<string, string> = {
-            'in_backlog': 'added to our backlog',
-            'in_progress': 'being worked on',
-            'in_testing': 'in testing',
-            'done': 'completed',
-            'launched': 'launched! 🎉',
-          };
-          const statusLabel = statusLabels[input.status] || input.status;
-          db.notifyUser({
-            userId: ticket.userId,
-            type: 'ticket_status_update',
-            title: `Your ${ticket.ticketType === 'bug' ? 'bug report' : 'feature request'} is ${statusLabel}`,
-            message: `"${ticket.title}" has been updated to: ${statusLabel}${input.adminNotes ? '. Note: ' + input.adminNotes : ''}`,
-          }).catch(e => console.warn('[Notification] Failed to notify ticket submitter:', e));
-        }
-        // If launched, also send admin notification
+        // If launched, send congratulation notification
         if (input.status === 'launched' && ticket.userEmail) {
           try {
             await notifyOwner({
@@ -1156,7 +963,7 @@ export const appRouter = router({
         try {
           await notifyOwner({
             title: `New Category Request: ${input.proposedName}`,
-            content: `A new ${input.categoryType} category has been proposed.\n\nName: ${input.proposedName}\nType: ${input.categoryType}\nBy: ${(ctx.user.contactName || ctx.user.name) || ctx.user.email || 'User #' + ctx.user.id}\n${input.parentRegion ? 'Parent Region: ' + input.parentRegion : ''}\n\nPlease review in the Admin Panel.`,
+            content: `A new ${input.categoryType} category has been proposed.\n\nName: ${input.proposedName}\nType: ${input.categoryType}\nBy: ${ctx.user.name || ctx.user.email || 'User #' + ctx.user.id}\n${input.parentRegion ? 'Parent Region: ' + input.parentRegion : ''}\n\nPlease review in the Admin Panel.`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify:', e);
@@ -1195,20 +1002,6 @@ export const appRouter = router({
           }
           // For region/hub, they are just string values used in businesses, no separate table needed
         }
-        // Notify the user who submitted the category request
-        if (approval.userId) {
-          const isApproved = input.status === 'approved';
-          db.notifyUser({
-            userId: approval.userId,
-            type: isApproved ? 'category_approved' : 'category_rejected',
-            title: isApproved
-              ? `Your ${approval.categoryType} suggestion "${approval.proposedName}" was approved!`
-              : `Your ${approval.categoryType} suggestion "${approval.proposedName}" was not approved`,
-            message: isApproved
-              ? `"${approval.proposedName}" is now available as a ${approval.categoryType === 'business_type' ? 'business type' : approval.categoryType}. Thank you for your contribution!`
-              : `Unfortunately, your suggestion was not approved.${input.adminNotes ? ' Reason: ' + input.adminNotes : ''}`,
-          }).catch(e => console.warn('[Notification] Failed to notify category submitter:', e));
-        }
         return { success: true };
       }),
   }),
@@ -1234,9 +1027,9 @@ export const appRouter = router({
       return {
         name: ctx.user.name,
         email: ctx.user.email,
-        contactName: ctx.user.contactName,
         accountType: ctx.user.accountType,
         role: ctx.user.role,
+        contactName: ctx.user.contactName || null,
         notificationPreference: ctx.user.notificationPreference || 'both',
       };
     }),
@@ -1244,37 +1037,18 @@ export const appRouter = router({
       .input(z.object({
         name: z.string().min(1).optional(),
         email: z.string().email().optional(),
-        contactName: z.string().min(1).optional(),
+        contactName: z.string().min(1).max(255).optional(),
         notificationPreference: z.enum(['in_app_only', 'email_only', 'both', 'none']).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         await db.updateUserProfile(ctx.user.id, input);
         return { success: true };
       }),
-    setContactName: protectedProcedure
-      .input(z.object({ contactName: z.string().min(1).max(255) }))
-      .mutation(async ({ input, ctx }) => {
-        await db.updateUserContactName(ctx.user.id, input.contactName);
-        return { success: true };
-      }),
-    // Self-service account deletion
+
     deleteAccount: protectedProcedure
-      .input(z.object({ confirmText: z.literal('DELETE MY ACCOUNT') }))
       .mutation(async ({ ctx }) => {
-        // Prevent admin from deleting themselves via self-service
-        if (ctx.user.role === 'admin') {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin accounts cannot be self-deleted. Please contact another admin.' });
-        }
         await db.softDeleteUser(ctx.user.id, 'self');
-        try {
-          await notifyOwner({
-            title: `User Account Deleted: ${ctx.user.contactName || ctx.user.name || ctx.user.email || 'Unknown'}`,
-            content: `A user has deleted their own account.\n\nUser ID: ${ctx.user.id}\nName: ${ctx.user.contactName || ctx.user.name || 'N/A'}\nEmail: ${ctx.user.email || 'N/A'}\nAccount Type: ${ctx.user.accountType}\n\nTheir activity data has been preserved. Their businesses have been hidden.`,
-          });
-        } catch (e) {
-          console.warn('[Notification] Failed to notify owner about account deletion:', e);
-        }
-        return { success: true, message: 'Your account has been deleted. Your activity data will be preserved anonymously.' };
+        return { success: true };
       }),
   }),
 

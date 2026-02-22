@@ -118,8 +118,8 @@ export default function Onboarding() {
 
   // Pre-fill display name from user
   useEffect(() => {
-    if ((user?.contactName || user?.name) && !athleteForm.displayName) {
-      setAthleteForm(prev => ({ ...prev, displayName: user?.contactName || user?.name || "" }));
+    if (user?.name && !athleteForm.displayName) {
+      setAthleteForm(prev => ({ ...prev, displayName: user.name || "" }));
     }
   }, [user]);
 
@@ -144,16 +144,10 @@ export default function Onboarding() {
     }
   };
 
-  const setContactNameMut = trpc.userProfile.setContactName.useMutation();
-
   const handleAthleteSubmit = () => {
     // Set account type first, then save profile (which also marks onboarding complete)
     setAccountType.mutate({ accountType: "consumer" }, {
       onSuccess: () => {
-        // Also save displayName as contactName
-        if (athleteForm.displayName.trim()) {
-          setContactNameMut.mutate({ contactName: athleteForm.displayName.trim() });
-        }
         saveProfile.mutate({
           displayName: athleteForm.displayName || undefined,
           sportIds: athleteForm.selectedSports.length > 0 ? JSON.stringify(athleteForm.selectedSports) : undefined,
@@ -173,10 +167,6 @@ export default function Onboarding() {
   const handleSkipProfile = () => {
     setAccountType.mutate({ accountType: "consumer" }, {
       onSuccess: () => {
-        // Save contactName if entered before skipping
-        if (athleteForm.displayName.trim()) {
-          setContactNameMut.mutate({ contactName: athleteForm.displayName.trim() });
-        }
         // Mark onboarding complete even when skipping profile
         completeOnboarding.mutate(undefined, {
           onSuccess: () => {

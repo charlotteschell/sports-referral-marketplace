@@ -1,9 +1,0 @@
-{
-  "query": "ALTER TABLE referrals \n  ADD COLUMN receiverConfirmedIncentiveAmount varchar(20) DEFAULT NULL,\n  ADD COLUMN senderConfirmedIncentiveAmount varchar(20) DEFAULT NULL,\n  ADD COLUMN isIncentiveVerified boolean NOT NULL DEFAULT false,\n  ADD COLUMN receiverConfirmedRevenueAmount varchar(20) DEFAULT NULL,\n  ADD COLUMN athleteConfirmedPaymentAmount varchar(20) DEFAULT NULL,\n  ADD COLUMN referredAthleteUserId int DEFAULT NULL,\n  ADD COLUMN isRevenueVerified boolean NOT NULL DEFAULT false;\n\nALTER TABLE consumerClaims \n  ADD COLUMN businessConfirmedSavingsAmount varchar(20) DEFAULT NULL,\n  ADD COLUMN isAmountVerified boolean NOT NULL DEFAULT false;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute ALTER TABLE referrals \n  ADD COLUMN receiverConfirmedIncentiveAmount varchar(20) DEFAULT NULL,\n  ADD COLUMN senderConfirmedIncentiveAmount varchar(20) DEFAULT NULL,\n  ADD COLUMN isIncentiveVerified boolean NOT NULL DEFAULT false,\n  ADD COLUMN receiverConfirmedRevenueAmount varchar(20) DEFAULT NULL,\n  ADD COLUMN athleteConfirmedPaymentAmount varchar(20) DEFAULT NULL,\n  ADD COLUMN referredAthleteUserId int DEFAULT NULL,\n  ADD COLUMN isRevenueVerified boolean NOT NULL DEFAULT false;\n\nALTER TABLE consumerClaims \n  ADD COLUMN businessConfirmedSavingsAmount varchar(20) DEFAULT NULL,\n  ADD COLUMN isAmountVerified boolean NOT NULL DEFAULT false;",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 1255
-}

@@ -109,8 +109,6 @@ vi.mock("./db", () => ({
   getUnreadNotificationCount: vi.fn().mockResolvedValue(0),
   getUsersWhoSavedBusiness: vi.fn().mockResolvedValue([]),
   createNotification: vi.fn().mockResolvedValue(1),
-  notifyUser: vi.fn().mockResolvedValue({ sent: true, method: 'in_app' }),
-  getUserById: vi.fn().mockResolvedValue(null),
   updateUserProfile: vi.fn().mockResolvedValue(undefined),
   updateUserNotificationPreference: vi.fn().mockResolvedValue(undefined),
 }));
@@ -319,6 +317,7 @@ describe("userProfile.get", () => {
       email: "owner@test.com",
       accountType: "business_owner",
       role: "user",
+      contactName: null,
       notificationPreference: "email_only",
     });
   });

@@ -18,13 +18,8 @@ import {
   Loader2, Gift, Heart, Bookmark, MapPin, ExternalLink,
   Ticket, CheckCircle2, Clock, AlertTriangle, Trash2,
   User, Target, Bike, Settings, ArrowRight, Bell, Check, CheckCheck,
-  Sparkles, Star, ChevronRight, Pencil, X, Save, Zap, Mail, BellRing, BellOff, Info
+  Sparkles, Star, ChevronRight, Pencil, X, Save, Zap, Mail, BellRing, BellOff
 } from "lucide-react";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter,
-  DialogHeader, DialogTitle, DialogTrigger
-} from "@/components/ui/dialog";
-import { PrivacyTooltip } from "@/components/PrivacyTooltip";
 
 type TabId = "offers" | "saved" | "notifications" | "profile";
 

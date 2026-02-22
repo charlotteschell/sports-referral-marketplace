@@ -1,0 +1,28 @@
+{
+  "query": "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_NAME = 'referrals' AND COLUMN_NAME LIKE '%Confirmed%' OR (TABLE_NAME = 'referrals' AND COLUMN_NAME LIKE '%Verified%');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_NAME = 'referrals' AND COLUMN_NAME LIKE '%Confirmed%' OR (TABLE_NAME = 'referrals' AND COLUMN_NAME LIKE '%Verified%');",
+  "rows": [
+    {
+      "COLUMN_NAME": "receiverConfirmedIncentiveAmount"
+    },
+    {
+      "COLUMN_NAME": "senderConfirmedIncentiveAmount"
+    },
+    {
+      "COLUMN_NAME": "isIncentiveVerified"
+    },
+    {
+      "COLUMN_NAME": "receiverConfirmedRevenueAmount"
+    },
+    {
+      "COLUMN_NAME": "athleteConfirmedPaymentAmount"
+    },
+    {
+      "COLUMN_NAME": "isRevenueVerified"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nreceiverConfirmedIncentiveAmount\nsenderConfirmedIncentiveAmount\nisIncentiveVerified\nreceiverConfirmedRevenueAmount\nathleteConfirmedPaymentAmount\nisRevenueVerified\n",
+  "stderr": "",
+  "execution_time_ms": 88
+}

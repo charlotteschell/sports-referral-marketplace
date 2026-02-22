@@ -17,7 +17,7 @@ export const users = mysqlTable("users", {
   notificationPreference: varchar("notificationPreference", { length: 20 }).default("both").notNull(),
   isDeleted: boolean("isDeleted").default(false).notNull(),
   deletedAt: timestamp("deletedAt"),
-  deletedBy: varchar("deletedBy", { length: 20 }),  // 'self' | 'admin'
+  deletedBy: varchar("deletedBy", { length: 50 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -191,16 +191,11 @@ export const referrals = mysqlTable("referrals", {
   senderCashedOutNotes: text("senderCashedOutNotes"),
   incentiveAmount: varchar("incentiveAmount", { length: 20 }),
   incentiveCurrency: varchar("incentiveCurrency", { length: 10 }).default("USD"),
-  
-  // Dual-verification: incentive amounts
-  receiverConfirmedIncentiveAmount: varchar("receiverConfirmedIncentiveAmount", { length: 20 }),
   senderConfirmedIncentiveAmount: varchar("senderConfirmedIncentiveAmount", { length: 20 }),
-  isIncentiveVerified: boolean("isIncentiveVerified").default(false).notNull(),
-  
-  // Dual-verification: revenue/payment amounts
+  receiverConfirmedIncentiveAmount: varchar("receiverConfirmedIncentiveAmount", { length: 20 }),
+  senderConfirmedRevenueAmount: varchar("senderConfirmedRevenueAmount", { length: 20 }),
   receiverConfirmedRevenueAmount: varchar("receiverConfirmedRevenueAmount", { length: 20 }),
-  athleteConfirmedPaymentAmount: varchar("athleteConfirmedPaymentAmount", { length: 20 }),
-  referredAthleteUserId: int("referredAthleteUserId"),
+  isIncentiveVerified: boolean("isIncentiveVerified").default(false).notNull(),
   isRevenueVerified: boolean("isRevenueVerified").default(false).notNull(),
   isDisputed: boolean("isDisputed").default(false).notNull(),
   disputeReason: text("disputeReason"),
@@ -229,10 +224,6 @@ export const consumerClaims = mysqlTable("consumerClaims", {
   honoredNotes: text("honoredNotes"),
   amountSaved: varchar("amountSaved", { length: 20 }),
   currency: varchar("currency", { length: 10 }).default("USD"),
-  
-  // Dual-verification: business confirms savings given
-  businessConfirmedSavingsAmount: varchar("businessConfirmedSavingsAmount", { length: 20 }),
-  isAmountVerified: boolean("isAmountVerified").default(false).notNull(),
   isDisputed: boolean("isDisputed").default(false).notNull(),
   disputeReason: text("disputeReason"),
   disputedAt: timestamp("disputedAt"),
