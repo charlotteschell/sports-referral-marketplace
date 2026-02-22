@@ -649,3 +649,6 @@
 - [x] Notification preferences (in-app only, email, both, none) on athlete profile
 - [x] Set onboardingComplete=true after completing onboarding for both paths
 - [x] Write tests for user-type routing and onboarding flows (12 new tests, 116 total pass)
+
+## Logo Visibility
+- [x] Make header logo bigger and more visually prominent (w-9→w-11, added warm glow shadow, bumped text to xl)
