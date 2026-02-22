@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BusinessLogo from "@/components/BusinessLogo";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
@@ -196,13 +197,10 @@ export default function Leaderboard() {
                     </div>
 
                     {/* Logo */}
-                    <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center shrink-0 overflow-hidden">
-                      {biz.logoUrl ? (
-                        <img src={biz.logoUrl} alt={biz.name} className="w-full h-full object-cover rounded-lg" />
-                      ) : (
-                        <span className="text-lg font-bold text-white/30">{biz.name?.charAt(0)}</span>
-                      )}
-                    </div>
+                    <BusinessLogo
+                      logoUrl={biz.logoUrl}
+                      businessName={biz.name}
+                    />
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">

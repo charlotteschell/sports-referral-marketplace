@@ -1,0 +1,19 @@
+Doctrine Training Ltd logo issue:
+- The logo URL exists and loads: https://thedoctrine.ca/wp-content/uploads/2019/11/doctrine-logo-80-wt.png
+- But the logo is WHITE TEXT on a TRANSPARENT background (259x80px)
+- When displayed on our dark background, it's barely visible / appears invisible
+- The logo is also very small (80px height) and rectangular, not square
+
+The issue is not a missing logo but a white-on-transparent logo that's invisible on dark backgrounds.
+
+Solution: Add an onError handler to all img tags displaying logos so if the image fails to load OR is problematic, fall back to the placeholder. Also add a subtle background behind logo images to make white logos visible.
+
+For the broader fix: ensure ALL business card/profile components have a consistent fallback when logoUrl is null, empty, or the image fails to load.
+
+Components that display business logos:
+1. Home.tsx - Featured carousel cards (line 475)
+2. Directory.tsx - Directory listing cards (line 391)
+3. BusinessProfile.tsx - Business profile header (line 306)
+4. EditBusiness.tsx - Edit form logo section (line 288)
+5. Leaderboard.tsx - May also show logos
+6. Dashboard.tsx - Business dashboard

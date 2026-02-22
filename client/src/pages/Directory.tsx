@@ -5,6 +5,7 @@ import { Link, useSearch, useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BusinessLogo from "@/components/BusinessLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -388,13 +389,11 @@ export default function Directory() {
                       <Link href={`/business/${item.business.slug}`} className="block">
                         <div className="flex items-start justify-between mb-3">
                           {/* Logo or sport icon */}
-                          {item.business.logoUrl ? (
-                            <img src={item.business.logoUrl} alt="" className="w-12 h-12 rounded-lg object-cover" />
-                          ) : (
-                            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                              {sportIcons[item.sportCategory?.slug || ""] || <Star className="w-6 h-6" />}
-                            </div>
-                          )}
+                          <BusinessLogo
+                            logoUrl={item.business.logoUrl}
+                            businessName={item.business.name}
+                            sportSlug={item.sportCategory?.slug}
+                          />
                           {item.business.isClaimed && item.business.claimedByUserId ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>
                               <Shield className="w-3 h-3" /> Verified

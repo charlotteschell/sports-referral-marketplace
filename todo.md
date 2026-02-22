@@ -694,3 +694,8 @@
 - [x] Merge all "Alberta" region entries into "Western Canada" in businesses table
 - [x] Research and add Zone6 Cycling (zone6cycling.com) to directory (id=150004, featured)
 - [x] Feature Zone6 Cycling in the homepage carousel
+
+## Placeholder Logo Fix
+- [x] Created reusable BusinessLogo component with onError fallback and sport icon/initial letter placeholder
+- [x] Replaced inline logo rendering in Home, Directory, BusinessProfile, Leaderboard, AthleteDashboard, EditBusiness (6 files)
+- [x] Fix Doctrine Training Ltd and all businesses without logos - consistent placeholder across all views

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BusinessLogo from "@/components/BusinessLogo";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -282,13 +283,12 @@ export default function AthleteDashboard() {
                     <Card className="h-full hover:shadow-md transition-shadow cursor-pointer group overflow-hidden">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          {biz.logoUrl ? (
-                            <img src={biz.logoUrl} alt={biz.name} className="w-10 h-10 rounded-lg object-cover shrink-0" />
-                          ) : (
-                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                              <Target className="w-5 h-5 text-primary" />
-                            </div>
-                          )}
+                          <BusinessLogo
+                            logoUrl={biz.logoUrl}
+                            businessName={biz.name}
+                            size="w-10 h-10"
+                            iconSize="w-5 h-5"
+                          />
                           <div className="min-w-0">
                             <h3 className="font-semibold text-sm group-hover:text-primary transition-colors truncate" style={{ textTransform: "none" }}>
                               {biz.name}
@@ -364,17 +364,12 @@ export default function AthleteDashboard() {
                             {/* Business Info */}
                             <div className="flex-1">
                               <div className="flex items-start gap-3">
-                                {item.business.logoUrl ? (
-                                  <img
-                                    src={item.business.logoUrl}
-                                    alt={item.business.name}
-                                    className="w-10 h-10 rounded-lg object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                    <Gift className="w-5 h-5 text-primary" />
-                                  </div>
-                                )}
+                                <BusinessLogo
+                                  logoUrl={item.business.logoUrl}
+                                  businessName={item.business.name}
+                                  size="w-10 h-10"
+                                  iconSize="w-5 h-5"
+                                />
                                 <div>
                                   <Link href={`/business/${item.business.slug}`}>
                                     <span className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer" style={{ textTransform: "none" }}>
@@ -493,17 +488,10 @@ export default function AthleteDashboard() {
                       <Card key={item.savedBusiness.id} className="overflow-hidden hover:shadow-md transition-shadow">
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
-                            {item.business.logoUrl ? (
-                              <img
-                                src={item.business.logoUrl}
-                                alt={item.business.name}
-                                className="w-12 h-12 rounded-lg object-cover shrink-0"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                <Heart className="w-6 h-6 text-primary" />
-                              </div>
-                            )}
+                            <BusinessLogo
+                              logoUrl={item.business.logoUrl}
+                              businessName={item.business.name}
+                            />
                             <div className="flex-1 min-w-0">
                               <Link href={`/business/${item.business.slug}`}>
                                 <span className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer line-clamp-1" style={{ textTransform: "none" }}>
@@ -646,13 +634,12 @@ function NotificationsTab() {
         >
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              {n.business?.logoUrl ? (
-                <img src={n.business.logoUrl} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
-              ) : (
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Bell className="w-5 h-5 text-primary" />
-                </div>
-              )}
+              <BusinessLogo
+                logoUrl={n.business?.logoUrl}
+                businessName={n.business?.name || ""}
+                size="w-10 h-10"
+                iconSize="w-5 h-5"
+              />
               <div className="flex-1 min-w-0">
                 <p className={`text-sm ${!n.notification.isRead ? "font-semibold text-foreground" : "text-muted-foreground"}`} style={{ textTransform: "none" }}>
                   {n.notification.title}

@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { useParams, useLocation, Link } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BusinessLogo from "@/components/BusinessLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -285,11 +286,13 @@ export default function EditBusiness() {
             <CardContent>
               <div className="flex items-center gap-6">
                 <div className="w-20 h-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30 shrink-0">
-                  {bizData?.business.logoUrl ? (
-                    <img src={bizData.business.logoUrl} alt="Logo" className="w-full h-full object-cover rounded-xl" />
-                  ) : (
-                    <Camera className="w-8 h-8 text-muted-foreground/40" />
-                  )}
+                  <BusinessLogo
+                    logoUrl={bizData?.business.logoUrl}
+                    businessName={bizData?.business.name || ""}
+                    size="w-full h-full"
+                    iconSize="w-8 h-8"
+                    roundedXl
+                  />
                 </div>
                 <div className="flex-1">
                   <Button

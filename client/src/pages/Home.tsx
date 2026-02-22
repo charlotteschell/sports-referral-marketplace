@@ -12,14 +12,14 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
+import BusinessLogo from "@/components/BusinessLogo";
 const sportIcons: Record<string, React.ReactNode> = {
   cycling: <Bike className="w-8 h-8" />,
   running: <Mountain className="w-8 h-8" />,
   "trail-running": <Mountain className="w-8 h-8" />,
   snowsports: <Snowflake className="w-8 h-8" />,
   "sport-vacations": <Compass className="w-8 h-8" />,
-};
+};;
 
 const sportSmallIcons: Record<string, React.ReactNode> = {
   cycling: <Bike className="w-4 h-4" />,
@@ -472,13 +472,11 @@ export default function Home() {
                   <Card className="h-full hover:shadow-lg hover:border-[oklch(0.55_0.15_45)]/30 transition-all cursor-pointer border-border group">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
-                        {item.business.logoUrl ? (
-                          <img src={item.business.logoUrl} alt={item.business.name} className="w-12 h-12 rounded-lg object-cover" />
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg bg-[oklch(0.55_0.15_45)]/10 flex items-center justify-center text-[oklch(0.55_0.15_45)] group-hover:bg-[oklch(0.55_0.15_45)]/20 transition-colors">
-                            {sportIcons[item.sportCategory?.slug || ""] || <Star className="w-6 h-6" />}
-                          </div>
-                        )}
+                        <BusinessLogo
+                          logoUrl={item.business.logoUrl}
+                          businessName={item.business.name}
+                          sportSlug={item.sportCategory?.slug}
+                        />
                         <div className="flex flex-col items-end gap-1">
                           {item.business.isClaimed && item.business.claimedByUserId ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full" style={{ textTransform: "none" }}>

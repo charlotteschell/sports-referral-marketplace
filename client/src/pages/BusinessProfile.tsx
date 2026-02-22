@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { useParams, Link, useLocation } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BusinessLogo from "@/components/BusinessLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -303,15 +304,14 @@ export default function BusinessProfile() {
         <div className="container">
           <div className="flex flex-col md:flex-row md:items-start gap-6">
             {/* Logo or icon */}
-            {(business as any).logoUrl ? (
-              <div className="w-16 h-16 rounded-xl overflow-hidden bg-white shrink-0">
-                <img src={(business as any).logoUrl} alt={business.name} className="w-full h-full object-contain" />
-              </div>
-            ) : (
-              <div className="w-16 h-16 rounded-xl bg-white/10 flex items-center justify-center text-[oklch(0.55_0.15_45)] shrink-0">
-                {sportIcons[sportCategory?.slug || ""] || <Star className="w-8 h-8" />}
-              </div>
-            )}
+            <BusinessLogo
+              logoUrl={(business as any).logoUrl}
+              businessName={business.name}
+              sportSlug={sportCategory?.slug}
+              size="w-16 h-16"
+              iconSize="w-8 h-8"
+              roundedXl
+            />
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-3 mb-2">
                 <h1 className="text-3xl md:text-4xl font-bold">{business.name}</h1>
