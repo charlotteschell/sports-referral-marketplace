@@ -716,3 +716,6 @@
 - [x] Change "Active Businesses" to "Business Revenue Earned from Referrals" on Scoreboard, placed next to referral incentives
 - [x] Add new metric: "Total Athletes Sent to Businesses" on Scoreboard
 - [x] Add new metric: "Total Business Partnerships Brokered" on Scoreboard
+## Leaderboard Styling
+- [x] Debug and fix styling issues on the Leaderboard page (BusinessLogo font size bug: parseInt("w-6 h-6".replace(/\D/g,'')) gave 66*3=198px instead of 6*3=18px)
+- [x] Update Leaderboard top metrics to match new Scoreboard metrics from homepage (8 metrics, fixed snake_case key mapping in getPlatformStats)

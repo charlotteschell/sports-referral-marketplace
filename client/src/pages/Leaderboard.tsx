@@ -12,7 +12,7 @@ import { useState } from "react";
 import {
   Trophy, Medal, Award, TrendingUp, ArrowUpRight, ArrowDownLeft,
   MessageSquare, Crown, Star, Flame, Zap, Users, DollarSign,
-  ChevronRight
+  ChevronRight, Handshake, UserCheck, Wallet
 } from "lucide-react";
 
 type Timeframe = "all" | "month" | "year";
@@ -44,6 +44,7 @@ export default function Leaderboard() {
 
   const { data: rankings, isLoading } = trpc.leaderboard.rankings.useQuery({ timeframe, limit: 20 });
   const { data: summary } = trpc.leaderboard.summary.useQuery();
+  const { data: platformStats } = trpc.platformStats.get.useQuery();
 
   const timeframeLabels: Record<Timeframe, string> = {
     all: "All Time",
@@ -89,20 +90,24 @@ export default function Leaderboard() {
           </p>
 
           {/* Summary Stats */}
-          {summary && (
+          {platformStats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
               {[
-                { label: "Total Referrals", value: summary.totalReferrals.toLocaleString(), icon: <TrendingUp className="w-5 h-5 text-amber-400" /> },
-                { label: "Honored", value: summary.totalHonored.toLocaleString(), icon: <Award className="w-5 h-5 text-green-400" /> },
-                { label: "$ Exchanged", value: `$${summary.totalEarned.toLocaleString()}`, icon: <DollarSign className="w-5 h-5 text-emerald-400" /> },
-                { label: "Businesses Active", value: summary.totalBusinessesParticipating.toLocaleString(), icon: <Users className="w-5 h-5 text-blue-400" /> },
+                { label: "Total Referrals", value: platformStats.totalReferrals.toLocaleString(), icon: <TrendingUp className="w-5 h-5 text-amber-400" />, color: "text-[oklch(0.55_0.15_45)]" },
+                { label: "Referrals Honored", value: platformStats.honoredReferrals.toLocaleString(), icon: <Award className="w-5 h-5 text-green-400" />, color: "text-green-400" },
+                { label: "Referral Incentives Earned", value: `$${platformStats.totalIncentivesExchanged.toLocaleString()}`, icon: <DollarSign className="w-5 h-5 text-emerald-400" />, color: "text-emerald-400" },
+                { label: "Business Revenue from Referrals", value: `$${platformStats.businessRevenueFromReferrals.toLocaleString()}`, icon: <Wallet className="w-5 h-5 text-amber-400" />, color: "text-amber-400" },
+                { label: "Athlete Offers Claimed", value: platformStats.consumerOffersClaimed.toLocaleString(), icon: <UserCheck className="w-5 h-5 text-blue-400" />, color: "text-blue-400" },
+                { label: "Athletes Sent to Businesses", value: platformStats.totalAthletesSentToBusinesses.toLocaleString(), icon: <Users className="w-5 h-5 text-cyan-400" />, color: "text-cyan-400" },
+                { label: "Business Partnerships Brokered", value: platformStats.totalPartnershipsBrokered.toLocaleString(), icon: <Handshake className="w-5 h-5 text-purple-400" />, color: "text-purple-400" },
+                { label: "Athlete Savings", value: `$${platformStats.consumerSavings.toLocaleString()}`, icon: <DollarSign className="w-5 h-5 text-amber-300" />, color: "text-amber-300" },
               ].map((stat) => (
                 <div key={stat.label} className="bg-white/5 border border-white/10 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-1">
                     {stat.icon}
                     <span className="text-xs text-white/40 uppercase tracking-wider">{stat.label}</span>
                   </div>
-                  <span className="text-2xl font-bold text-white">{stat.value}</span>
+                  <span className={`text-2xl font-bold ${stat.color}`}>{stat.value}</span>
                 </div>
               ))}
             </div>

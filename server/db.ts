@@ -1304,15 +1304,15 @@ export async function getPlatformStats() {
     raw[row.statKey] = row.statValue;
   }
   return {
-    totalReferrals: raw['totalReferrals'] || 0,
-    honoredReferrals: raw['honoredReferrals'] || 0,
-    totalIncentivesExchanged: raw['totalIncentivesExchanged'] || 0,
-    consumerOffersClaimed: raw['consumerOffersClaimed'] || 0,
-    consumerSavings: raw['consumerSavings'] || 0,
-    activeBusinesses: raw['activeBusinesses'] || 0,
-    businessRevenueFromReferrals: raw['businessRevenueFromReferrals'] || 0,
-    totalAthletesSentToBusinesses: raw['totalAthletesSentToBusinesses'] || 0,
-    totalPartnershipsBrokered: raw['totalPartnershipsBrokered'] || 0,
+    totalReferrals: raw['total_referrals_sent'] || raw['totalReferrals'] || 0,
+    honoredReferrals: raw['total_referrals_honored'] || raw['honoredReferrals'] || 0,
+    totalIncentivesExchanged: raw['total_incentive_value'] || raw['totalIncentivesExchanged'] || 0,
+    consumerOffersClaimed: raw['total_consumer_claims'] || raw['consumerOffersClaimed'] || 0,
+    consumerSavings: raw['total_consumer_savings'] || raw['consumerSavings'] || 0,
+    activeBusinesses: raw['active_businesses'] || raw['activeBusinesses'] || 0,
+    businessRevenueFromReferrals: raw['businessRevenueFromReferrals'] || raw['business_revenue_from_referrals'] || 0,
+    totalAthletesSentToBusinesses: raw['totalAthletesSentToBusinesses'] || raw['total_athletes_sent_to_businesses'] || 0,
+    totalPartnershipsBrokered: raw['totalPartnershipsBrokered'] || raw['active_partnerships'] || 0,
   };
 }
 

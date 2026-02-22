@@ -62,7 +62,7 @@ export default function BusinessLogo({
       {getIcon ? (
         getIcon(iconSize)
       ) : businessName ? (
-        <span className={`font-bold text-[oklch(0.55_0.15_45)]`} style={{ fontSize: parseInt(iconSize.replace(/\D/g, "")) * 3 || 18 }}>
+        <span className={`font-bold text-[oklch(0.55_0.15_45)]`} style={{ fontSize: parseInt(iconSize.match(/\d+/)?.[0] || "6") * 3 }}>
           {businessName.charAt(0).toUpperCase()}
         </span>
       ) : (

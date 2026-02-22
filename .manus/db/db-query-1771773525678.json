@@ -1,0 +1,52 @@
+{
+  "query": "SELECT * FROM platform_stats ORDER BY stat_key;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT * FROM platform_stats ORDER BY stat_key;",
+  "rows": [
+    {
+      "id": "6",
+      "stat_key": "active_businesses",
+      "stat_value": "60",
+      "updatedAt": "2026-02-21 22:35:05"
+    },
+    {
+      "id": "4",
+      "stat_key": "consumer_offers_claimed",
+      "stat_value": "412",
+      "updatedAt": "2026-02-21 22:35:05"
+    },
+    {
+      "id": "5",
+      "stat_key": "consumer_savings",
+      "stat_value": "18920",
+      "updatedAt": "2026-02-21 22:35:05"
+    },
+    {
+      "id": "7",
+      "stat_key": "partnership_emails",
+      "stat_value": "847",
+      "updatedAt": "2026-02-21 23:35:22"
+    },
+    {
+      "id": "2",
+      "stat_key": "referrals_honored",
+      "stat_value": "623",
+      "updatedAt": "2026-02-21 22:35:05"
+    },
+    {
+      "id": "3",
+      "stat_key": "total_incentives_exchanged",
+      "stat_value": "34750",
+      "updatedAt": "2026-02-21 22:35:05"
+    },
+    {
+      "id": "1",
+      "stat_key": "total_referrals",
+      "stat_value": "847",
+      "updatedAt": "2026-02-21 22:35:05"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tstat_key\tstat_value\tupdatedAt\n6\tactive_businesses\t60\t2026-02-21 22:35:05\n4\tconsumer_offers_claimed\t412\t2026-02-21 22:35:05\n5\tconsumer_savings\t18920\t2026-02-21 22:35:05\n7\tpartnership_emails\t847\t2026-02-21 23:35:22\n2\treferrals_honored\t623\t2026-02-21 22:35:05\n3\ttotal_incentives_exchanged\t34750\t2026-02-21 22:35:05\n1\ttotal_referrals\t847\t2026-02-21 22:35:05\n",
+  "stderr": "",
+  "execution_time_ms": 67
+}
