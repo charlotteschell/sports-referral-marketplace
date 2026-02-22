@@ -25,6 +25,7 @@ import BetaBanner from "./components/BetaBanner";
 import ContactNamePrompt from "./components/ContactNamePrompt";
 import University from "./pages/University";
 import UniversityArticle from "./pages/UniversityArticle";
+import AccountSettings from "./pages/AccountSettings";
 
 function Router() {
   return (
@@ -47,6 +48,7 @@ function Router() {
       <Route path="/athlete-dashboard" component={AthleteDashboard} />
       <Route path="/university/:slug" component={UniversityArticle} />
       <Route path="/university" component={University} />
+      <Route path="/account-settings" component={AccountSettings} />
       <Route path="/admin" component={AdminPanel} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

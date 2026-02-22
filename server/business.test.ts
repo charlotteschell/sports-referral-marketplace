@@ -211,6 +211,8 @@ vi.mock("./db", () => ({
   getBusinessBusinessTypes: vi.fn().mockResolvedValue([]),
   setBusinessBusinessTypes: vi.fn().mockResolvedValue(undefined),
   notifyUsersOfNewOffer: vi.fn().mockResolvedValue(undefined),
+  notifyUser: vi.fn().mockResolvedValue({ sent: true, method: 'in_app' }),
+  getUserById: vi.fn().mockResolvedValue(null),
   getUserNotifications: vi.fn().mockResolvedValue([]),
   markNotificationRead: vi.fn().mockResolvedValue(undefined),
   markAllNotificationsRead: vi.fn().mockResolvedValue(undefined),

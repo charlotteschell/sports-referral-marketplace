@@ -780,3 +780,25 @@
 
 ## Nav Bar Alignment Fix
 - [x] Fix styling/alignment of referral offers link in nav bar when users are logged in
+
+## Notification System Audit & Fix
+- [x] Audit all notification triggers across the codebase (in-app + email)
+- [x] Verify business claim notification is sent to the business owner (not just admin)
+- [x] List all events that should trigger notifications and to whom
+- [x] Verify in-app notifications are created correctly
+- [x] Verify email notifications are sent correctly (no email module exists yet — noted for future)
+- [x] Verify notification preferences (in_app_only, email_only, both, none) are respected via notifyUser helper
+- [x] Fix any missing or broken notification delivery (added 10+ notification triggers)
+- [x] Write tests for notification system (15 new tests, 162 total pass)
+
+## Account Deletion
+- [x] User self-service account deletion (Settings page at /account-settings)
+- [x] Keep previous activity data (referrals, claims, etc.) when user deletes their own account
+- [x] Show deleted user's activity as "Deleted Account" to other users
+- [x] Admin: delete or hide a user account from admin dashboard (Users tab)
+- [x] Admin: delete or hide all related businesses when deleting a user
+- [x] Admin: option to retain previous activity data (shown as "Deleted Account") or delete those as well
+- [x] Admin: confirmation dialog with data retention toggle before deletion
+- [x] Database: soft-delete user (mark as deleted, anonymize PII)
+- [x] Database: cascade hide/delete businesses owned by deleted user
+- [x] Write tests for account deletion (18 new tests, 180 total pass)

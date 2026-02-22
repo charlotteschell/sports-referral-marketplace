@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Mountain, Shield, Building2, Bike, ChevronDown } from "lucide-react";
+import { Menu, X, Mountain, Shield, Building2, Bike, ChevronDown, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useRef } from "react";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -190,6 +190,12 @@ export default function Header() {
                 )}
 
 
+                <Link href="/account-settings">
+                  <Button variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
+                    <Settings className="w-3.5 h-3.5" />
+                  </Button>
+                </Link>
+
                 <Button
                   variant="ghost"
                   className="text-white/60 hover:text-white hover:bg-white/10 text-sm"
@@ -286,6 +292,11 @@ export default function Header() {
                     )}
 
 
+                    <Link href="/account-settings">
+                      <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                        <Settings className="w-3.5 h-3.5 inline mr-1.5" />Account Settings
+                      </span>
+                    </Link>
                     <button
                       className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white/60 hover:text-white"
                       onClick={() => { logout(); setMobileOpen(false); }}

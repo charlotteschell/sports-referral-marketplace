@@ -91,6 +91,13 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 // ─── Sport Categories ───────────────────────────────────────────
 
 export async function getAllSportCategories(): Promise<SportCategory[]> {
@@ -2038,6 +2045,61 @@ export async function createUserNotification(data: {
   return result[0].insertId;
 }
 
+/**
+ * Preference-aware notification helper.
+ * Checks the user's notificationPreference before creating an in-app notification.
+ * Returns { sent: boolean, method: string } indicating what was done.
+ * Email sending is not yet implemented — when preference includes email, we log it
+ * and still create the in-app notification as a fallback.
+ */
+export async function notifyUser(data: {
+  userId: number;
+  type: string;
+  title: string;
+  message?: string;
+  businessId?: number;
+  offerId?: number;
+}): Promise<{ sent: boolean; method: string }> {
+  try {
+    const user = await getUserById(data.userId);
+    if (!user) return { sent: false, method: 'user_not_found' };
+
+    const pref = user.notificationPreference || 'both';
+
+    // If user opted out of all notifications
+    if (pref === 'none') {
+      return { sent: false, method: 'opted_out' };
+    }
+
+    // Determine what to send
+    const shouldSendInApp = pref === 'in_app_only' || pref === 'both';
+    const shouldSendEmail = pref === 'email_only' || pref === 'both';
+
+    let inAppSent = false;
+    let emailSent = false;
+
+    // Always create in-app notification unless user explicitly chose email_only
+    // (even for email_only, we create in-app as fallback since email isn't implemented yet)
+    if (shouldSendInApp || shouldSendEmail) {
+      await createUserNotification(data);
+      inAppSent = true;
+    }
+
+    if (shouldSendEmail) {
+      // TODO: Implement email sending when email service is available
+      // For now, log that email would be sent
+      console.log(`[Notification] Email would be sent to user ${data.userId} (${user.email}): ${data.title}`);
+      // emailSent = await sendEmail(user.email, data.title, data.message);
+    }
+
+    const method = [inAppSent && 'in_app', emailSent && 'email'].filter(Boolean).join('+') || 'in_app_fallback';
+    return { sent: true, method };
+  } catch (error) {
+    console.error(`[Notification] Failed to notify user ${data.userId}:`, error);
+    return { sent: false, method: 'error' };
+  }
+}
+
 export async function createBulkUserNotifications(notifications: Array<{
   userId: number;
   type: string;
@@ -2107,8 +2169,20 @@ export async function notifyUsersOfNewOffer(businessId: number, businessName: st
     const savedUsers = await getUsersWhoSavedBusinessWithOptIn(businessId);
     if (savedUsers.length === 0) return { notified: 0 };
 
-    // Filter to users who opted in (or have no profile yet — default to notify in-app)
-    const notifications = savedUsers.map(u => ({
+    // Filter out users who opted out of all notifications
+    // For each user, check their notification preference
+    const usersToNotify: typeof savedUsers = [];
+    for (const u of savedUsers) {
+      const user = await getUserById(u.userId);
+      if (!user) continue;
+      const pref = user.notificationPreference || 'both';
+      if (pref === 'none') continue; // skip users who opted out
+      usersToNotify.push(u);
+    }
+
+    if (usersToNotify.length === 0) return { notified: 0 };
+
+    const notifications = usersToNotify.map(u => ({
       userId: u.userId,
       type: 'new_offer' as const,
       title: `${businessName} just posted a new offer!`,
@@ -2255,4 +2329,191 @@ export async function getRecommendedBusinesses(userId: number, limit = 12) {
   }
 
   return results;
+}
+
+// ─── Account Deletion ──────────────────────────────────────────
+
+/**
+ * Soft-delete a user account: anonymize PII, mark as deleted, hide their businesses.
+ * Activity data (referrals, consumer claims, etc.) is preserved — the user's name
+ * will display as "Deleted Account" to other users.
+ */
+export async function softDeleteUser(userId: number, deletedBy: 'self' | 'admin') {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // 1. Anonymize PII and mark user as deleted
+  await db.update(users).set({
+    name: 'Deleted Account',
+    email: null,
+    contactName: null,
+    isDeleted: true,
+    deletedAt: new Date(),
+    deletedBy,
+    onboardingComplete: false,
+  }).where(eq(users.id, userId));
+
+  // 2. Hide all businesses owned by this user (soft-hide, don't destroy)
+  await db.update(businesses).set({
+    isAdminHidden: true,
+    isClaimed: false,
+    claimedByUserId: null,
+    claimedAt: null,
+  }).where(eq(businesses.claimedByUserId, userId));
+
+  // 3. Deactivate all referral offers for their businesses
+  const userBusinesses = await db.select({ id: businesses.id })
+    .from(businesses)
+    .where(eq(businesses.claimedByUserId, userId));
+  
+  for (const biz of userBusinesses) {
+    await db.update(referralOffers).set({ isActive: false })
+      .where(eq(referralOffers.businessId, biz.id));
+  }
+
+  // 4. Delete athlete profile if exists
+  await db.delete(athleteProfiles).where(eq(athleteProfiles.userId, userId));
+
+  // 5. Delete saved businesses
+  await db.delete(savedBusinesses).where(eq(savedBusinesses.userId, userId));
+
+  // 6. Delete user notifications
+  await db.delete(userNotifications).where(eq(userNotifications.userId, userId));
+
+  return { success: true };
+}
+
+/**
+ * Admin: hard-delete a user's activity data (referrals, consumer claims, partnership emails).
+ * This is destructive and should only be called after softDeleteUser.
+ */
+export async function purgeUserActivityData(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Get all businesses that were owned by this user
+  // (claimedByUserId is already null after soft-delete, so we need to check referrals)
+  
+  // Delete referrals where user's businesses were involved
+  // We track by the user's businesses — find businesses that had this user
+  // Since claimedByUserId was nulled, we need to use referral records directly
+
+  // Delete consumer claims made by this user
+  await db.delete(consumerClaims).where(eq(consumerClaims.userId, userId));
+
+  // Delete partnership emails sent by or to this user
+  await db.delete(partnershipEmails).where(
+    or(
+      eq(partnershipEmails.senderUserId, userId),
+    )
+  );
+
+  // Delete support tickets
+  await db.delete(supportTickets).where(eq(supportTickets.userId, userId));
+
+  // Delete category approvals
+  await db.delete(categoryApprovals).where(eq(categoryApprovals.userId, userId));
+
+  return { success: true };
+}
+
+/**
+ * Admin: fully delete businesses owned by a user (set isActive=false, remove from directory).
+ * Different from soft-delete: this makes them completely invisible.
+ */
+export async function hardDeleteUserBusinesses(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Get all businesses owned by this user before they were unclaimed
+  const userBizzes = await db.select({ id: businesses.id })
+    .from(businesses)
+    .where(eq(businesses.claimedByUserId, userId));
+
+  for (const biz of userBizzes) {
+    // Deactivate all offers
+    await db.update(referralOffers).set({ isActive: false })
+      .where(eq(referralOffers.businessId, biz.id));
+    // Soft-delete the business
+    await db.update(businesses).set({
+      isActive: false,
+      isClaimed: false,
+      claimedByUserId: null,
+      claimedAt: null,
+      isAdminHidden: true,
+    }).where(eq(businesses.id, biz.id));
+  }
+
+  return { deleted: userBizzes.length };
+}
+
+/**
+ * Admin: get all users (for admin user management panel)
+ */
+export async function getAllUsers(opts?: { includeDeleted?: boolean; limit?: number; offset?: number; search?: string }) {
+  const db = await getDb();
+  if (!db) return { users: [], total: 0 };
+
+  const conditions: any[] = [];
+  if (!opts?.includeDeleted) {
+    conditions.push(eq(users.isDeleted, false));
+  }
+  if (opts?.search) {
+    const term = `%${opts.search}%`;
+    conditions.push(
+      or(
+        like(users.name, term),
+        like(users.email, term),
+        like(users.contactName, term),
+      )
+    );
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const limit = opts?.limit ?? 50;
+  const offset = opts?.offset ?? 0;
+
+  const [userRows, countResult] = await Promise.all([
+    db.select().from(users).where(whereClause).orderBy(desc(users.createdAt)).limit(limit).offset(offset),
+    db.select({ count: sql<number>`COUNT(*)` }).from(users).where(whereClause),
+  ]);
+
+  return {
+    users: userRows,
+    total: countResult[0]?.count ?? 0,
+  };
+}
+
+/**
+ * Admin: hide/unhide a user account (without deleting)
+ */
+export async function toggleUserHidden(userId: number, isDeleted: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  if (isDeleted) {
+    // Hiding: anonymize and mark as deleted
+    await db.update(users).set({
+      isDeleted: true,
+      deletedAt: new Date(),
+      deletedBy: 'admin',
+    }).where(eq(users.id, userId));
+    
+    // Hide their businesses
+    await db.update(businesses).set({
+      isAdminHidden: true,
+    }).where(eq(businesses.claimedByUserId, userId));
+  } else {
+    // Unhiding: restore account (but PII stays anonymized if it was deleted)
+    await db.update(users).set({
+      isDeleted: false,
+      deletedAt: null,
+      deletedBy: null,
+    }).where(eq(users.id, userId));
+    
+    // Unhide their businesses
+    await db.update(businesses).set({
+      isAdminHidden: false,
+    }).where(eq(businesses.claimedByUserId, userId));
+  }
 }

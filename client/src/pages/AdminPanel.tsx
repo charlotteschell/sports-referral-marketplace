@@ -27,8 +27,18 @@ import {
   Building2, MapPin, Mail, Phone, Globe, Instagram, User, FileText,
   ArrowLeft, Loader2, AlertTriangle, Inbox, Eye, EyeOff, Gift,
   Search, RefreshCw, LifeBuoy, Bug, Lightbulb, HelpCircle, Rocket,
-  Tags, Plus,
+  Tags, Plus, Users, Trash2, UserX,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 
 function StatusBadge({ status }: { status: string }) {
@@ -170,6 +180,34 @@ export default function AdminPanel() {
   const categoryApprovals = trpc.categoryApproval.all.useQuery(undefined, { enabled: isAdmin });
 
   const [ticketNotes, setTicketNotes] = useState<Record<number, string>>({});
+  const [userSearch, setUserSearch] = useState("");
+  const [showDeletedUsers, setShowDeletedUsers] = useState(false);
+  const [deleteUserDialog, setDeleteUserDialog] = useState<{ userId: number; userName: string } | null>(null);
+  const [retainActivityData, setRetainActivityData] = useState(true);
+
+  // Users management
+  const allUsers = trpc.admin.allUsers.useQuery(
+    { includeDeleted: showDeletedUsers, search: userSearch || undefined },
+    { enabled: isAdmin }
+  );
+
+  const deleteUserMutation = trpc.admin.deleteUser.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      allUsers.refetch();
+      setDeleteUserDialog(null);
+      setRetainActivityData(true);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const toggleUserVisibility = trpc.admin.toggleUserVisibility.useMutation({
+    onSuccess: () => {
+      toast.success("User visibility updated");
+      allUsers.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
   const reviewMutation = trpc.submission.review.useMutation({
     onSuccess: (_, variables) => {
@@ -352,7 +390,7 @@ export default function AdminPanel() {
 
         <div className="container py-8">
           <Tabs defaultValue="approvals" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto">
+            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 h-auto">
               <TabsTrigger value="approvals" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>
                 Claims {(pendingApprovals.data?.length || 0) > 0 && <Badge className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0">{pendingApprovals.data?.length}</Badge>}
               </TabsTrigger>
@@ -366,6 +404,9 @@ export default function AdminPanel() {
               </TabsTrigger>
               <TabsTrigger value="categories" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>
                 Categories {(categoryApprovals.data?.filter((c: any) => c.status === 'pending').length || 0) > 0 && <Badge className="ml-1 bg-purple-500 text-white text-[10px] px-1.5 py-0">{categoryApprovals.data?.filter((c: any) => c.status === 'pending').length}</Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="users" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>
+                <Users className="w-3.5 h-3.5 mr-1" /> Users
               </TabsTrigger>
             </TabsList>
 
@@ -763,9 +804,168 @@ export default function AdminPanel() {
                 </div>
               )}
             </TabsContent>
+
+            {/* ─── Users Tab ─────────────────────────────── */}
+            <TabsContent value="users" className="space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <h2 className="text-lg font-bold flex items-center gap-2"><Users className="w-5 h-5 text-indigo-500" /> User Management</h2>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Switch id="showDeleted" checked={showDeletedUsers} onCheckedChange={setShowDeletedUsers} />
+                    <Label htmlFor="showDeleted" className="text-xs text-muted-foreground cursor-pointer" style={{ textTransform: "none" }}>Show deleted</Label>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => allUsers.refetch()} style={{ textTransform: "none" }}><RefreshCw className="w-4 h-4 mr-1" /> Refresh</Button>
+                </div>
+              </div>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, email, or contact name..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="pl-10"
+                  style={{ textTransform: "none" }}
+                />
+              </div>
+
+              {allUsers.isLoading ? (
+                <div className="flex items-center justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
+              ) : !allUsers.data?.users?.length ? (
+                <Card className="border-dashed"><CardContent className="p-12 text-center">
+                  <Users className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">No Users Found</h3>
+                  <p className="text-sm text-muted-foreground/70" style={{ textTransform: "none" }}>No users match your search criteria.</p>
+                </CardContent></Card>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                    Showing {allUsers.data.users.length} of {allUsers.data.total} users
+                  </p>
+                  {allUsers.data.users.map((u: any) => (
+                    <Card key={u.id} className={`border overflow-hidden ${u.isDeleted ? 'opacity-60 border-red-200 bg-red-50/30' : 'border-border/60'}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-foreground">{u.contactName || u.name || 'Unknown'}</span>
+                              {u.isDeleted && <Badge className="bg-red-100 text-red-800 text-[10px]"><UserX className="w-3 h-3 mr-0.5" /> Deleted</Badge>}
+                              {u.role === 'admin' && <Badge className="bg-amber-100 text-amber-800 text-[10px]"><Shield className="w-3 h-3 mr-0.5" /> Admin</Badge>}
+                              {u.accountType === 'business_owner' && <Badge className="bg-emerald-100 text-emerald-800 text-[10px]"><Building2 className="w-3 h-3 mr-0.5" /> Business</Badge>}
+                              {u.accountType === 'consumer' && <Badge className="bg-sky-100 text-sky-800 text-[10px]">Athlete</Badge>}
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
+                              {u.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {u.email}</span>}
+                              <span>ID: {u.id}</span>
+                              <span>Joined: {new Date(u.createdAt).toLocaleDateString()}</span>
+                              {u.deletedAt && <span className="text-red-500">Deleted: {new Date(u.deletedAt).toLocaleDateString()}</span>}
+                            </div>
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            {!u.isDeleted && u.role !== 'admin' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-amber-600 border-amber-200 hover:bg-amber-50 text-xs"
+                                  style={{ textTransform: "none" }}
+                                  onClick={() => toggleUserVisibility.mutate({ userId: u.id, isHidden: true })}
+                                  disabled={toggleUserVisibility.isPending}
+                                >
+                                  <EyeOff className="w-3 h-3 mr-1" /> Hide
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-600 border-red-200 hover:bg-red-50 text-xs"
+                                  style={{ textTransform: "none" }}
+                                  onClick={() => setDeleteUserDialog({ userId: u.id, userName: u.contactName || u.name || u.email || 'Unknown' })}
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" /> Delete
+                                </Button>
+                              </>
+                            )}
+                            {u.isDeleted && u.deletedBy === 'admin' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 text-xs"
+                                style={{ textTransform: "none" }}
+                                onClick={() => toggleUserVisibility.mutate({ userId: u.id, isHidden: false })}
+                                disabled={toggleUserVisibility.isPending}
+                              >
+                                <Eye className="w-3 h-3 mr-1" /> Restore
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
           </Tabs>
         </div>
       </main>
+
+      {/* Delete User Confirmation Dialog */}
+      <Dialog open={!!deleteUserDialog} onOpenChange={(open) => { if (!open) { setDeleteUserDialog(null); setRetainActivityData(true); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Delete User Account
+            </DialogTitle>
+            <DialogDescription style={{ textTransform: "none" }}>
+              You are about to delete the account for <strong>{deleteUserDialog?.userName}</strong>. This will anonymize their personal data and hide their businesses.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="retainData" className="font-medium" style={{ textTransform: "none" }}>Retain activity data</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5" style={{ textTransform: "none" }}>
+                    {retainActivityData
+                      ? 'Referrals and claims will be preserved, shown as "Deleted Account"'
+                      : 'All activity data (referrals, claims, tickets) will be permanently deleted'}
+                  </p>
+                </div>
+                <Switch id="retainData" checked={retainActivityData} onCheckedChange={setRetainActivityData} />
+              </div>
+            </div>
+            {!retainActivityData && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                <p className="text-xs text-red-700" style={{ textTransform: "none" }}>
+                  Warning: Purging activity data is irreversible and may affect other users' referral history and leaderboard standings.
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDeleteUserDialog(null); setRetainActivityData(true); }} style={{ textTransform: "none" }}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deleteUserDialog) {
+                  deleteUserMutation.mutate({
+                    userId: deleteUserDialog.userId,
+                    retainActivityData,
+                  });
+                }
+              }}
+              disabled={deleteUserMutation.isPending}
+              style={{ textTransform: "none" }}
+            >
+              {deleteUserMutation.isPending ? "Deleting..." : retainActivityData ? "Delete (Keep Activity)" : "Delete Everything"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

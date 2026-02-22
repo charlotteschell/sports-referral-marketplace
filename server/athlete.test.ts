@@ -132,6 +132,8 @@ vi.mock("./db", () => ({
   createNotification: vi.fn().mockResolvedValue(1),
   updateUserProfile: vi.fn().mockResolvedValue(undefined),
   updateUserNotificationPreference: vi.fn().mockResolvedValue(undefined),
+  notifyUser: vi.fn().mockResolvedValue({ sent: true, method: 'in_app' }),
+  getUserById: vi.fn().mockResolvedValue(null),
 }));
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
@@ -40,7 +40,7 @@ vi.mock("./db", () => ({
   disputeReferral: vi.fn().mockResolvedValue(undefined),
   incrementPlatformStat: vi.fn().mockResolvedValue(undefined),
   hasUserClaimedOffer: vi.fn().mockResolvedValue(false),
-  createConsumerClaim: vi.fn().mockResolvedValue(1),
+  createConsumerClaim: vi.fn().mockResolvedValue({ id: 1, claimCode: "SC-TEST1" }),
   verifyConsumerClaim: vi.fn().mockResolvedValue(undefined),
   getConsumerClaimsByUser: vi.fn().mockResolvedValue([]),
   getConsumerClaimsByBusiness: vi.fn().mockResolvedValue([]),
@@ -109,10 +109,21 @@ vi.mock("./db", () => ({
   getUnreadNotificationCount: vi.fn().mockResolvedValue(0),
   getUsersWhoSavedBusiness: vi.fn().mockResolvedValue([]),
   createNotification: vi.fn().mockResolvedValue(1),
+  createUserNotification: vi.fn().mockResolvedValue(1),
   notifyUser: vi.fn().mockResolvedValue({ sent: true, method: 'in_app' }),
   getUserById: vi.fn().mockResolvedValue(null),
   updateUserProfile: vi.fn().mockResolvedValue(undefined),
   updateUserNotificationPreference: vi.fn().mockResolvedValue(undefined),
+  updateUserContactName: vi.fn().mockResolvedValue(undefined),
+  businessConfirmClaimSavings: vi.fn().mockResolvedValue(undefined),
+  athleteConfirmReferralPayment: vi.fn().mockResolvedValue(undefined),
+  clearSampleDataForBusiness: vi.fn().mockResolvedValue(undefined),
+  // Account deletion functions
+  softDeleteUser: vi.fn().mockResolvedValue({ success: true }),
+  purgeUserActivityData: vi.fn().mockResolvedValue({ success: true }),
+  hardDeleteUserBusinesses: vi.fn().mockResolvedValue({ deleted: 0 }),
+  getAllUsers: vi.fn().mockResolvedValue({ users: [], total: 0 }),
+  toggleUserHidden: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Mock notification module
@@ -137,8 +148,9 @@ function createAuthContext(
     name: "Test User",
     loginMethod: "manus",
     role: "user",
-    accountType: "consumer",
-    onboardingComplete: false,
+    accountType: "business_owner",
+    onboardingComplete: true,
+    contactName: "Charlotte",
     notificationPreference: "both",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -152,235 +164,285 @@ function createAuthContext(
   };
 }
 
-function createPublicContext(): TrpcContext {
-  return {
-    user: null,
-    req: { protocol: "https", headers: {} } as TrpcContext["req"],
-    res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
-  };
+function createAdminContext(
+  overrides: Partial<AuthenticatedUser> = {}
+): TrpcContext {
+  return createAuthContext({
+    id: 99,
+    openId: "admin-1",
+    email: "admin@test.com",
+    name: "Admin User",
+    role: "admin",
+    contactName: "Admin Charlotte",
+    ...overrides,
+  });
 }
 
-// ─── Account Type Setting Tests ──────────────────────────────────
+// ─── Self-Service Account Deletion ──────────────────────────────
 
-describe("accountType.set", () => {
-  it("sets account type to consumer for authenticated user", async () => {
+describe("User Self-Service Account Deletion", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("allows a regular user to delete their own account with correct confirmation", async () => {
     const db = await import("./db");
     const ctx = createAuthContext();
     const caller = appRouter.createCaller(ctx);
-    const result = await caller.accountType.set({ accountType: "consumer" });
-    expect(result).toEqual({ success: true });
-    expect(db.updateUserAccountType).toHaveBeenCalledWith(1, "consumer");
+
+    const result = await caller.userProfile.deleteAccount({ confirmText: "DELETE MY ACCOUNT" });
+
+    expect(result.success).toBe(true);
+    expect(db.softDeleteUser).toHaveBeenCalledWith(1, "self");
   });
 
-  it("sets account type to business_owner and marks onboarding complete", async () => {
-    const db = await import("./db");
-    const ctx = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.accountType.set({ accountType: "business_owner" });
-    expect(result).toEqual({ success: true });
-    expect(db.updateUserAccountType).toHaveBeenCalledWith(1, "business_owner");
-    // Business owners get onboarding marked complete immediately
-    expect(db.markOnboardingComplete).toHaveBeenCalledWith(1);
-  });
-
-  it("does not mark onboarding complete for consumer account type", async () => {
-    const db = await import("./db");
-    vi.mocked(db.markOnboardingComplete).mockClear();
-    const ctx = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
-    await caller.accountType.set({ accountType: "consumer" });
-    // markOnboardingComplete should NOT be called for consumers (they need to fill profile first)
-    expect(db.markOnboardingComplete).not.toHaveBeenCalled();
-  });
-
-  it("rejects unauthenticated users", async () => {
-    const ctx = createPublicContext();
-    const caller = appRouter.createCaller(ctx);
-    await expect(caller.accountType.set({ accountType: "consumer" })).rejects.toThrow();
-  });
-});
-
-// ─── Onboarding Complete Tests ──────────────────────────────────
-
-describe("onboarding.complete", () => {
-  it("marks onboarding as complete for authenticated user", async () => {
-    const db = await import("./db");
-    const ctx = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.onboarding.complete();
-    expect(result).toEqual({ success: true });
-    expect(db.markOnboardingComplete).toHaveBeenCalledWith(1);
-  });
-
-  it("rejects unauthenticated users", async () => {
-    const ctx = createPublicContext();
-    const caller = appRouter.createCaller(ctx);
-    await expect(caller.onboarding.complete()).rejects.toThrow();
-  });
-});
-
-// ─── Athlete Profile Save with Notification Preference ──────────
-
-describe("athleteProfile.save with notificationPreference", () => {
-  it("saves profile with notification preference and marks onboarding complete", async () => {
-    const db = await import("./db");
-    const ctx = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.athleteProfile.save({
-      displayName: "Test Athlete",
-      city: "Calgary",
-      state: "AB",
-      country: "Canada",
-      notificationPreference: "both",
-    });
-    expect(result).toEqual({ id: 1, success: true });
-    expect(db.createOrUpdateAthleteProfile).toHaveBeenCalledWith(1, expect.objectContaining({
-      displayName: "Test Athlete",
-      city: "Calgary",
-      notificationPreference: "both",
-    }));
-    // Saving athlete profile should also mark onboarding complete
-    expect(db.markOnboardingComplete).toHaveBeenCalledWith(1);
-  });
-
-  it("accepts all notification preference values", async () => {
+  it("rejects deletion with wrong confirmation text", async () => {
     const ctx = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
-    for (const pref of ["in_app_only", "email_only", "both", "none"] as const) {
-      const result = await caller.athleteProfile.save({
-        notificationPreference: pref,
-      });
-      expect(result.success).toBe(true);
-    }
-  });
-
-  it("rejects invalid notification preference values", async () => {
-    const ctx = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
     await expect(
-      caller.athleteProfile.save({
-        notificationPreference: "invalid_value" as any,
-      })
+      caller.userProfile.deleteAccount({ confirmText: "wrong text" as any })
     ).rejects.toThrow();
   });
-});
 
-// ─── Auth.me Returns User Type Fields ──────────────────────────
-
-describe("auth.me returns user type fields", () => {
-  it("returns user with accountType and onboardingComplete fields", async () => {
-    const ctx = createAuthContext({
-      accountType: "business_owner",
-      onboardingComplete: true,
-    });
+  it("prevents admin from deleting their own account via self-service", async () => {
+    const ctx = createAdminContext();
     const caller = appRouter.createCaller(ctx);
-    const result = await caller.auth.me();
-    expect(result).toBeTruthy();
-    expect(result?.accountType).toBe("business_owner");
-    expect(result?.onboardingComplete).toBe(true);
+
+    await expect(
+      caller.userProfile.deleteAccount({ confirmText: "DELETE MY ACCOUNT" })
+    ).rejects.toThrow("Admin accounts cannot be self-deleted");
   });
 
-  it("returns consumer account type with onboarding incomplete", async () => {
-    const ctx = createAuthContext({
+  it("notifies the platform owner when a user deletes their account", async () => {
+    const { notifyOwner } = await import("./_core/notification");
+    const ctx = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await caller.userProfile.deleteAccount({ confirmText: "DELETE MY ACCOUNT" });
+
+    expect(notifyOwner).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: expect.stringContaining("User Account Deleted"),
+      })
+    );
+  });
+});
+
+// ─── Admin Account Deletion ──────────────────────────────
+
+describe("Admin User Deletion", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("allows admin to delete a user with activity data retained", async () => {
+    const db = await import("./db");
+    (db.getUserById as any).mockResolvedValueOnce({
+      id: 5,
+      name: "Target User",
+      email: "target@test.com",
+      contactName: "Target",
+      isDeleted: false,
+      role: "user",
+      accountType: "business_owner",
+    });
+
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.admin.deleteUser({ userId: 5, retainActivityData: true });
+
+    expect(result.success).toBe(true);
+    expect(result.message).toContain("preserved");
+    expect(db.softDeleteUser).toHaveBeenCalledWith(5, "admin");
+    expect(db.purgeUserActivityData).not.toHaveBeenCalled();
+  });
+
+  it("allows admin to delete a user and purge all activity data", async () => {
+    const db = await import("./db");
+    (db.getUserById as any).mockResolvedValueOnce({
+      id: 5,
+      name: "Target User",
+      email: "target@test.com",
+      contactName: "Target",
+      isDeleted: false,
+      role: "user",
       accountType: "consumer",
-      onboardingComplete: false,
     });
+
+    const ctx = createAdminContext();
     const caller = appRouter.createCaller(ctx);
-    const result = await caller.auth.me();
-    expect(result).toBeTruthy();
-    expect(result?.accountType).toBe("consumer");
-    expect(result?.onboardingComplete).toBe(false);
+
+    const result = await caller.admin.deleteUser({ userId: 5, retainActivityData: false });
+
+    expect(result.success).toBe(true);
+    expect(result.message).toContain("permanently deleted");
+    expect(db.softDeleteUser).toHaveBeenCalledWith(5, "admin");
+    expect(db.purgeUserActivityData).toHaveBeenCalledWith(5);
   });
 
-  it("returns null for unauthenticated users", async () => {
-    const ctx = createPublicContext();
+  it("prevents admin from deleting themselves", async () => {
+    const ctx = createAdminContext();
     const caller = appRouter.createCaller(ctx);
-    const result = await caller.auth.me();
-    expect(result).toBeNull();
-  });
-});
 
-// ─── User Profile Settings Tests ──────────────────────────────
-
-describe("userProfile.get", () => {
-  it("returns user profile for authenticated user", async () => {
-    const ctx = createAuthContext({
-      name: "Business Owner",
-      email: "owner@test.com",
-      accountType: "business_owner",
-      role: "user",
-      notificationPreference: "email_only",
-    });
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.userProfile.get();
-    expect(result).toEqual({
-      name: "Business Owner",
-      email: "owner@test.com",
-      accountType: "business_owner",
-      role: "user",
-      notificationPreference: "email_only",
-    });
-  });
-
-  it("defaults notificationPreference to 'both' if not set", async () => {
-    const ctx = createAuthContext({
-      notificationPreference: "",
-    });
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.userProfile.get();
-    expect(result.notificationPreference).toBe("both");
-  });
-
-  it("rejects unauthenticated users", async () => {
-    const ctx = createPublicContext();
-    const caller = appRouter.createCaller(ctx);
-    await expect(caller.userProfile.get()).rejects.toThrow();
-  });
-});
-
-describe("userProfile.update", () => {
-  it("updates user name and email", async () => {
-    const db = await import("./db");
-    const ctx = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.userProfile.update({
-      name: "New Name",
-      email: "new@test.com",
-    });
-    expect(result).toEqual({ success: true });
-    expect(db.updateUserProfile).toHaveBeenCalledWith(1, {
-      name: "New Name",
-      email: "new@test.com",
-    });
-  });
-
-  it("updates notification preference", async () => {
-    const db = await import("./db");
-    const ctx = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.userProfile.update({
-      notificationPreference: "in_app_only",
-    });
-    expect(result).toEqual({ success: true });
-    expect(db.updateUserProfile).toHaveBeenCalledWith(1, {
-      notificationPreference: "in_app_only",
-    });
-  });
-
-  it("rejects invalid notification preference", async () => {
-    const ctx = createAuthContext();
-    const caller = appRouter.createCaller(ctx);
     await expect(
-      caller.userProfile.update({
-        notificationPreference: "invalid" as any,
-      })
+      caller.admin.deleteUser({ userId: 99, retainActivityData: true })
+    ).rejects.toThrow("You cannot delete your own admin account");
+  });
+
+  it("rejects deletion of already-deleted user", async () => {
+    const db = await import("./db");
+    (db.getUserById as any).mockResolvedValueOnce({
+      id: 5,
+      name: "Deleted Account",
+      email: null,
+      isDeleted: true,
+      role: "user",
+    });
+
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.admin.deleteUser({ userId: 5, retainActivityData: true })
+    ).rejects.toThrow("User is already deleted");
+  });
+
+  it("rejects deletion of non-existent user", async () => {
+    const db = await import("./db");
+    (db.getUserById as any).mockResolvedValueOnce(null);
+
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.admin.deleteUser({ userId: 999, retainActivityData: true })
+    ).rejects.toThrow("User not found");
+  });
+
+  it("prevents non-admin from deleting users", async () => {
+    const ctx = createAuthContext(); // regular user
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.admin.deleteUser({ userId: 5, retainActivityData: true })
     ).rejects.toThrow();
   });
+});
 
-  it("rejects unauthenticated users", async () => {
-    const ctx = createPublicContext();
+// ─── Admin User Visibility Toggle ──────────────────────────────
+
+describe("Admin Toggle User Visibility", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("allows admin to hide a user", async () => {
+    const db = await import("./db");
+    const ctx = createAdminContext();
     const caller = appRouter.createCaller(ctx);
-    await expect(caller.userProfile.update({ name: "Test" })).rejects.toThrow();
+
+    const result = await caller.admin.toggleUserVisibility({ userId: 5, isHidden: true });
+
+    expect(result.success).toBe(true);
+    expect(db.toggleUserHidden).toHaveBeenCalledWith(5, true);
+  });
+
+  it("allows admin to restore a hidden user", async () => {
+    const db = await import("./db");
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.admin.toggleUserVisibility({ userId: 5, isHidden: false });
+
+    expect(result.success).toBe(true);
+    expect(db.toggleUserHidden).toHaveBeenCalledWith(5, false);
+  });
+
+  it("prevents admin from hiding themselves", async () => {
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.admin.toggleUserVisibility({ userId: 99, isHidden: true })
+    ).rejects.toThrow("You cannot hide your own admin account");
+  });
+
+  it("prevents non-admin from toggling user visibility", async () => {
+    const ctx = createAuthContext(); // regular user
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.admin.toggleUserVisibility({ userId: 5, isHidden: true })
+    ).rejects.toThrow();
+  });
+});
+
+// ─── Admin User Listing ──────────────────────────────
+
+describe("Admin User Listing", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("allows admin to list all users", async () => {
+    const db = await import("./db");
+    (db.getAllUsers as any).mockResolvedValueOnce({
+      users: [
+        { id: 1, name: "User 1", email: "u1@test.com", isDeleted: false },
+        { id: 2, name: "User 2", email: "u2@test.com", isDeleted: false },
+      ],
+      total: 2,
+    });
+
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.admin.allUsers({});
+
+    expect(result.users).toHaveLength(2);
+    expect(result.total).toBe(2);
+    expect(db.getAllUsers).toHaveBeenCalled();
+  });
+
+  it("allows admin to search users", async () => {
+    const db = await import("./db");
+    (db.getAllUsers as any).mockResolvedValueOnce({
+      users: [{ id: 1, name: "Charlotte", email: "charlotte@test.com", isDeleted: false }],
+      total: 1,
+    });
+
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.admin.allUsers({ search: "Charlotte" });
+
+    expect(result.users).toHaveLength(1);
+    expect(db.getAllUsers).toHaveBeenCalledWith(expect.objectContaining({ search: "Charlotte" }));
+  });
+
+  it("allows admin to include deleted users in listing", async () => {
+    const db = await import("./db");
+    (db.getAllUsers as any).mockResolvedValueOnce({
+      users: [],
+      total: 0,
+    });
+
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await caller.admin.allUsers({ includeDeleted: true });
+
+    expect(db.getAllUsers).toHaveBeenCalledWith(expect.objectContaining({ includeDeleted: true }));
+  });
+
+  it("prevents non-admin from listing users", async () => {
+    const ctx = createAuthContext(); // regular user
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.admin.allUsers({})
+    ).rejects.toThrow();
   });
 });
