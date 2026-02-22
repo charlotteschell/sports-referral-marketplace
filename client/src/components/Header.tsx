@@ -2,11 +2,71 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Mountain, Shield, Building2, Bike } from "lucide-react";
+import { Menu, X, Mountain, Shield, Building2, Bike, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NotificationBell } from "@/components/NotificationBell";
 import SportConnectLogo from "@/components/SportConnectLogo";
+
+function AdminNavDropdown() {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [open]);
+
+  const items = [
+    { href: '/admin', label: 'Admin Panel', icon: Shield },
+    { href: '/dashboard', label: 'Biz Dashboard', icon: Building2 },
+    { href: '/athlete-dashboard', label: 'Athlete View', icon: Bike },
+  ];
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <Button
+        variant="ghost"
+        className="text-white/80 hover:text-white hover:bg-white/10 text-sm gap-1"
+        style={{ textTransform: 'none' }}
+        onClick={() => setOpen(!open)}
+      >
+        <Shield className="w-3.5 h-3.5" />
+        Dashboards
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </Button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-48 rounded-lg bg-[oklch(0.22_0.02_50)] border border-white/15 shadow-xl z-50 py-1 animate-in fade-in-0 zoom-in-95 duration-150">
+          {items.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.href}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-white/75 hover:text-white hover:bg-white/10 transition-colors"
+                style={{ textTransform: 'none' }}
+                onClick={() => { navigate(item.href); setOpen(false); }}
+              >
+                <Icon className="w-4 h-4 text-white/50" />
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -114,31 +174,19 @@ export default function Header() {
 
                 {/* Role badge */}
                 <div className="flex items-center gap-1.5">
-                  {user?.name && <span className="text-white/60 text-sm hidden lg:inline" style={{ textTransform: "none" }}>{user.name}</span>}
+                  {(user?.contactName || user?.name) && <span className="text-white/60 text-sm hidden lg:inline" style={{ textTransform: "none" }}>{user.contactName || user.name}</span>}
                   {getRoleBadge()}
                 </div>
 
-                {/* Primary dashboard link - correct per user type */}
-                <Link href={getDashboardLink()}>
-                  <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
-                    {getDashboardLabel()}
-                  </Button>
-                </Link>
-
-                {/* Admin gets secondary links to business and athlete dashboards */}
-                {isAdmin && (
-                  <>
-                    <Link href="/dashboard">
-                      <Button variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
-                        Biz Dashboard
-                      </Button>
-                    </Link>
-                    <Link href="/athlete-dashboard">
-                      <Button variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
-                        Athlete View
-                      </Button>
-                    </Link>
-                  </>
+                {/* Dashboard link(s) - admin gets dropdown, others get single link */}
+                {isAdmin ? (
+                  <AdminNavDropdown />
+                ) : (
+                  <Link href={getDashboardLink()}>
+                    <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-sm" style={{ textTransform: "none" }}>
+                      {getDashboardLabel()}
+                    </Button>
+                  </Link>
                 )}
 
 
@@ -205,31 +253,36 @@ export default function Header() {
                   <>
                     {/* Role badge + name in mobile */}
                     <div className="px-3 py-2 flex items-center gap-2">
-                      {user?.name && <span className="text-white/60 text-sm" style={{ textTransform: "none" }}>{user.name}</span>}
+                      {(user?.contactName || user?.name) && <span className="text-white/60 text-sm" style={{ textTransform: "none" }}>{user.contactName || user.name}</span>}
                       {getRoleBadge()}
                     </div>
 
-                    {/* Primary dashboard link */}
-                    <Link href={getDashboardLink()}>
-                      <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
-                        {getDashboardLabel()}
-                      </span>
-                    </Link>
-
-                    {/* Admin gets secondary links */}
-                    {isAdmin && (
+                    {/* Dashboard links */}
+                    {isAdmin ? (
                       <>
+                        <span className="block px-3 py-1.5 text-xs font-semibold text-white/40 uppercase tracking-wider mt-1" style={{ textTransform: "uppercase" }}>Admin Views</span>
+                        <Link href="/admin">
+                          <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                            <Shield className="w-3.5 h-3.5 inline mr-1.5" />Admin Panel
+                          </span>
+                        </Link>
                         <Link href="/dashboard">
-                          <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/50 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
-                            Biz Dashboard
+                          <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                            <Building2 className="w-3.5 h-3.5 inline mr-1.5" />Biz Dashboard
                           </span>
                         </Link>
                         <Link href="/athlete-dashboard">
-                          <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/50 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
-                            Athlete View
+                          <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                            <Bike className="w-3.5 h-3.5 inline mr-1.5" />Athlete View
                           </span>
                         </Link>
                       </>
+                    ) : (
+                      <Link href={getDashboardLink()}>
+                        <span className="block px-3 py-2 rounded-md text-sm font-medium text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
+                          {getDashboardLabel()}
+                        </span>
+                      </Link>
                     )}
 
 

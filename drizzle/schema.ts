@@ -13,6 +13,7 @@ export const users = mysqlTable("users", {
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   accountType: mysqlEnum("accountType", ["consumer", "business_owner"]).default("consumer").notNull(),
   onboardingComplete: boolean("onboardingComplete").default(false).notNull(),
+  contactName: varchar("contactName", { length: 255 }),
   notificationPreference: varchar("notificationPreference", { length: 20 }).default("both").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -187,6 +188,17 @@ export const referrals = mysqlTable("referrals", {
   senderCashedOutNotes: text("senderCashedOutNotes"),
   incentiveAmount: varchar("incentiveAmount", { length: 20 }),
   incentiveCurrency: varchar("incentiveCurrency", { length: 10 }).default("USD"),
+  
+  // Dual-verification: incentive amounts
+  receiverConfirmedIncentiveAmount: varchar("receiverConfirmedIncentiveAmount", { length: 20 }),
+  senderConfirmedIncentiveAmount: varchar("senderConfirmedIncentiveAmount", { length: 20 }),
+  isIncentiveVerified: boolean("isIncentiveVerified").default(false).notNull(),
+  
+  // Dual-verification: revenue/payment amounts
+  receiverConfirmedRevenueAmount: varchar("receiverConfirmedRevenueAmount", { length: 20 }),
+  athleteConfirmedPaymentAmount: varchar("athleteConfirmedPaymentAmount", { length: 20 }),
+  referredAthleteUserId: int("referredAthleteUserId"),
+  isRevenueVerified: boolean("isRevenueVerified").default(false).notNull(),
   isDisputed: boolean("isDisputed").default(false).notNull(),
   disputeReason: text("disputeReason"),
   disputedAt: timestamp("disputedAt"),
@@ -214,6 +226,10 @@ export const consumerClaims = mysqlTable("consumerClaims", {
   honoredNotes: text("honoredNotes"),
   amountSaved: varchar("amountSaved", { length: 20 }),
   currency: varchar("currency", { length: 10 }).default("USD"),
+  
+  // Dual-verification: business confirms savings given
+  businessConfirmedSavingsAmount: varchar("businessConfirmedSavingsAmount", { length: 20 }),
+  isAmountVerified: boolean("isAmountVerified").default(false).notNull(),
   isDisputed: boolean("isDisputed").default(false).notNull(),
   disputeReason: text("disputeReason"),
   disputedAt: timestamp("disputedAt"),

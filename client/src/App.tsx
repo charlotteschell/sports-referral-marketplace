@@ -22,6 +22,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Onboarding from "./pages/Onboarding";
 import AthleteDashboard from "./pages/AthleteDashboard";
 import BetaBanner from "./components/BetaBanner";
+import ContactNamePrompt from "./components/ContactNamePrompt";
 import University from "./pages/University";
 import UniversityArticle from "./pages/UniversityArticle";
 
@@ -60,6 +61,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <BetaBanner />
+          <ContactNamePrompt />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

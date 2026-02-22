@@ -178,7 +178,7 @@ export const appRouter = router({
         try {
           await notifyOwner({
             title: `New Business Added: ${input.name}`,
-            content: `A new business has been added and needs your approval.\n\nBusiness: ${input.name}\nAdded by: ${ctx.user.name || ctx.user.email || 'Unknown'}\nCity: ${input.city || 'N/A'}, ${input.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
+            content: `A new business has been added and needs your approval.\n\nBusiness: ${input.name}\nAdded by: ${(ctx.user.contactName || ctx.user.name) || ctx.user.email || 'Unknown'}\nCity: ${input.city || 'N/A'}, ${input.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify owner:', e);
@@ -201,7 +201,7 @@ export const appRouter = router({
         try {
           await notifyOwner({
             title: `Business Claim Pending: ${biz.business.name}`,
-            content: `A business has been claimed and needs your approval.\n\nBusiness: ${biz.business.name}\nClaimed by: ${ctx.user.name || ctx.user.email || 'Unknown'}\nUser email: ${ctx.user.email || 'N/A'}\nCity: ${biz.business.city || 'N/A'}, ${biz.business.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
+            content: `A business has been claimed and needs your approval.\n\nBusiness: ${biz.business.name}\nClaimed by: ${(ctx.user.contactName || ctx.user.name) || ctx.user.email || 'Unknown'}\nUser email: ${ctx.user.email || 'N/A'}\nCity: ${biz.business.city || 'N/A'}, ${biz.business.country || 'N/A'}\n\nPlease review in the Admin Panel.`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify owner:', e);
@@ -646,6 +646,8 @@ export const appRouter = router({
       .input(z.object({
         referralId: z.number(),
         notes: z.string().optional(),
+        incentiveAmount: z.string().optional(),
+        revenueAmount: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const ref = await db.getReferralById(input.referralId);
@@ -653,7 +655,7 @@ export const appRouter = router({
         // Check user owns the receiving business
         const biz = await db.getBusinessById(ref.receivingBusinessId);
         assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
-        await db.markReferralHonored(input.referralId, ctx.user.id, input.notes);
+        await db.markReferralHonored(input.referralId, ctx.user.id, input.notes, input.incentiveAmount, input.revenueAmount);
         // Increment platform stats
         await db.incrementPlatformStat('total_referrals_honored');
         return { success: true };
@@ -698,6 +700,20 @@ export const appRouter = router({
           throw new TRPCError({ code: 'FORBIDDEN' });
         }
         await db.disputeReferral(input.referralId, ctx.user.id, input.reason);
+        return { success: true };
+      }),
+
+    // Athlete confirms the payment amount on a referral
+    athleteConfirmPayment: protectedProcedure
+      .input(z.object({
+        referralId: z.number(),
+        amount: z.string().min(1),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Any authenticated user (athlete) can confirm their payment
+        const ref = await db.getReferralById(input.referralId);
+        if (!ref) throw new TRPCError({ code: 'NOT_FOUND' });
+        await db.athleteConfirmReferralPayment(input.referralId, ctx.user.id, input.amount);
         return { success: true };
       }),
 
@@ -774,6 +790,20 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Business confirms the savings/discount amount given to athlete
+    businessConfirmSavings: protectedProcedure
+      .input(z.object({
+        claimId: z.number(),
+        amount: z.string().min(1),
+        businessId: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        assertApprovedOwner(biz, ctx.user.id, ctx.user.role);
+        await db.businessConfirmClaimSavings(input.claimId, input.amount);
+        return { success: true };
+      }),
+
     // Get my claims
     myClaims: protectedProcedure.query(async ({ ctx }) => {
       return db.getConsumerClaimsByUser(ctx.user.id);
@@ -828,7 +858,7 @@ export const appRouter = router({
         try {
           await notifyOwner({
             title: `Partnership Email: ${input.subject}`,
-            content: `A partnership email was sent.\n\nFrom: ${ctx.user.name || ctx.user.email || 'User #' + ctx.user.id}\nTo: ${biz.business.name} (${recipientEmail})\nSubject: ${input.subject}\n\nMessage:\n${input.message}`,
+            content: `A partnership email was sent.\n\nFrom: ${(ctx.user.contactName || ctx.user.name) || ctx.user.email || 'User #' + ctx.user.id}\nTo: ${biz.business.name} (${recipientEmail})\nSubject: ${input.subject}\n\nMessage:\n${input.message}`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify owner:', e);
@@ -854,14 +884,14 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const result = await db.createSupportTicket({
           userId: ctx.user.id,
-          userName: ctx.user.name || undefined,
+          userName: ctx.user.contactName || ctx.user.name || undefined,
           userEmail: ctx.user.email || 'unknown@sportconnect.com',
           ...input,
         });
         try {
           await notifyOwner({
             title: `Support Ticket: ${input.title}`,
-            content: `New support ticket submitted.\n\nFrom: ${ctx.user.name || ctx.user.email || 'User #' + ctx.user.id}\nType: ${input.ticketType}\nTitle: ${input.title}\n\nDescription:\n${input.description}`,
+            content: `New support ticket submitted.\n\nFrom: ${(ctx.user.contactName || ctx.user.name) || ctx.user.email || 'User #' + ctx.user.id}\nType: ${input.ticketType}\nTitle: ${input.title}\n\nDescription:\n${input.description}`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify owner:', e);
@@ -923,7 +953,7 @@ export const appRouter = router({
         try {
           await notifyOwner({
             title: `New Category Request: ${input.proposedName}`,
-            content: `A new ${input.categoryType} category has been proposed.\n\nName: ${input.proposedName}\nType: ${input.categoryType}\nBy: ${ctx.user.name || ctx.user.email || 'User #' + ctx.user.id}\n${input.parentRegion ? 'Parent Region: ' + input.parentRegion : ''}\n\nPlease review in the Admin Panel.`,
+            content: `A new ${input.categoryType} category has been proposed.\n\nName: ${input.proposedName}\nType: ${input.categoryType}\nBy: ${(ctx.user.contactName || ctx.user.name) || ctx.user.email || 'User #' + ctx.user.id}\n${input.parentRegion ? 'Parent Region: ' + input.parentRegion : ''}\n\nPlease review in the Admin Panel.`,
           });
         } catch (e) {
           console.warn('[Notification] Failed to notify:', e);
@@ -987,6 +1017,7 @@ export const appRouter = router({
       return {
         name: ctx.user.name,
         email: ctx.user.email,
+        contactName: ctx.user.contactName,
         accountType: ctx.user.accountType,
         role: ctx.user.role,
         notificationPreference: ctx.user.notificationPreference || 'both',
@@ -996,10 +1027,17 @@ export const appRouter = router({
       .input(z.object({
         name: z.string().min(1).optional(),
         email: z.string().email().optional(),
+        contactName: z.string().min(1).optional(),
         notificationPreference: z.enum(['in_app_only', 'email_only', 'both', 'none']).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         await db.updateUserProfile(ctx.user.id, input);
+        return { success: true };
+      }),
+    setContactName: protectedProcedure
+      .input(z.object({ contactName: z.string().min(1).max(255) }))
+      .mutation(async ({ input, ctx }) => {
+        await db.updateUserContactName(ctx.user.id, input.contactName);
         return { success: true };
       }),
   }),

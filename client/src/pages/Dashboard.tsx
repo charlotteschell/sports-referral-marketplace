@@ -24,7 +24,7 @@ import {
   Loader2, BarChart3, Users, Percent, Clock, CheckCircle2,
   XCircle, AlertTriangle, Trash2, Unlink, ExternalLink,
   Palmtree, Activity, ArrowUpRight, ArrowDownRight, Eye, EyeOff,
-  Settings, Bell, BellRing, BellOff, Mail, Save, X as XIcon, User
+  Settings, Bell, BellRing, BellOff, Mail, Save, X as XIcon, User, Info
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useMemo, useEffect } from "react";
@@ -33,6 +33,7 @@ import {
   DialogHeader, DialogTitle, DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { PrivacyTooltip } from "@/components/PrivacyTooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -211,6 +212,9 @@ export default function Dashboard() {
   const [disputeReason, setDisputeReason] = useState("");
   const [verifyAmount, setVerifyAmount] = useState("");
   const [verifyNotes, setVerifyNotes] = useState("");
+  const [honorIncentiveAmount, setHonorIncentiveAmount] = useState("");
+  const [honorRevenueAmount, setHonorRevenueAmount] = useState("");
+  const [honorNotes, setHonorNotes] = useState("");
 
   if (loading) {
     return (
@@ -239,7 +243,7 @@ export default function Dashboard() {
                 Dashboard
               </h1>
               <p className="text-white/70" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Welcome back, {user?.name || "there"}. Here's what's happening with your referrals and businesses.
+                Welcome back, {(user?.contactName || user?.name)?.split(' ')[0] || "there"}. Here's what's happening with your referrals and businesses.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -589,8 +593,9 @@ export default function Dashboard() {
                                     </DialogHeader>
                                     <div className="space-y-4">
                                       <div>
-                                        <Label style={{ textTransform: "none" }}>Amount received ($)</Label>
-                                        <Input type="number" placeholder="e.g. 25.00" value={cashoutAmount} onChange={e => setCashoutAmount(e.target.value)} />
+                                        <Label style={{ textTransform: "none" }} className="flex items-center">Amount received ($) <PrivacyTooltip /></Label>
+                                        <Input type="number" step="0.01" placeholder="e.g. 25.00" value={cashoutAmount} onChange={e => setCashoutAmount(e.target.value)} />
+                                        <p className="text-xs text-white/40 mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>The incentive amount you received from the business you referred to</p>
                                       </div>
                                       <div>
                                         <Label style={{ textTransform: "none" }}>Notes (optional)</Label>
@@ -704,12 +709,46 @@ export default function Dashboard() {
                                   <CheckCircle2 className="w-3 h-3 mr-1" /> You honored this referral
                                 </Badge>
                               ) : !r.isDisputed ? (
-                                <Button size="sm" className="bg-green-600 text-white h-7 text-xs hover:bg-green-700" style={{ textTransform: "none" }}
-                                  onClick={() => honorMutation.mutate({ referralId: item.referral.id })}
-                                  disabled={honorMutation.isPending}>
-                                  {honorMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <CheckCircle2 className="w-3 h-3 mr-1" />}
-                                  Honor Referral
-                                </Button>
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button size="sm" className="bg-green-600 text-white h-7 text-xs hover:bg-green-700" style={{ textTransform: "none" }}>
+                                      <CheckCircle2 className="w-3 h-3 mr-1" /> Honor Referral
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Honor This Referral</DialogTitle>
+                                      <DialogDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
+                                        Confirm that you honored this referral from {item.referringBusiness?.name}. Please enter the amounts below.
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <Label style={{ textTransform: "none" }} className="flex items-center">Incentive amount paid to referrer ($) <PrivacyTooltip /></Label>
+                                        <Input type="number" step="0.01" placeholder="e.g. 25.00" value={honorIncentiveAmount} onChange={e => setHonorIncentiveAmount(e.target.value)} />
+                                        <p className="text-xs text-white/40 mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>The incentive/commission you paid to the referring business</p>
+                                      </div>
+                                      <div>
+                                        <Label style={{ textTransform: "none" }} className="flex items-center">Revenue generated from this referral ($) <PrivacyTooltip /></Label>
+                                        <Input type="number" step="0.01" placeholder="e.g. 150.00" value={honorRevenueAmount} onChange={e => setHonorRevenueAmount(e.target.value)} />
+                                        <p className="text-xs text-white/40 mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>The total sales/revenue you earned from this referred customer</p>
+                                      </div>
+                                      <div>
+                                        <Label style={{ textTransform: "none" }}>Notes (optional)</Label>
+                                        <Textarea placeholder="Any additional details..." value={honorNotes} onChange={e => setHonorNotes(e.target.value)} />
+                                      </div>
+                                    </div>
+                                    <DialogFooter>
+                                      <Button className="bg-green-600 text-white hover:bg-green-700" style={{ textTransform: "none" }}
+                                        onClick={() => { honorMutation.mutate({ referralId: item.referral.id, incentiveAmount: honorIncentiveAmount, revenueAmount: honorRevenueAmount, notes: honorNotes }); setHonorIncentiveAmount(''); setHonorRevenueAmount(''); setHonorNotes(''); }}
+                                        disabled={honorMutation.isPending}
+                                      >
+                                        {honorMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                        Confirm Honor
+                                      </Button>
+                                    </DialogFooter>
+                                  </DialogContent>
+                                </Dialog>
                               ) : null}
                               {r.senderCashedOut && (
                                 <Badge className="bg-emerald-100 text-emerald-800 text-xs" style={{ textTransform: "none" }}>

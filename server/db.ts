@@ -1037,16 +1037,45 @@ export function formatPhoneNumber(phone: string | null | undefined): string {
 /**
  * Receiver marks a referral as honored (they served the customer)
  */
-export async function markReferralHonored(referralId: number, userId: number, notes?: string) {
+export async function markReferralHonored(
+  referralId: number, userId: number, notes?: string,
+  incentiveAmount?: string, revenueAmount?: string
+) {
   const db = await getDb();
   if (!db) return;
+  
+  // First get the current referral to check if sender already confirmed
+  const [current] = await db.select().from(referrals).where(eq(referrals.id, referralId));
+  
+  const updateData: Record<string, any> = {
+    receiverHonored: true,
+    receiverHonoredAt: new Date(),
+    receiverHonoredNotes: notes || null,
+    status: 'converted',
+  };
+  
+  // Receiver confirms incentive amount they paid
+  if (incentiveAmount) {
+    updateData.receiverConfirmedIncentiveAmount = incentiveAmount;
+    // Check if sender already confirmed and amounts match
+    if (current?.senderConfirmedIncentiveAmount && 
+        parseFloat(current.senderConfirmedIncentiveAmount) === parseFloat(incentiveAmount)) {
+      updateData.isIncentiveVerified = true;
+    }
+  }
+  
+  // Receiver confirms revenue generated from this referral
+  if (revenueAmount) {
+    updateData.receiverConfirmedRevenueAmount = revenueAmount;
+    // Check if athlete already confirmed and amounts match
+    if (current?.athleteConfirmedPaymentAmount && 
+        parseFloat(current.athleteConfirmedPaymentAmount) === parseFloat(revenueAmount)) {
+      updateData.isRevenueVerified = true;
+    }
+  }
+  
   await db.update(referrals)
-    .set({
-      receiverHonored: true,
-      receiverHonoredAt: new Date(),
-      receiverHonoredNotes: notes || null,
-      status: 'converted',
-    })
+    .set(updateData)
     .where(eq(referrals.id, referralId));
 }
 
@@ -1056,14 +1085,30 @@ export async function markReferralHonored(referralId: number, userId: number, no
 export async function markReferralCashedOut(referralId: number, userId: number, amount?: string, notes?: string) {
   const db = await getDb();
   if (!db) return;
+  
+  // Get current referral to check if receiver already confirmed incentive amount
+  const [current] = await db.select().from(referrals).where(eq(referrals.id, referralId));
+  
+  const updateData: Record<string, any> = {
+    senderCashedOut: true,
+    senderCashedOutAt: new Date(),
+    senderCashedOutNotes: notes || null,
+    incentiveAmount: amount || null,
+    completedAt: new Date(),
+  };
+  
+  // Sender confirms incentive amount they received
+  if (amount) {
+    updateData.senderConfirmedIncentiveAmount = amount;
+    // Check if receiver already confirmed and amounts match
+    if (current?.receiverConfirmedIncentiveAmount && 
+        parseFloat(current.receiverConfirmedIncentiveAmount) === parseFloat(amount)) {
+      updateData.isIncentiveVerified = true;
+    }
+  }
+  
   await db.update(referrals)
-    .set({
-      senderCashedOut: true,
-      senderCashedOutAt: new Date(),
-      senderCashedOutNotes: notes || null,
-      incentiveAmount: amount || null,
-      completedAt: new Date(),
-    })
+    .set(updateData)
     .where(eq(referrals.id, referralId));
 }
 
@@ -1124,14 +1169,25 @@ export async function verifyConsumerClaim(claimId: number, userId: number, honor
   if (!db) return;
   
   if (honored) {
+    // Get current claim to check if business already confirmed
+    const [current] = await db.select().from(consumerClaims).where(eq(consumerClaims.id, claimId));
+    
+    const updateData: Record<string, any> = {
+      isHonored: true,
+      honoredAt: new Date(),
+      honoredNotes: notes || null,
+      amountSaved: amountSaved || null,
+      status: 'redeemed',
+    };
+    
+    // Check if business already confirmed savings and amounts match
+    if (amountSaved && current?.businessConfirmedSavingsAmount && 
+        parseFloat(current.businessConfirmedSavingsAmount) === parseFloat(amountSaved)) {
+      updateData.isAmountVerified = true;
+    }
+    
     await db.update(consumerClaims)
-      .set({
-        isHonored: true,
-        honoredAt: new Date(),
-        honoredNotes: notes || null,
-        amountSaved: amountSaved || null,
-        status: 'redeemed',
-      })
+      .set(updateData)
       .where(and(eq(consumerClaims.id, claimId), eq(consumerClaims.userId, userId)));
   } else {
     await db.update(consumerClaims)
@@ -1143,6 +1199,56 @@ export async function verifyConsumerClaim(claimId: number, userId: number, honor
       })
       .where(and(eq(consumerClaims.id, claimId), eq(consumerClaims.userId, userId)));
   }
+}
+
+/**
+ * Business confirms the savings/discount amount given to athlete on a consumer claim
+ */
+export async function businessConfirmClaimSavings(claimId: number, amount: string) {
+  const db = await getDb();
+  if (!db) return;
+  
+  // Get current claim to check if athlete already confirmed
+  const [current] = await db.select().from(consumerClaims).where(eq(consumerClaims.id, claimId));
+  
+  const updateData: Record<string, any> = {
+    businessConfirmedSavingsAmount: amount,
+  };
+  
+  // Check if athlete already confirmed and amounts match
+  if (current?.amountSaved && parseFloat(current.amountSaved) === parseFloat(amount)) {
+    updateData.isAmountVerified = true;
+  }
+  
+  await db.update(consumerClaims)
+    .set(updateData)
+    .where(eq(consumerClaims.id, claimId));
+}
+
+/**
+ * Athlete confirms the payment amount on a referral (what they paid to business B)
+ */
+export async function athleteConfirmReferralPayment(referralId: number, userId: number, amount: string) {
+  const db = await getDb();
+  if (!db) return;
+  
+  // Get current referral to check if receiver already confirmed revenue
+  const [current] = await db.select().from(referrals).where(eq(referrals.id, referralId));
+  
+  const updateData: Record<string, any> = {
+    athleteConfirmedPaymentAmount: amount,
+    referredAthleteUserId: userId,
+  };
+  
+  // Check if receiver already confirmed revenue and amounts match
+  if (current?.receiverConfirmedRevenueAmount && 
+      parseFloat(current.receiverConfirmedRevenueAmount) === parseFloat(amount)) {
+    updateData.isRevenueVerified = true;
+  }
+  
+  await db.update(referrals)
+    .set(updateData)
+    .where(eq(referrals.id, referralId));
 }
 
 /**
@@ -1514,16 +1620,23 @@ export async function updateUserNotificationPreference(userId: number, preferenc
   await db.update(users).set({ notificationPreference: preference }).where(eq(users.id, userId));
 }
 
-export async function updateUserProfile(userId: number, data: { name?: string; email?: string; notificationPreference?: string }) {
+export async function updateUserProfile(userId: number, data: { name?: string; email?: string; contactName?: string; notificationPreference?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const updateData: Record<string, any> = {};
   if (data.name !== undefined) updateData.name = data.name;
   if (data.email !== undefined) updateData.email = data.email;
+  if (data.contactName !== undefined) updateData.contactName = data.contactName;
   if (data.notificationPreference !== undefined) updateData.notificationPreference = data.notificationPreference;
   if (Object.keys(updateData).length > 0) {
     await db.update(users).set(updateData).where(eq(users.id, userId));
   }
+}
+
+export async function updateUserContactName(userId: number, contactName: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ contactName }).where(eq(users.id, userId));
 }
 
 // ─── Logo Upload ────────────────────────────────────────────

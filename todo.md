@@ -743,3 +743,28 @@
 - [x] Add University link to top navigation header
 - [x] Create article detail page for individual tutorials
 - [x] Added 6 business articles and 4 athlete articles (5 coming soon placeholders each)
+## Dual-Verification Referral Amount System
+- [ ] Schema: Add sender_confirmed_incentive_amount, receiver_confirmed_incentive_amount to referrals
+- [ ] Schema: Add receiver_confirmed_revenue_amount, athlete_confirmed_payment_amount to referrals
+- [ ] Schema: Add is_incentive_verified (true when both incentive amounts match) to referrals
+- [ ] Schema: Add is_revenue_verified (true when both revenue/payment amounts match) to referrals
+- [ ] Backend: When Business A (sender) confirms referral honored, ask for $ incentive amount received
+- [ ] Backend: When Business B (receiver) marks referral honored, ask for $ incentive amount paid
+- [ ] Backend: Only count referral as honored when both incentive amounts match
+- [ ] Backend: When Business B confirms revenue from referral, record revenue amount
+- [ ] Backend: When referred Athlete confirms payment, record payment amount
+- [ ] Backend: Only count revenue toward dashboards when both revenue/payment amounts match
+- [ ] Frontend: Add $ amount input fields to honor/confirm referral forms
+- [ ] Frontend: Add $ amount input to revenue confirmation form
+- [ ] Frontend: Add privacy tooltip: "This amount is only visible to you. Only aggregated platform totals are shown publicly."
+- [ ] Frontend: Update dashboards to use verified amounts only for scorecards
+- [ ] Update platform stats to use verified amounts
+## Admin Nav Dropdown
+- [x] Merge admin nav items into a single dropdown menu to shorten nav bar
+- [x] Keep nav bar clean and not too long for admin accounts
+
+## Contact Name for All Users
+- [x] Add contactName field to user schema
+- [x] Prompt users to enter their contact name on first login/signup
+- [x] Display contact name in nav bar instead of email username
+- [x] Display contact name everywhere users are referenced

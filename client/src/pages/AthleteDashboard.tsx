@@ -18,8 +18,13 @@ import {
   Loader2, Gift, Heart, Bookmark, MapPin, ExternalLink,
   Ticket, CheckCircle2, Clock, AlertTriangle, Trash2,
   User, Target, Bike, Settings, ArrowRight, Bell, Check, CheckCheck,
-  Sparkles, Star, ChevronRight, Pencil, X, Save, Zap, Mail, BellRing, BellOff
+  Sparkles, Star, ChevronRight, Pencil, X, Save, Zap, Mail, BellRing, BellOff, Info
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter,
+  DialogHeader, DialogTitle, DialogTrigger
+} from "@/components/ui/dialog";
+import { PrivacyTooltip } from "@/components/PrivacyTooltip";
 
 type TabId = "offers" | "saved" | "notifications" | "profile";
 
@@ -99,7 +104,7 @@ export default function AthleteDashboard() {
       const expLevels = athleteProfile.experienceLevels ? JSON.parse(athleteProfile.experienceLevels) : {};
       const interests = athleteProfile.interests ? JSON.parse(athleteProfile.interests) : [];
       setEditForm({
-        displayName: athleteProfile.displayName || user?.name || "",
+        displayName: athleteProfile.displayName || user?.contactName || user?.name || "",
         selectedSports: sportIds,
         experienceLevels: expLevels,
         city: athleteProfile.city || "",
@@ -206,7 +211,7 @@ export default function AthleteDashboard() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
-                  Hey, {user?.name?.split(' ')[0] || 'Athlete'} 👋
+                  Hey, {(user?.contactName || user?.name)?.split(' ')[0] || 'Athlete'} 👋
                 </h1>
                 <p className="text-white/60 mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>
                   Your deals, your saves, your profile. All the stuff that matters.
@@ -1055,7 +1060,7 @@ function ProfileTab({
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2" style={{ fontFamily: "var(--font-heading)" }}>
               <User className="w-5 h-5 text-primary" />
-              {athleteProfile.displayName || user?.name || "Athlete"}
+              {athleteProfile.displayName || user?.contactName || user?.name || "Athlete"}
             </CardTitle>
             <Button
               variant="outline"
