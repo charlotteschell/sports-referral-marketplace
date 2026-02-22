@@ -122,6 +122,23 @@ export default function BusinessProfile() {
     onError: (err: any) => toast.error(err.message || "Failed to send email"),
   });
 
+  // Save business functionality (must be before early returns to maintain hook order)
+  const { data: savedList } = trpc.savedBusiness.list.useQuery(undefined, { enabled: isAuthenticated });
+  const saveMutation = trpc.savedBusiness.save.useMutation({
+    onSuccess: () => {
+      utils.savedBusiness.list.invalidate();
+      toast.success("Business saved!");
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to save"),
+  });
+  const unsaveMutation = trpc.savedBusiness.unsave.useMutation({
+    onSuccess: () => {
+      utils.savedBusiness.list.invalidate();
+      toast.success("Business removed from saved list.");
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to unsave"),
+  });
+
   // Logo upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -265,24 +282,7 @@ export default function BusinessProfile() {
 
   const b2bOffers = offers?.filter(o => o.offerType === "b2b") || [];
   const consumerOffers = offers?.filter(o => o.offerType === "consumer") || [];
-
-  // Save business functionality
-  const { data: savedList } = trpc.savedBusiness.list.useQuery(undefined, { enabled: isAuthenticated });
   const isSaved = savedList?.some((s: any) => s.business.id === business.id) || false;
-  const saveMutation = trpc.savedBusiness.save.useMutation({
-    onSuccess: () => {
-      utils.savedBusiness.list.invalidate();
-      toast.success("Business saved!");
-    },
-    onError: (err: any) => toast.error(err.message || "Failed to save"),
-  });
-  const unsaveMutation = trpc.savedBusiness.unsave.useMutation({
-    onSuccess: () => {
-      utils.savedBusiness.list.invalidate();
-      toast.success("Business removed from saved list.");
-    },
-    onError: (err: any) => toast.error(err.message || "Failed to unsave"),
-  });
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

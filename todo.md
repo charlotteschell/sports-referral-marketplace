@@ -699,3 +699,7 @@
 - [x] Created reusable BusinessLogo component with onError fallback and sport icon/initial letter placeholder
 - [x] Replaced inline logo rendering in Home, Directory, BusinessProfile, Leaderboard, AthleteDashboard, EditBusiness (6 files)
 - [x] Fix Doctrine Training Ltd and all businesses without logos - consistent placeholder across all views
+
+## BusinessProfile Hooks Error Fix
+- [x] Fix "Rendered more hooks than during the previous render" error on /business/the-doctrine-training
+- [x] Ensure all hooks are called unconditionally in BusinessProfile component (moved savedBusiness hooks above early returns)
