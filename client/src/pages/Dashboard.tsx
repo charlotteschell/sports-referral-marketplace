@@ -194,7 +194,7 @@ export default function Dashboard() {
                 Dashboard
               </h1>
               <p className="text-white/70" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Welcome back, {user?.name || "there"}. Track your referrals and manage your businesses.
+                Welcome back, {user?.name || "there"}. Here's what's happening with your referrals and businesses.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -478,7 +478,7 @@ export default function Dashboard() {
                   ) : !sentReferrals?.length ? (
                     <div className="text-center py-8">
                       <Send className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>No referrals sent yet</p>
+                      <p className="text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>No referrals sent yet. Time to spread the love?</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -603,7 +603,7 @@ export default function Dashboard() {
                   ) : !receivedReferrals?.length ? (
                     <div className="text-center py-8">
                       <ArrowDownLeft className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>No referrals received yet</p>
+                      <p className="text-muted-foreground" style={{ textTransform: "none", letterSpacing: "normal" }}>No referrals received yet. They'll come. Patience, grasshopper.</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -932,7 +932,7 @@ export default function Dashboard() {
                 <div className="text-center py-8">
                   <Send className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                   <p className="text-muted-foreground mb-3" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                    You haven't sent any B2B referrals yet. Start growing your network by referring customers to partner businesses.
+                    You haven't sent any referrals yet. Know a business that could use some extra customers? Send them one. Karma's a real thing in this network.
                   </p>
                   <Link href="/dashboard/send-referral">
                     <Button className="bg-primary text-primary-foreground" size="sm" style={{ textTransform: "none" }}>

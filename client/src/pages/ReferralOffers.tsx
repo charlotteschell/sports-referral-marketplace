@@ -46,7 +46,7 @@ export default function ReferralOffers() {
             </h1>
           </div>
           <p className="text-white/70 max-w-2xl text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-            B2B referral incentives for businesses and consumer deals for athletes. Pick the ones that make sense for you.
+            Referral incentives between businesses, and deals for athletes. Browse what's on offer and find the ones worth your time.
           </p>
         </div>
       </section>
@@ -58,10 +58,10 @@ export default function ReferralOffers() {
             <Heart className="w-5 h-5 text-[oklch(0.55_0.15_45)] mt-0.5 shrink-0" />
             <div>
               <p className="text-sm text-foreground font-medium" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Community supporting community — all for free.
+                These are real offers from real businesses. No catch.
               </p>
               <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                SportConnect is free. If you see your business listed here, <Link href="/directory" className="text-[oklch(0.55_0.15_45)] underline hover:text-[oklch(0.45_0.15_45)]">claim your listing</Link> and replace these sample offers with your real incentives. No cost, no catch.
+                SportConnect is free. See your business here with a sample offer? <Link href="/directory" className="text-[oklch(0.55_0.15_45)] underline hover:text-[oklch(0.45_0.15_45)]">Claim your listing</Link> and replace it with your actual incentive. Takes about 2 minutes. We timed it.
               </p>
             </div>
           </div>

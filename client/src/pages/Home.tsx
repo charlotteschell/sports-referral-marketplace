@@ -48,33 +48,37 @@ const regionHighlights = [
   { name: "Alps", country: "France/Switzerland", emoji: "🇨🇭", description: "UTMB and ski touring paradise" },
 ];
 
-// Launch date: Feb 21, 2026
-const LAUNCH_DATE = new Date('2026-02-21T00:00:00Z').getTime();
+// Launch date: Monday Feb 23, 2026 at 12:00 PM MST (19:00 UTC)
+const LAUNCH_DATE = new Date('2026-02-23T19:00:00Z').getTime();
 
 function LaunchTimer() {
-  const [elapsed, setElapsed] = useState(() => Date.now() - LAUNCH_DATE);
+  const [diff, setDiff] = useState(() => Date.now() - LAUNCH_DATE);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setElapsed(Date.now() - LAUNCH_DATE);
+      setDiff(Date.now() - LAUNCH_DATE);
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const seconds = Math.floor(elapsed / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
+  const isLaunched = diff >= 0;
+  const absDiff = Math.abs(diff);
+  const totalSeconds = Math.floor(absDiff / 1000);
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const totalHours = Math.floor(totalMinutes / 60);
+  const days = Math.floor(totalHours / 24);
 
-  const displayHours = hours % 24;
-  const displayMinutes = minutes % 60;
-  const displaySeconds = seconds % 60;
+  const displayHours = totalHours % 24;
+  const displayMinutes = totalMinutes % 60;
+  const displaySeconds = totalSeconds % 60;
 
   return (
     <div className="flex flex-col items-center mb-2">
       <div className="flex items-center gap-2 mb-2">
         <Clock className="w-4 h-4 text-[oklch(0.55_0.15_45)]" />
-        <span className="text-xs text-white/50 uppercase tracking-wider" style={{ textTransform: "none", letterSpacing: "0.1em" }}>Time since launch</span>
+        <span className="text-xs text-white/50 uppercase tracking-wider" style={{ textTransform: "none", letterSpacing: "0.1em" }}>
+          {isLaunched ? "Time since launch" : "Launching in"}
+        </span>
       </div>
       <div className="flex items-center gap-1 md:gap-3">
         {[
@@ -95,7 +99,7 @@ function LaunchTimer() {
         ))}
       </div>
       <p className="text-xs text-white/40 mt-2 italic" style={{ textTransform: "none", letterSpacing: "normal" }}>
-        See how much we can help each other grow
+        {isLaunched ? "Ticking since launch. No pressure." : "Monday at noon MST. Mark your calendar. Or don't. The counter doesn't care."}
       </p>
     </div>
   );
@@ -151,7 +155,7 @@ export default function Home() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-6 text-sm font-medium">
               <Handshake className="w-4 h-4 text-[oklch(0.55_0.15_45)]" />
-              <span>The Endurance Sports Business Network</span>
+              <span>Word-of-mouth referrals, minus the forgetting</span>
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6" style={{ fontFamily: "var(--font-heading)" }}>
               Your Crew.<br />
@@ -159,10 +163,10 @@ export default function Home() {
               One Network.
             </h1>
             <p className="text-lg md:text-xl text-white/80 mb-4 max-w-2xl leading-relaxed" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
-              Coaches, bike shops, physios, sport psychologists — if you serve <strong className="text-white">cyclists, runners, or snow sports athletes</strong>, this is your network. And if you're an <strong className="text-white">athlete looking for the right local pros</strong>, you're in the right place too.
+              You already send clients to that physio down the road. And the bike shop already tells people about your coaching. It's just that <strong className="text-white">nobody tracks it, nobody gets thanked, and it stays local forever</strong>. We figured we'd fix that part.
             </p>
             <p className="text-base md:text-lg text-white/60 mb-4 max-w-2xl" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
-              Businesses refer customers to each other and earn incentives. Athletes find trusted local pros and grab real deals. Simple as that.
+              SportConnect helps <strong className="text-white/80">coaches, shops, physios, nutritionists, clubs, and vacation providers</strong> refer customers to each other — with actual incentives, actual tracking, and reach beyond your postcode. Athletes get deals too. Everyone wins. Revolutionary, we know.
             </p>
             <p className="text-sm text-white/50 mb-8 max-w-2xl" style={{ fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "normal" }}>
               Cycling &bull; Road Running &bull; Trail Running &bull; Ultra Running &bull; Skiing &bull; Snowboarding &bull; Nordic Skiing &bull; Sport Vacations
@@ -202,7 +206,7 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
             <div>
               <p className="text-3xl font-bold text-primary" style={{ fontFamily: "var(--font-heading)" }}>{stats?.totalBusinesses || 0}+</p>
-              <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Businesses Listed</p>
+              <p className="text-sm text-muted-foreground mt-1" style={{ textTransform: "none" }}>Businesses (and counting)</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>{stats?.sportCategories || 4}</p>
@@ -218,12 +222,11 @@ export default function Home() {
             </div>
             <div className="col-span-2 md:col-span-1 relative group/info">
               <p className="text-3xl font-bold text-[oklch(0.55_0.15_45)]" style={{ fontFamily: "var(--font-heading)" }}>{stats?.totalReferrals || 0}</p>
-              <p className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1" style={{ textTransform: "none" }}>
-                Referrals Sent
+              <p className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1" style={{ textTransform: "none" }}>Referrals Sent
                 <span className="relative">
                   <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-primary cursor-help transition-colors" />
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-lg bg-popover text-popover-foreground text-xs leading-relaxed shadow-lg border border-border opacity-0 group-hover/info:opacity-100 pointer-events-none group-hover/info:pointer-events-auto transition-opacity z-50" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                    The builders of the site seeded sample referrals to help demonstrate the platform's capabilities. This number will be updated with real referrals once they start coming in.
+                    Full transparency: we seeded sample referrals so you can see how the platform works. Real numbers incoming once you lot start using it.
                   </span>
                 </span>
               </p>
@@ -237,8 +240,8 @@ export default function Home() {
         <section className="py-12 bg-gradient-to-r from-[oklch(0.22_0.02_50)] to-[oklch(0.28_0.03_50)] text-white">
           <div className="container">
             <div className="text-center mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: "var(--font-heading)" }}>Community Activity</h2>
-              <p className="text-white/60 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>What's happening across the network right now</p>
+              <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ fontFamily: "var(--font-heading)" }}>The Scoreboard</h2>
+              <p className="text-white/60 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>Real-time proof that collaboration beats going it alone</p>
             </div>
             {/* Launch Countdown Timer */}
             <LaunchTimer />
@@ -278,14 +281,14 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How It Works</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Three steps. That's it.
+              Three steps. We'd have made it two, but we're not that clever.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: <Search className="w-8 h-8" />, title: "Discover", desc: "Browse coaches, shops, physios, clubs, and vacation providers across cycling, running, and snow sports. Own a business or just love the sport — the directory works for both." },
-              { icon: <Handshake className="w-8 h-8" />, title: "Connect & Refer", desc: "Claim your profile, post referral offers (B2B or consumer), and start sending customers to your partners. Enthusiasts can grab exclusive deals directly. It's a win-win." },
-              { icon: <TrendingUp className="w-8 h-8" />, title: "Grow Together", desc: "Track every referral, build partnerships locally and across borders, and watch your network grow from the Dolomites to the Canadian Rockies." },
+              { icon: <Search className="w-8 h-8" />, title: "Find Your People", desc: "Browse coaches, shops, physios, clubs, and vacation providers across cycling, running, and snow sports. You know that nutritionist your training buddy swears by? They're probably in here." },
+              { icon: <Handshake className="w-8 h-8" />, title: "Refer & Get Referred", desc: "Claim your profile, post your referral offers, and start sending customers to businesses you actually trust. Athletes can grab deals directly. It's the word-of-mouth thing you already do — just with receipts." },
+              { icon: <TrendingUp className="w-8 h-8" />, title: "Grow Together", desc: "Track every referral, build partnerships locally and across borders. Because as endurance athletes, we already do enough hard things the hard way. Revenue growth shouldn't be one of them." },
             ].map((step, i) => (
               <div key={i} className="relative">
                 <div className="bg-card border border-border rounded-lg p-8 h-full hover:shadow-lg transition-shadow">
@@ -311,7 +314,7 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Endurance Sports</h2>
             <p className="text-white/70 max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Road, trail, snow, or all three. We cover the sports and the businesses behind them. And yes, sport vacations absolutely count.
+              Road, trail, snow, or the "I do all three and my knees hate me" combo. We cover the sports and every business that keeps athletes moving (or recovering when they overdo it).
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -350,10 +353,10 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               <Globe className="w-8 h-8 inline-block mr-2 text-[oklch(0.55_0.15_45)]" />
-              Endurance Sports Hubs
+              Where the Magic Happens
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              The places where athletes actually train, race, and take sport vacations. From the Dolomites to the Canadian Rockies, these hubs are on the map.
+              The towns where people plan their entire lives around training schedules. You know who you are. These are the hubs where our businesses operate.
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -374,9 +377,9 @@ export default function Home() {
       <section className="py-20 bg-secondary/30">
         <div className="container">
           <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Every Type of Sports Business</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Every Flavour of Sports Business</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Coaches, shops, physios, clubs, cafes, vacation providers — basically everyone who keeps athletes going (and recovering when things go sideways).
+              If your business involves keeping athletes faster, healthier, less injured, or just slightly less delusional about their FTP — you belong here.
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
@@ -412,7 +415,7 @@ export default function Home() {
                   <span style={{ textTransform: "none" }}>Featured</span>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Featured Businesses</h2>
-                <p className="text-muted-foreground max-w-xl" style={{ textTransform: "none", letterSpacing: "normal" }}>Some of the businesses already on the platform. Claim your listing to show up here.</p>
+                <p className="text-muted-foreground max-w-xl" style={{ textTransform: "none", letterSpacing: "normal" }}>A few of the businesses already in the network. See yours? Claim it. Don't see yours? List it. Either way, get in here.</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="icon" onClick={() => scrollCarousel('left')} className="bg-transparent hidden md:flex">
@@ -535,9 +538,9 @@ export default function Home() {
       <section className="py-20 bg-secondary/30">
         <div className="container">
           <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Two Types of Referral Offers</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Two Ways to Play</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Businesses post offers for other businesses and for individual athletes. Two types of offers, one platform.
+              Business-to-business referral incentives, and deals for athletes. Because why should only one side benefit?
             </p>
           </div>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -547,7 +550,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-foreground mb-3">B2B Offers</h3>
               <p className="text-muted-foreground leading-relaxed mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                For businesses that want to send customers to each other. Earn commissions, trade services, or set up a partnership that works for both sides. Referred customers can still grab any consumer offers too.
+                You send a client to a physio, the physio sends a client to you. Except now there's an actual incentive attached and you can track it. Wild concept, we know.
               </p>
               <ul className="space-y-2" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 {["Commission per referral", "Service trade agreements", "Cross-promotion partnerships", "Volume-based incentives"].map((item) => (
@@ -564,7 +567,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-foreground mb-3">Consumer Offers</h3>
               <p className="text-muted-foreground leading-relaxed mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                For athletes and enthusiasts looking for services. Browse and claim offers directly — discounts, free sessions, package deals, that kind of thing.
+                For athletes who like saving money (so, all athletes). Browse deals from local pros — discounts, free sessions, package deals. No coupon clipping required.
               </p>
               <ul className="space-y-2" style={{ textTransform: "none", letterSpacing: "normal" }}>
                 {["Percentage discounts", "Free trial sessions", "Package deal pricing", "First-time customer specials"].map((item) => (
@@ -595,12 +598,12 @@ export default function Home() {
               <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center mb-5">
                 <Handshake className="w-6 h-6" />
               </div>
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">For Sports Professionals</h3>
+              <h3 className="text-2xl md:text-3xl font-bold mb-4">For Sports Businesses</h3>
               <p className="text-primary-foreground/80 mb-6 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Claim your business, post referral offers, and start getting customers from partner businesses. From Mallorca to Colorado, your next client might come from a referral across the hall or across the ocean.
+                You've been doing the word-of-mouth thing for years. We just gave it a URL. Claim your profile, post what you'll offer for referrals, and let the network do what networks do — from Mallorca to Colorado.
               </p>
               <ul className="space-y-2 mb-8" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                {["Claim and manage your business profile", "Post B2B and consumer referral offers", "Track referrals sent and received", "Connect with businesses across regions"].map((item) => (
+                {["Claim your profile (it's probably already here)", "Post referral offers that actually make sense", "Track who sent what and who owes who coffee", "Connect with businesses beyond your postcode"].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-sm text-primary-foreground/90">
                     <div className="w-1.5 h-1.5 rounded-full bg-[oklch(0.55_0.15_45)]" />
                     {item}
@@ -626,12 +629,12 @@ export default function Home() {
               <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center mb-5">
                 <Search className="w-6 h-6" />
               </div>
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">For Sports Enthusiasts</h3>
+              <h3 className="text-2xl md:text-3xl font-bold mb-4">For Athletes & Enthusiasts</h3>
               <p className="text-white/80 mb-6 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Find coaches, shops, physios, vacation providers, and clubs near you. Browse their profiles, check their reviews, and grab deals when they're available.
+                Looking for a coach who gets it? A physio who won't judge your training volume? A bike shop that doesn't upsell you on things you don't need? Start here.
               </p>
               <ul className="space-y-2 mb-8" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                {["Search by sport, region, and business type", "Find businesses with real reviews", "Grab deals from local pros", "Plan your next sport trip"].map((item) => (
+                {["Search by sport, region, and business type", "Find businesses with actual Google reviews", "Grab deals you won't find anywhere else", "Plan your next sport trip (tax-deductible, right?)"].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-sm text-white/90">
                     <div className="w-1.5 h-1.5 rounded-full bg-white" />
                     {item}

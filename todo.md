@@ -571,3 +571,18 @@
 
 ## Fix Duplicate Key Errors on /directory Page
 - [x] Fix duplicate key warnings for hub/city names (Boulder, Calgary, Whistler, etc.) in Directory.tsx filter dropdowns
+
+## Copywriting Rewrite - Casual, Witty, Self-Deprecating Humour
+- [x] Rewrite Home page copy (hero, sections, CTAs)
+- [x] Rewrite About page - emphasize word-of-mouth referrals already happening, we just make it easier/broader
+- [x] Rewrite Directory page copy
+- [x] Rewrite Leaderboard page copy
+- [x] Rewrite Referral Offers page copy
+- [x] Rewrite Support page copy
+- [x] Rewrite Dashboard page copy
+- [x] Rewrite Onboarding/Submit Business page copy
+- [x] Rewrite Footer copy
+- [x] Review all copy for AI-sounding language and eliminate it
+
+## Counter Launch
+- [x] Set launch counter to Monday Feb 23, 2026 at 12:00 PM MST (shows countdown before, elapsed after)

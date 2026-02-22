@@ -719,12 +719,12 @@ export default function BusinessProfile() {
                 <Card className="border-dashed border-2 border-muted">
                   <CardContent className="p-8 text-center">
                     <Shield className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                    <h3 className="text-lg font-bold mb-2">This Business Hasn't Been Claimed</h3>
+                    <h3 className="text-lg font-bold mb-2">This Business Hasn't Been Claimed Yet</h3>
                     <p className="text-muted-foreground mb-4 max-w-md mx-auto" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                      Contact information, referral offers, and full business details are only available for claimed and verified businesses. SportConnect is 100% free — community supporting community.
+                      Is this your business? Claim it to unlock your full profile, post referral offers, and start getting customers from partner businesses. It's free. Like, actually free. No asterisks.
                     </p>
                     <p className="text-xs text-muted-foreground/70 mb-4" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                      All claims are subject to admin approval after email verification.
+                      We'll verify your email matches the business domain. Quick and painless.
                     </p>
                     {isAuthenticated ? (
                       <Button

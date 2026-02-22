@@ -17,9 +17,9 @@ import {
 } from "lucide-react";
 
 const ticketTypeOptions = [
-  { value: "bug" as const, label: "Bug Report", icon: Bug, description: "Something's broken or not working right" },
-  { value: "feature_request" as const, label: "Feature Request", icon: Lightbulb, description: "Got an idea to make things better?" },
-  { value: "general" as const, label: "General Support", icon: HelpCircle, description: "Questions, feedback, or just saying hi" },
+  { value: "bug" as const, label: "Bug Report", icon: Bug, description: "Something's broken. We're not surprised, but we are sorry." },
+  { value: "feature_request" as const, label: "Feature Request", icon: Lightbulb, description: "Got an idea? We're all ears. Seriously." },
+  { value: "general" as const, label: "General Support", icon: HelpCircle, description: "Questions, feedback, or just want to chat." },
 ];
 
 const statusLabels: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -64,9 +64,9 @@ export default function SupportTicket() {
           <Card className="max-w-md w-full mx-4">
             <CardContent className="p-8 text-center">
               <LifeBuoy className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h2 className="text-xl font-bold mb-2">Support Center</h2>
+              <h2 className="text-xl font-bold mb-2">Need a Hand?</h2>
               <p className="text-muted-foreground mb-6" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Log in to submit a support ticket or track your existing ones.
+                Log in to submit a ticket or check on one you've already sent. We read every single one. (Mostly during coffee breaks.)
               </p>
               <Button onClick={() => window.location.href = getLoginUrl()} style={{ textTransform: "none" }}>
                 Log In to Continue
@@ -86,7 +86,7 @@ export default function SupportTicket() {
       <section className="bg-[oklch(0.22_0.02_50)] text-white py-12">
         <div className="container">
           <h1 className="text-3xl md:text-4xl font-bold mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-            Support Center
+            Support
           </h1>
           <p className="text-white/70 max-w-2xl text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
             Found a bug? Got a brilliant idea? Or just need a hand? We're all ears (and we promise our volunteers check this regularly... between rides).
@@ -218,7 +218,7 @@ export default function SupportTicket() {
                   <CardContent className="p-8 text-center">
                     <LifeBuoy className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground" style={{ textTransform: "none" }}>
-                      No tickets yet. Everything working perfectly? That's what we like to hear!
+                       No tickets yet. Either everything's working perfectly, or you're very patient. Either way, we appreciate you.
                     </p>
                   </CardContent>
                 </Card>

@@ -20,7 +20,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-sm leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              A referral network for the businesses behind cycling, running, and snow sports. Send customers to each other, earn incentives, and grow together.
+              The referral network for endurance sports businesses. Because growing your business shouldn't be harder than a 200km ride.
             </p>
           </div>
 
@@ -77,7 +77,7 @@ export default function Footer() {
 
         <div className="border-t border-white/10 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-white/40" style={{ textTransform: "none", letterSpacing: "normal" }}>
-            &copy; {new Date().getFullYear()} SportConnect. Built for the endurance sports community.
+            &copy; {new Date().getFullYear()} SportConnect. Built by athletes who should probably be training instead.
           </p>
           <div className="flex items-center gap-4 text-xs text-white/40" style={{ textTransform: "none", letterSpacing: "normal" }}>
             <span>Cycling</span>

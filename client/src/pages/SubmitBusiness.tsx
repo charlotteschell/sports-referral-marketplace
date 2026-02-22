@@ -166,11 +166,10 @@ export default function SubmitBusiness() {
               </div>
               <div>
                 <h2 className="text-2xl font-heading font-bold text-foreground mb-2">
-                  Submission Received!
+                  You're In the Queue!
                 </h2>
-                <p className="text-muted-foreground leading-relaxed">
-                  Thank you for submitting <strong>{businessName}</strong> to the SportConnect directory.
-                  Your submission is now <strong>pending admin approval</strong>. We'll review it shortly and send you an email confirmation once it's approved. In the meantime, feel free to browse the directory!
+                <p className="text-muted-foreground leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                  <strong>{businessName}</strong> has been submitted. Our (volunteer) team will review it shortly. We're not going to pretend we have a 24-hour SLA, but we do check these regularly. Browse the directory while you wait!
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
@@ -235,16 +234,14 @@ export default function SubmitBusiness() {
                 <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground tracking-tight">
                   SUBMIT YOUR BUSINESS
                 </h1>
-                <p className="text-muted-foreground">
-                  Join the endurance sports community network
+                <p className="text-muted-foreground" style={{ textTransform: "none" }}>
+                  Get in the network. It takes 3 minutes.
                 </p>
               </div>
             </div>
-            <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl">
-              Coach, bike shop, physio, vacation provider, or any business that serves
-              cyclists, runners, or snow sports athletes — submit your business to get listed in
-              the directory and start getting referrals from other businesses.
-              <span className="block mt-3 text-sm text-amber-500 font-medium">All submissions are subject to admin approval. A website is required for verification. Your email must match your business domain.</span>
+            <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl" style={{ textTransform: "none", letterSpacing: "normal" }}>
+              If your business serves cyclists, runners, or snow sports athletes in any capacity, you belong here. Fill out the form, we'll verify you're real (nothing personal), and you'll be in the directory.
+              <span className="block mt-3 text-sm text-amber-500 font-medium" style={{ textTransform: "none" }}>Heads up: we need a website for verification, and all submissions get a quick human review.</span>
             </p>
           </div>
         </section>

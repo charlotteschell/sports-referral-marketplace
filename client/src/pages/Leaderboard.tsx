@@ -49,9 +49,9 @@ export default function Leaderboard() {
   };
 
   const tabs = [
-    { key: "referrers" as const, label: "Top Referrers", icon: <ArrowUpRight className="w-4 h-4" />, description: "Businesses sending the most referrals" },
-    { key: "receivers" as const, label: "Most Reliable", icon: <ArrowDownLeft className="w-4 h-4" />, description: "Businesses that honor the most referrals" },
-    { key: "connectors" as const, label: "Top Connectors", icon: <MessageSquare className="w-4 h-4" />, description: "Most active in partnership conversations" },
+    { key: "referrers" as const, label: "Top Referrers", icon: <ArrowUpRight className="w-4 h-4" />, description: "The generous ones. Sending clients left, right, and across borders." },
+    { key: "receivers" as const, label: "Most Reliable", icon: <ArrowDownLeft className="w-4 h-4" />, description: "They said they'd honour the referral. And they actually did. Legends." },
+    { key: "connectors" as const, label: "Top Connectors", icon: <MessageSquare className="w-4 h-4" />, description: "The matchmakers. Always introducing businesses to each other." },
   ];
 
   const currentData = activeTab === "referrers"
@@ -81,9 +81,8 @@ export default function Leaderboard() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-3" style={{ fontFamily: "var(--font-heading)" }}>
             THE LEADERBOARD
           </h1>
-          <p className="text-lg text-white/60 max-w-2xl">
-            Who's crushing it in the referral game? These are the businesses that walk the walk, 
-            sending customers, honoring deals, and building real partnerships.
+          <p className="text-lg text-white/60 max-w-2xl" style={{ textTransform: "none", letterSpacing: "normal" }}>
+            Who's actually walking the walk? These businesses aren't just talking about collaboration over post-ride coffees. They're sending real customers, honouring real deals, and building partnerships that go beyond a handshake at a race expo.
           </p>
 
           {/* Summary Stats */}
@@ -166,8 +165,8 @@ export default function Leaderboard() {
             <CardContent className="py-16 text-center">
               <Trophy className="w-12 h-12 text-white/20 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-white mb-2">No rankings yet</h3>
-              <p className="text-white/50 mb-6">
-                No referrals tracked yet. Once businesses start sending referrals, rankings will show up here.
+              <p className="text-white/50 mb-6" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                The leaderboard is empty. Which means there's a #1 spot with your name on it. Just saying.
               </p>
               <Link href="/directory">
                 <Button className="bg-[oklch(0.55_0.15_45)] hover:bg-[oklch(0.50_0.15_45)] text-white">

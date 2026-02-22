@@ -74,7 +74,7 @@ export default function Onboarding() {
               Welcome to SportConnect!
             </h1>
             <p className="text-white/70 text-lg max-w-xl mx-auto" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Quick question before we get going — are you here as a business or as an athlete?
+              One quick question before we let you loose. Are you here to grow a business, or to find the best local pros for your sport?
             </p>
           </div>
         </section>
@@ -105,21 +105,21 @@ export default function Onboarding() {
                         Business Owner
                       </h3>
                       <p className="text-sm text-muted-foreground" style={{ textTransform: "none" }}>
-                        I run a sports-related business
+                        I have a sports business to grow
                       </p>
                     </div>
                   </div>
 
                   <p className="text-muted-foreground text-sm mb-5 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                    Claim or list your business, post referral offers, send and receive referrals from other businesses in the network, and track everything from your dashboard.
+                    Get your business in the network, post what you'll offer for referrals, and start sending (and receiving) customers. It's the word-of-mouth thing you already do, just with tracking and reach.
                   </p>
 
                   <div className="space-y-3">
                     {[
-                      { icon: <Send className="w-4 h-4" />, text: "Send & receive B2B referrals" },
-                      { icon: <Gift className="w-4 h-4" />, text: "Create referral offers & incentives" },
-                      { icon: <TrendingUp className="w-4 h-4" />, text: "Track conversions & earnings" },
-                      { icon: <Users className="w-4 h-4" />, text: "Build partner network" },
+                      { icon: <Send className="w-4 h-4" />, text: "Send and receive referrals" },
+                      { icon: <Gift className="w-4 h-4" />, text: "Post offers that attract partners" },
+                      { icon: <TrendingUp className="w-4 h-4" />, text: "Track who sent what" },
+                      { icon: <Users className="w-4 h-4" />, text: "Grow beyond your postcode" },
                     ].map((item, i) => (
                       <div key={i} className="flex items-center gap-2.5 text-sm" style={{ textTransform: "none" }}>
                         <span className={selected === "business_owner" ? "text-primary" : "text-muted-foreground"}>
@@ -161,21 +161,21 @@ export default function Onboarding() {
                         Sports Enthusiast
                       </h3>
                       <p className="text-sm text-muted-foreground" style={{ textTransform: "none" }}>
-                        I'm an athlete or sports fan
+                        I ride, run, or ski (or all three)
                       </p>
                     </div>
                   </div>
 
                   <p className="text-muted-foreground text-sm mb-5 leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                    Find coaches, shops, physios, and other sports businesses near you. Browse their profiles, check reviews, and grab deals when they're available.
+                    Find the coaches, shops, physios, and clubs that other athletes actually recommend. Browse profiles, check reviews, and grab deals that aren't available anywhere else.
                   </p>
 
                   <div className="space-y-3">
                     {[
-                      { icon: <Gift className="w-4 h-4" />, text: "Claim exclusive consumer deals" },
-                      { icon: <Star className="w-4 h-4" />, text: "Find well-reviewed local businesses" },
-                      { icon: <Mountain className="w-4 h-4" />, text: "Find coaches, shops & services" },
-                      { icon: <Heart className="w-4 h-4" />, text: "Support your local sports community" },
+                      { icon: <Gift className="w-4 h-4" />, text: "Grab deals from local pros" },
+                      { icon: <Star className="w-4 h-4" />, text: "Find businesses with real reviews" },
+                      { icon: <Mountain className="w-4 h-4" />, text: "Coaches, shops, physios & more" },
+                      { icon: <Heart className="w-4 h-4" />, text: "Support the businesses that support you" },
                     ].map((item, i) => (
                       <div key={i} className="flex items-center gap-2.5 text-sm" style={{ textTransform: "none" }}>
                         <span className={selected === "consumer" ? "text-primary" : "text-muted-foreground"}>
@@ -213,7 +213,7 @@ export default function Onboarding() {
                 )}
               </Button>
               <p className="text-xs text-muted-foreground mt-3" style={{ textTransform: "none" }}>
-                You can always change this later in your account settings.
+                Don't overthink it. You can change this later.
               </p>
             </div>
           </div>

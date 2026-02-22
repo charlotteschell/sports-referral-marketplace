@@ -242,7 +242,7 @@ export default function Directory() {
             Business Directory
           </h1>
           <p className="text-white/70 max-w-2xl text-lg" style={{ textTransform: "none", letterSpacing: "normal" }}>
-            Coaches, shops, sport psychologists, vacation providers, clubs, and more. Find your people in the world's best endurance sports hubs.
+            Every coach, shop, physio, club, and vacation provider that keeps endurance athletes moving. Find your people, or find out your people are already here.
           </p>
         </div>
       </section>
@@ -371,9 +371,9 @@ export default function Directory() {
           ) : data?.businesses.length === 0 ? (
             <div className="text-center py-20">
               <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-bold mb-2">No businesses found</h3>
+              <h3 className="text-xl font-bold mb-2">Nothing here (yet)</h3>
               <p className="text-muted-foreground mb-6" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                Try adjusting your search or filters to find what you're looking for.
+                Try different filters, or maybe you've just discovered a gap in our directory. Want to fix that? List a business.
               </p>
               <Button variant="outline" onClick={clearFilters} className="bg-transparent" style={{ textTransform: "none" }}>
                 Clear All Filters
