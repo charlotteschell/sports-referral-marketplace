@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO referralOffers (businessId, title, description, offerType, incentiveType, incentiveValue, isActive, isSample, createdAt, updatedAt) SELECT id, '10% Referral Commission on Bike Fits', 'Refer your cycling clients for a professional Retul bike fit at Intrinsi. Earn 10% commission on each completed fitting. Insurance-billable sessions available.', 'b2b', 'percentage', '10', 1, 1, NOW(), NOW() FROM businesses WHERE slug = 'intrinsi-calgary';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute INSERT INTO referralOffers (businessId, title, description, offerType, incentiveType, incentiveValue, isActive, isSample, createdAt, updatedAt) SELECT id, '10% Referral Commission on Bike Fits', 'Refer your cycling clients for a professional Retul bike fit at Intrinsi. Earn 10% commission on each completed fitting. Insurance-billable sessions available.', 'b2b', 'percentage', '10', 1, 1, NOW(), NOW() FROM businesses WHERE slug = 'intrinsi-calgary';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 58
+}

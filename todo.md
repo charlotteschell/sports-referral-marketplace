@@ -460,3 +460,9 @@
 - [x] Remove sample referral offers (isSample=true) for the claimed business
 - [x] Cleanup runs on both: claimBusiness() and approveOrRejectBusiness(approved)
 - [x] Leaderboard and analytics auto-recalculate since data is deleted from source tables
+
+## Add Specific Business: Business Intrinsi Calgary
+- [x] Research Business Intrinsi (physio and bike fit) in Calgary
+- [x] Add to directory with correct details: 3519 18th St SW, Marda Loop, 820+ Google reviews, 4.9 rating
+- [x] Added B2B offer (10% commission on bike fits) and consumer offer (15% off first bike fit)
+- [x] Marked as featured business
