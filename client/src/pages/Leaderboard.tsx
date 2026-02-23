@@ -55,7 +55,7 @@ export default function Leaderboard() {
   const tabs = [
     { key: "referrers" as const, label: "Top Referrers", icon: <ArrowUpRight className="w-4 h-4" />, description: "The generous ones. Sending clients left, right, and across borders." },
     { key: "receivers" as const, label: "Most Reliable", icon: <ArrowDownLeft className="w-4 h-4" />, description: "They said they'd honour the referral. And they actually did. Legends." },
-    { key: "connectors" as const, label: "Top Connectors", icon: <MessageSquare className="w-4 h-4" />, description: "The matchmakers. Always introducing businesses to each other." },
+    { key: "connectors" as const, label: "Loved by Athletes", icon: <UserCheck className="w-4 h-4" />, description: "Ranked by the most unique athletes who claimed and redeemed their offers." },
   ];
 
   const currentData = activeTab === "referrers"
@@ -261,8 +261,11 @@ export default function Leaderboard() {
                       )}
                       {activeTab === "connectors" && (
                         <div className="text-right">
-                          <div className="text-xs text-white/40">Emails</div>
-                          <div className="text-lg font-bold text-blue-400">{Number(biz.totalEmails || 0)}</div>
+                          <div className="text-xs text-white/40">Athletes</div>
+                          <div className="text-lg font-bold text-blue-400">{Number(biz.uniqueAthletes || biz.totalEmails || 0)}</div>
+                          {biz.totalRedeemed > 0 && (
+                            <div className="text-[10px] text-emerald-400">${Number(biz.totalRedeemed).toFixed(0)} redeemed</div>
+                          )}
                         </div>
                       )}
                       <ChevronRight className="w-4 h-4 text-white/20 hidden sm:block" />

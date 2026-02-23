@@ -1871,20 +1871,21 @@ export async function getLeaderboard(opts: { limit?: number; timeframe?: 'all' |
     LIMIT ${limit}
   `));
 
-  // Top partnership connectors (most emails exchanged)
+  // Loved by Athletes: ranked by unique athletes who claimed/redeemed offers
   const [connectorRows] = await db.execute(sql.raw(`
     SELECT 
       b.id, b.name, b.slug, b.logoUrl, b.city, b.region,
       bt.name as businessTypeName,
-      (
-        SELECT COUNT(*) FROM partnership_emails pe 
-        WHERE pe.senderBusinessId = b.id OR pe.recipientBusinessId = b.id
-      ) as totalEmails
+      COUNT(DISTINCT cc.userId) as uniqueAthletes,
+      COALESCE(SUM(CASE WHEN cc.isRedeemed = 1 THEN CAST(o.discountValue AS DECIMAL(10,2)) ELSE 0 END), 0) as totalRedeemed
     FROM businesses b
+    LEFT JOIN offers o ON o.businessId = b.id AND o.offerType = 'consumer'
+    LEFT JOIN consumer_claims cc ON cc.offerId = o.id
     LEFT JOIN businessTypes bt ON b.businessTypeId = bt.id
     WHERE b.isActive = 1
-    HAVING totalEmails > 0
-    ORDER BY totalEmails DESC
+    GROUP BY b.id, b.name, b.slug, b.logoUrl, b.city, b.region, bt.name
+    HAVING uniqueAthletes > 0
+    ORDER BY uniqueAthletes DESC, totalRedeemed DESC
     LIMIT ${limit}
   `));
 
@@ -2788,7 +2789,13 @@ export async function dismissWelcome(userId: number) {
 export async function getAllUsers(search?: string, limit = 100, offset = 0) {
   const db = await getDb();
   if (!db) return [];
-  const conditions = [eq(users.isDeleted, false)];
+  // Show all users including soft-deleted, but exclude permanently deleted (email wiped)
+  const conditions: any[] = [
+    or(
+      eq(users.isDeleted, false),
+      and(eq(users.isDeleted, true), isNotNull(users.email))
+    )!
+  ];
   if (search) {
     conditions.push(
       or(

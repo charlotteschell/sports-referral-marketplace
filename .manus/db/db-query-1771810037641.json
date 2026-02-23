@@ -1,0 +1,87 @@
+{
+  "query": "SELECT id, name, email, contactName, role, accountType, isDeleted, deletedBy, createdAt FROM users WHERE email LIKE '%charlotte%' OR email LIKE '%rarelabs%' ORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, name, email, contactName, role, accountType, isDeleted, deletedBy, createdAt FROM users WHERE email LIKE '%charlotte%' OR email LIKE '%rarelabs%' ORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "id": "271974",
+      "name": "charlotte+biz1",
+      "email": "charlotte+biz1@rarelabs.ai",
+      "contactName": "Charlotte Testing Biz1",
+      "role": "user",
+      "accountType": "business_owner",
+      "isDeleted": "1",
+      "deletedBy": "admin",
+      "createdAt": "2026-02-23 00:42:44"
+    },
+    {
+      "id": "271920",
+      "name": "charlotte+admin",
+      "email": "charlotte+admin@rarelabs.ai",
+      "contactName": "Chalotte Testing Admin",
+      "role": "admin",
+      "accountType": "business_owner",
+      "isDeleted": "0",
+      "deletedBy": "NULL",
+      "createdAt": "2026-02-23 00:39:10"
+    },
+    {
+      "id": "210077",
+      "name": "charlotte+trailrun",
+      "email": "charlotte+trailrun@rarelabs.ai",
+      "contactName": "Charlotte TrailRunBiz",
+      "role": "user",
+      "accountType": "business_owner",
+      "isDeleted": "0",
+      "deletedBy": "NULL",
+      "createdAt": "2026-02-22 15:38:49"
+    },
+    {
+      "id": "180148",
+      "name": "charlotte+test2",
+      "email": "charlotte+test2@rarelabs.ai",
+      "contactName": "Charlotte BizOwner2",
+      "role": "user",
+      "accountType": "business_owner",
+      "isDeleted": "0",
+      "deletedBy": "NULL",
+      "createdAt": "2026-02-22 04:49:17"
+    },
+    {
+      "id": "180023",
+      "name": "charlotte+athlete",
+      "email": "charlotte+athlete@rarelabs.ai",
+      "contactName": "Charlotte Testing Athlete",
+      "role": "user",
+      "accountType": "consumer",
+      "isDeleted": "1",
+      "deletedBy": "admin",
+      "createdAt": "2026-02-22 04:27:43"
+    },
+    {
+      "id": "142",
+      "name": "charlotte+test1",
+      "email": "charlotte+test1@rarelabs.ai",
+      "contactName": "Charlotte BizOwner1",
+      "role": "user",
+      "accountType": "business_owner",
+      "isDeleted": "0",
+      "deletedBy": "NULL",
+      "createdAt": "2026-02-21 20:25:53"
+    },
+    {
+      "id": "1",
+      "name": "Charlotte Schell",
+      "email": "charlotte.jingwei.schell@gmail.com",
+      "contactName": "Charlotte",
+      "role": "admin",
+      "accountType": "consumer",
+      "isDeleted": "0",
+      "deletedBy": "NULL",
+      "createdAt": "2026-02-21 18:28:46"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tcontactName\trole\taccountType\tisDeleted\tdeletedBy\tcreatedAt\n271974\tcharlotte+biz1\tcharlotte+biz1@rarelabs.ai\tCharlotte Testing Biz1\tuser\tbusiness_owner\t1\tadmin\t2026-02-23 00:42:44\n271920\tcharlotte+admin\tcharlotte+admin@rarelabs.ai\tChalotte Testing Admin\tadmin\tbusiness_owner\t0\tNULL\t2026-02-23 00:39:10\n210077\tcharlotte+trailrun\tcharlotte+trailrun@rarelabs.ai\tCharlotte TrailRunBiz\tuser\tbusiness_owner\t0\tNULL\t2026-02-22 15:38:49\n180148\tcharlotte+test2\tcharlotte+test2@rarelabs.ai\tCharlotte BizOwner2\tuser\tbusiness_owner\t0\tNULL\t2026-02-22 04:49:17\n180023\tcharlotte+athlete\tcharlotte+athlete@rarelabs.ai\tCharlotte Testing Athlete\tuser\tconsumer\t1\tadmin\t2026-02-22 04:27:43\n142\tcharlotte+test1\tcharlotte+test1@rarelabs.ai\tCharlotte BizOwner1\tuser\tbusiness_owner\t0\tNULL\t2026-02-21 20:25:53\n1\tCharlotte Schell\tcharlotte.jingwei.schell@gmail.com\tCharlotte\tadmin\tconsumer\t0\tNULL\t2026-02-21 18:28:46\n",
+  "stderr": "",
+  "execution_time_ms": 110
+}

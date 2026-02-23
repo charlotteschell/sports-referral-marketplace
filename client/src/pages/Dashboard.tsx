@@ -268,14 +268,7 @@ export default function Dashboard() {
                   <Building2 className="w-4 h-4 mr-2" /> Browse Directory
                 </Button>
               </Link>
-              <Button
-                variant="outline"
-                className="bg-transparent border-white/30 text-white hover:bg-white/10"
-                style={{ textTransform: "none" }}
-                onClick={() => setShowSettings(true)}
-              >
-                <Settings className="w-4 h-4 mr-2" /> Settings
-              </Button>
+
             </div>
           </div>
         </div>

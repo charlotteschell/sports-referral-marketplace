@@ -589,85 +589,83 @@ export default function AthleteDashboard() {
           </div>
         </section>
 
-        {/* Recommended For You */}
-        {recommendations && recommendations.length > 0 && (
-          <section className="py-6 bg-gradient-to-b from-muted/30 to-transparent">
-            <div className="container">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  <h2 className="text-lg font-bold" style={{ fontFamily: "var(--font-heading)" }}>
-                    Recommended For You
-                  </h2>
-                  {activeTestProfile && (
-                    <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 bg-violet-500/10">
-                      <Shield className="w-3 h-3 mr-1" />
-                      Filtered for: {activeTestProfile.profileName}
-                    </Badge>
-                  )}
-                </div>
-                <Link href="/directory">
-                  <Button variant="ghost" size="sm" className="text-xs gap-1" style={{ textTransform: "none" }}>
-                    View All <ChevronRight className="w-3.5 h-3.5" />
-                  </Button>
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {recommendations.slice(0, 8).map((biz: any) => (
-                  <Link key={biz.id} href={`/business/${biz.slug}`}>
-                    <Card className="h-full hover:shadow-md transition-shadow cursor-pointer group overflow-hidden">
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <BusinessLogo
-                            logoUrl={biz.logoUrl}
-                            businessName={biz.name}
-                            size="w-10 h-10"
-                            iconSize="w-5 h-5"
-                          />
-                          <div className="min-w-0">
-                            <h3 className="font-semibold text-sm group-hover:text-primary transition-colors truncate" style={{ textTransform: "none" }}>
-                              {biz.name}
-                            </h3>
-                            <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
-                              {biz.businessTypeName}
-                            </p>
-                          </div>
-                        </div>
-                        {biz.city && (
-                          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                            <MapPin className="w-3 h-3" />
-                            <span style={{ textTransform: "none" }}>{biz.city}{biz.region ? `, ${biz.region}` : ''}</span>
-                          </div>
-                        )}
-                        {biz.googleRating > 0 && (
-                          <div className="flex items-center gap-1 mt-1 text-xs">
-                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                            <span className="text-muted-foreground">{Number(biz.googleRating).toFixed(1)}</span>
-                          </div>
-                        )}
-                        <div className="mt-2">
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                            {biz.matchReason === 'near_you' ? '📍 Near you' :
-                             biz.matchReason === 'your_sport' ? '🏅 Your sport' :
-                             biz.matchReason === 'your_interest' ? '🎯 Matches interests' :
-                             '🔥 Popular'}
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* Tab Content */}
         <section className="py-8">
           <div className="container max-w-4xl">
 
             {/* ─── My Offers Tab ─── */}
             {activeTab === "offers" && (
+              <>
+              {/* Recommended For You - shown only on offers tab */}
+              {recommendations && recommendations.length > 0 && (
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                      <h2 className="text-lg font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                        Recommended For You
+                      </h2>
+                      {activeTestProfile && (
+                        <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-400 bg-violet-500/10">
+                          <Shield className="w-3 h-3 mr-1" />
+                          Filtered for: {activeTestProfile.profileName}
+                        </Badge>
+                      )}
+                    </div>
+                    <Link href="/directory">
+                      <Button variant="ghost" size="sm" className="text-xs gap-1" style={{ textTransform: "none" }}>
+                        View All <ChevronRight className="w-3.5 h-3.5" />
+                      </Button>
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {recommendations.slice(0, 8).map((biz: any) => (
+                      <Link key={biz.id} href={`/business/${biz.slug}`}>
+                        <Card className="h-full hover:shadow-md transition-shadow cursor-pointer group overflow-hidden">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <BusinessLogo
+                                logoUrl={biz.logoUrl}
+                                businessName={biz.name}
+                                size="w-10 h-10"
+                                iconSize="w-5 h-5"
+                              />
+                              <div className="min-w-0">
+                                <h3 className="font-semibold text-sm group-hover:text-primary transition-colors truncate" style={{ textTransform: "none" }}>
+                                  {biz.name}
+                                </h3>
+                                <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>
+                                  {biz.businessTypeName}
+                                </p>
+                              </div>
+                            </div>
+                            {biz.city && (
+                              <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                                <MapPin className="w-3 h-3" />
+                                <span style={{ textTransform: "none" }}>{biz.city}{biz.region ? `, ${biz.region}` : ''}</span>
+                              </div>
+                            )}
+                            {biz.googleRating > 0 && (
+                              <div className="flex items-center gap-1 mt-1 text-xs">
+                                <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                                <span className="text-muted-foreground">{Number(biz.googleRating).toFixed(1)}</span>
+                              </div>
+                            )}
+                            <div className="mt-2">
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                {biz.matchReason === 'near_you' ? '📍 Near you' :
+                                 biz.matchReason === 'your_sport' ? '🏅 Your sport' :
+                                 biz.matchReason === 'your_interest' ? '🎯 Matches interests' :
+                                 '🔥 Popular'}
+                              </Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div>
                 {claimsLoading ? (
                   <div className="flex items-center justify-center py-16">
@@ -791,6 +789,7 @@ export default function AthleteDashboard() {
                   </div>
                 )}
               </div>
+              </>
             )}
 
             {/* ─── Saved Businesses Tab ─── */}

@@ -872,3 +872,17 @@
 - [x] Allow admin to promote another user to admin role
 - [x] Allow admin to edit user details (name, role, account type, etc.)
 - [x] Admin user management UI in Admin Panel
+
+## UI/UX Fixes (Feb 23)
+- [x] Fix dead tabs in admin athlete view (saved businesses, notifications, my profile)
+- [x] Change "consumer" tag to "athlete" in admin Users tab
+- [ ] Admin accounts should be admin + athlete + business owner simultaneously (deferred - requires schema changes)
+- [x] Do not show permanently deleted accounts in Users tab
+- [x] Allow same email to register fresh new account after permanent deletion
+- [x] "Manage Profiles" in admin athlete view should go to Test Profiles tab
+- [x] Fix welcome popup buttons to direct users to correct pages
+- [x] Rename "Top Connectors" leaderboard tab to "Loved by Athletes" with athlete-centric ranking
+- [x] Remove settings button from Business Dashboard (duplicative with main nav)
+- [x] Fix dead tabs in athlete dashboard for ALL users (saved businesses, notifications, my profile)
+- [x] Fix missing user accounts in admin panel (charlotte+athlete@rarelabs.ai, charlotte+biz1@rarelabs.ai, charlotte+biz2@rarelabs.ai)
+- [x] Welcome popup should show immediately on first login landing on Dashboard page

@@ -357,7 +357,7 @@ function UsersTab() {
                       <p className="font-medium text-sm truncate" style={{ textTransform: "none" }}>
                         {u.contactName || u.name || 'Unknown'}
                         {u.role === 'admin' && <Badge className="ml-2 bg-purple-100 text-purple-800 text-[10px]" style={{ textTransform: "none" }}><ShieldCheck className="w-3 h-3 mr-0.5" />Admin</Badge>}
-                        {u.isDeleted && <Badge className="ml-2 bg-red-100 text-red-800 text-[10px]" style={{ textTransform: "none" }}>{u.deletedBy === 'admin_hidden' ? 'Hidden' : 'Deleted'}</Badge>}
+                        {u.isDeleted && <Badge className={`ml-2 text-[10px] ${u.deletedBy === 'admin_hidden' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}`} style={{ textTransform: "none" }}>{u.deletedBy === 'admin_hidden' ? 'Hidden' : 'Deleted'}</Badge>}
                       </p>
                       <p className="text-xs text-muted-foreground truncate" style={{ textTransform: "none" }}>{u.email}</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
@@ -432,7 +432,8 @@ function UsersTab() {
                       </AlertDialog>
                     )}
                     {/* Hide / Restore */}
-                    {u.isDeleted && u.deletedBy === 'admin_hidden' ? (
+                    {/* Restore: for any deleted user that still has email */}
+                    {u.isDeleted && u.email ? (
                       <Button size="sm" variant="outline" className="h-7 text-xs bg-transparent" style={{ textTransform: "none" }}
                         onClick={() => restoreUserMutation.mutate({ userId: u.id })} disabled={restoreUserMutation.isPending}>
                         <UserCheck className="w-3 h-3 mr-1" /> Restore
@@ -444,7 +445,7 @@ function UsersTab() {
                       </Button>
                     ) : null}
                     {/* Delete */}
-                    {!u.isDeleted || u.deletedBy === 'admin_hidden' ? (
+                    {!u.isDeleted || (u.isDeleted && u.email) ? (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button size="sm" variant="outline" className="h-7 text-xs bg-transparent text-red-600 border-red-300" style={{ textTransform: "none" }}>
@@ -455,7 +456,7 @@ function UsersTab() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete User Account</AlertDialogTitle>
                             <AlertDialogDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
-                              Are you sure you want to permanently delete <strong>{u.contactName || u.name}</strong>'s account? This will anonymize their PII and deactivate all their businesses.
+                              Are you sure you want to permanently delete <strong>{u.contactName || u.name}</strong>'s account? This will anonymize their PII and deactivate all their businesses. Once permanently deleted, the same email can be used to register a fresh new account.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <div className="flex items-center gap-2 py-2">
@@ -657,6 +658,10 @@ function SubmissionCard({ submission, sportCategory, businessType, onReview, isR
 
 export default function AdminPanel() {
   const { user, loading, isAuthenticated } = useAuth();
+  // Read tab from URL query param (e.g. /admin?tab=test-profiles)
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialTab = urlParams.get('tab') || 'approvals';
+  const [activeAdminTab, setActiveAdminTab] = useState(initialTab);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [bizSearch, setBizSearch] = useState("");
   const utils = trpc.useUtils();
@@ -868,7 +873,7 @@ export default function AdminPanel() {
         </section>
 
         <div className="container py-8">
-          <Tabs defaultValue="approvals" className="space-y-6">
+          <Tabs value={activeAdminTab} onValueChange={setActiveAdminTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 h-auto">
               <TabsTrigger value="approvals" className="text-xs sm:text-sm py-2" style={{ textTransform: "none" }}>
                 Claims {(pendingApprovals.data?.length || 0) > 0 && <Badge className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0">{pendingApprovals.data?.length}</Badge>}
