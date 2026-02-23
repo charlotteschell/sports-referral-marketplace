@@ -1022,7 +1022,7 @@ export default function AthleteDashboard() {
                 style={{ textTransform: "none" }}
                 onClick={handleSkipAthleteWelcome}
               >
-                I'll come back to this later
+                Skip for now
               </Button>
             )}
           </DialogFooter>

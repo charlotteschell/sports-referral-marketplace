@@ -895,3 +895,7 @@
 - [x] Nav bar: declutter/collapse crowded top navigation
 - [x] Athlete offers: "View Offers" should go to athlete offers tab, not all offers
 - [x] Admin accounts: show admin + athlete + business owner triple tags for all admins
+
+## Welcome Popup Skip Button (Feb 23 batch 3)
+- [x] Add "Skip for now" button to business owner welcome checklist popup
+- [x] Add "Skip for now" button to athlete welcome checklist popup

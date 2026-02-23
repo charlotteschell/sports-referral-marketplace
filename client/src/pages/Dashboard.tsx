@@ -1400,7 +1400,7 @@ export default function Dashboard() {
                 style={{ textTransform: "none" }}
                 onClick={handleSkipWelcome}
               >
-                I'll come back to this later
+                Skip for now
               </Button>
             )}
           </DialogFooter>
