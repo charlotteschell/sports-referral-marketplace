@@ -64,6 +64,13 @@
       "when": 1771729182105,
       "tag": "0008_low_amphibian",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1771811249880,
+      "tag": "0009_loving_red_hulk",
+      "breakpoints": true
     }
   ]
 }

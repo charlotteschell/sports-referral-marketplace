@@ -16,6 +16,7 @@ export const users = mysqlTable("users", {
   contactName: varchar("contactName", { length: 255 }),
   notificationPreference: varchar("notificationPreference", { length: 20 }).default("both").notNull(),
   hasSeenWelcome: boolean("hasSeenWelcome").default(false).notNull(),
+  welcomeProgress: text("welcomeProgress"),  // JSON string tracking completed checklist items e.g. '{"directory":true,"addBusiness":true}'
   isDeleted: boolean("isDeleted").default(false).notNull(),
   deletedAt: timestamp("deletedAt"),
   deletedBy: varchar("deletedBy", { length: 50 }),

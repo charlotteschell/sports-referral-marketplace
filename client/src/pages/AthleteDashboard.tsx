@@ -73,19 +73,34 @@ export default function AthleteDashboard() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
 
-  // Welcome popup for first-time athletes
+  // Welcome checklist for first-time athletes
   const [showWelcome, setShowWelcome] = useState(false);
-  const dismissWelcome = (trpc as any).auth.dismissWelcome.useMutation({
+  const updateWelcomeProgress = (trpc as any).auth.updateWelcomeProgress.useMutation({
     onSuccess: () => (utils as any).auth.me.invalidate(),
   });
+  const dismissWelcomeAll = (trpc as any).auth.dismissWelcome.useMutation({
+    onSuccess: () => (utils as any).auth.me.invalidate(),
+  });
+  const welcomeProgress: Record<string, boolean> = useMemo(() => {
+    try { return user?.welcomeProgress ? JSON.parse(user.welcomeProgress as string) : {}; } catch { return {}; }
+  }, [user?.welcomeProgress]);
+  const allAthleteStepsDone = welcomeProgress.profile && welcomeProgress.directory && welcomeProgress.offers;
   useEffect(() => {
-    if (!loading && user && user.onboardingComplete && !user.hasSeenWelcome) {
+    if (!loading && user && user.onboardingComplete && !user.hasSeenWelcome && !allAthleteStepsDone) {
       setShowWelcome(true);
     }
-  }, [loading, user]);
-  const handleDismissWelcome = () => {
+  }, [loading, user, allAthleteStepsDone]);
+  const handleAthleteWelcomeStep = (stepKey: string, action: () => void) => {
+    updateWelcomeProgress.mutate({ stepKey });
     setShowWelcome(false);
-    dismissWelcome.mutate();
+    action();
+  };
+  const handleSkipAthleteWelcome = () => {
+    setShowWelcome(false);
+  };
+  const handleDismissAthleteWelcome = () => {
+    setShowWelcome(false);
+    dismissWelcomeAll.mutate();
   };
 
   // Route guard: business owners should use /dashboard, not athlete dashboard
@@ -899,72 +914,117 @@ export default function AthleteDashboard() {
         </section>
       </main>
 
-      {/* First-Time Athlete Welcome Popup */}
-      <Dialog open={showWelcome} onOpenChange={(open) => { if (!open) handleDismissWelcome(); }}>
+      {/* First-Time Athlete Welcome Checklist */}
+      <Dialog open={showWelcome} onOpenChange={(open) => { if (!open) handleSkipAthleteWelcome(); }}>
         <DialogContent className="sm:max-w-lg bg-[oklch(0.25_0.02_50)] border-primary/30 text-white">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
               Welcome to Your Athlete Hub!
             </DialogTitle>
             <DialogDescription className="text-white/70 text-base" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Hey {user?.contactName || user?.name}! You're all set to discover the best local sports businesses and exclusive deals.
+              Hey {user?.contactName || user?.name}! Complete these steps to get the most out of SportConnect.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="text-white/80 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Here's how to get the most out of SportConnect:
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="text-xs text-white/50" style={{ textTransform: "none" }}>
+                {Object.values(welcomeProgress).filter(Boolean).length} of 3 completed
+              </div>
+              <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${(Object.values(welcomeProgress).filter(Boolean).length / 3) * 100}%` }} />
+              </div>
+            </div>
             <div className="space-y-3">
               <button
-                onClick={() => { handleDismissWelcome(); setActiveTab('profile'); }}
-                className="w-full flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all text-left group"
+                onClick={() => handleAthleteWelcomeStep('profile', () => setActiveTab('profile'))}
+                className={`w-full flex items-center gap-4 p-4 rounded-lg border transition-all text-left group ${
+                  welcomeProgress.profile
+                    ? 'bg-primary/10 border-primary/30'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-primary/40'
+                }`}
               >
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <User className="w-5 h-5 text-primary" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  welcomeProgress.profile ? 'bg-primary/30' : 'bg-primary/20'
+                }`}>
+                  {welcomeProgress.profile ? <Check className="w-5 h-5 text-primary" /> : <User className="w-5 h-5 text-primary" />}
                 </div>
                 <div>
-                  <p className="font-semibold text-white group-hover:text-primary transition-colors" style={{ textTransform: "none" }}>Update Your Profile</p>
+                  <p className={`font-semibold transition-colors ${welcomeProgress.profile ? 'text-primary' : 'text-white group-hover:text-primary'}`} style={{ textTransform: "none" }}>
+                    {welcomeProgress.profile ? 'Updated Your Profile' : 'Update Your Profile'}
+                  </p>
                   <p className="text-xs text-white/60" style={{ textTransform: "none", letterSpacing: "normal" }}>Add your sports, location, and goals for better recommendations.</p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />
+                {welcomeProgress.profile
+                  ? <CheckCircle2 className="w-5 h-5 text-primary ml-auto shrink-0" />
+                  : <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />}
               </button>
               <button
-                onClick={() => { handleDismissWelcome(); navigate('/directory'); }}
-                className="w-full flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all text-left group"
+                onClick={() => handleAthleteWelcomeStep('directory', () => navigate('/directory'))}
+                className={`w-full flex items-center gap-4 p-4 rounded-lg border transition-all text-left group ${
+                  welcomeProgress.directory
+                    ? 'bg-primary/10 border-primary/30'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-primary/40'
+                }`}
               >
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-5 h-5 text-primary" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  welcomeProgress.directory ? 'bg-primary/30' : 'bg-primary/20'
+                }`}>
+                  {welcomeProgress.directory ? <Check className="w-5 h-5 text-primary" /> : <Sparkles className="w-5 h-5 text-primary" />}
                 </div>
                 <div>
-                  <p className="font-semibold text-white group-hover:text-primary transition-colors" style={{ textTransform: "none" }}>Browse the Directory</p>
+                  <p className={`font-semibold transition-colors ${welcomeProgress.directory ? 'text-primary' : 'text-white group-hover:text-primary'}`} style={{ textTransform: "none" }}>
+                    {welcomeProgress.directory ? 'Browsed the Directory' : 'Browse the Directory'}
+                  </p>
                   <p className="text-xs text-white/60" style={{ textTransform: "none", letterSpacing: "normal" }}>Discover coaches, shops, physios, and clubs near you.</p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />
+                {welcomeProgress.directory
+                  ? <CheckCircle2 className="w-5 h-5 text-primary ml-auto shrink-0" />
+                  : <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />}
               </button>
               <button
-                onClick={() => { handleDismissWelcome(); navigate('/referral-offers'); }}
-                className="w-full flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all text-left group"
+                onClick={() => handleAthleteWelcomeStep('offers', () => navigate('/referral-offers?tab=consumer'))}
+                className={`w-full flex items-center gap-4 p-4 rounded-lg border transition-all text-left group ${
+                  welcomeProgress.offers
+                    ? 'bg-primary/10 border-primary/30'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-primary/40'
+                }`}
               >
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <Gift className="w-5 h-5 text-primary" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  welcomeProgress.offers ? 'bg-primary/30' : 'bg-primary/20'
+                }`}>
+                  {welcomeProgress.offers ? <Check className="w-5 h-5 text-primary" /> : <Gift className="w-5 h-5 text-primary" />}
                 </div>
                 <div>
-                  <p className="font-semibold text-white group-hover:text-primary transition-colors" style={{ textTransform: "none" }}>Claim Exclusive Offers</p>
+                  <p className={`font-semibold transition-colors ${welcomeProgress.offers ? 'text-primary' : 'text-white group-hover:text-primary'}`} style={{ textTransform: "none" }}>
+                    {welcomeProgress.offers ? 'Claimed Exclusive Offers' : 'Claim Exclusive Offers'}
+                  </p>
                   <p className="text-xs text-white/60" style={{ textTransform: "none", letterSpacing: "normal" }}>Get deals from businesses recommended by the community.</p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />
+                {welcomeProgress.offers
+                  ? <CheckCircle2 className="w-5 h-5 text-primary ml-auto shrink-0" />
+                  : <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />}
               </button>
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              className="bg-transparent border-white/30 text-white hover:bg-white/10"
-              style={{ textTransform: "none" }}
-              onClick={handleDismissWelcome}
-            >
-              I'll explore on my own
-            </Button>
+          <DialogFooter className="flex gap-2 sm:gap-2">
+            {allAthleteStepsDone ? (
+              <Button
+                className="bg-primary hover:bg-primary/90 text-white"
+                style={{ textTransform: "none" }}
+                onClick={handleDismissAthleteWelcome}
+              >
+                All done — let's go!
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="bg-transparent border-white/30 text-white hover:bg-white/10"
+                style={{ textTransform: "none" }}
+                onClick={handleSkipAthleteWelcome}
+              >
+                I'll come back to this later
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

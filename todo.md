@@ -886,3 +886,12 @@
 - [x] Fix dead tabs in athlete dashboard for ALL users (saved businesses, notifications, my profile)
 - [x] Fix missing user accounts in admin panel (charlotte+athlete@rarelabs.ai, charlotte+biz1@rarelabs.ai, charlotte+biz2@rarelabs.ai)
 - [x] Welcome popup should show immediately on first login landing on Dashboard page
+
+## Welcome Popup & Nav Improvements (Feb 23 batch 2)
+- [x] Welcome popup: convert 3 buttons to a checklist that persists across sessions
+- [x] Welcome popup: clicking a checklist item navigates to the relevant page
+- [x] Welcome popup: popup keeps showing until all 3 items are checked off
+- [x] Welcome popup: previously clicked items show as checked when returning to dashboard
+- [x] Nav bar: declutter/collapse crowded top navigation
+- [x] Athlete offers: "View Offers" should go to athlete offers tab, not all offers
+- [x] Admin accounts: show admin + athlete + business owner triple tags for all admins

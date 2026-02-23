@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import Header from "@/components/Header";
@@ -21,7 +21,9 @@ const sportIcons: Record<string, React.ReactNode> = {
 };
 
 export default function ReferralOffers() {
-  const [offerTypeFilter, setOfferTypeFilter] = useState<string>("all");
+  // Read initial tab from URL query param
+  const initialTab = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') || 'all' : 'all';
+  const [offerTypeFilter, setOfferTypeFilter] = useState<string>(initialTab);
   const { data: offers, isLoading } = trpc.referralOffer.allActive.useQuery({ limit: 100 });
 
   const filteredOffers = useMemo(() => {

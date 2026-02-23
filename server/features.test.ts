@@ -156,6 +156,8 @@ vi.mock("./db", () => ({
   adminDeleteUser: vi.fn().mockResolvedValue(undefined),
   adminHideUser: vi.fn().mockResolvedValue(undefined),
   adminRestoreUser: vi.fn().mockResolvedValue(undefined),
+  dismissWelcome: vi.fn().mockResolvedValue(undefined),
+  updateWelcomeProgress: vi.fn().mockResolvedValue({ progress: { directory: true }, allDone: false }),
   updateUserRole: vi.fn().mockResolvedValue(undefined),
   adminUpdateUser: vi.fn().mockResolvedValue(undefined),
   getAllUsers: vi.fn().mockResolvedValue([
@@ -1129,5 +1131,44 @@ describe("admin.editUser", () => {
     const ctx = createAuthContext(2, "user");
     const caller = appRouter.createCaller(ctx);
     await expect(caller.admin.editUser({ userId: 3, contactName: "Hacked" })).rejects.toThrow();
+  });
+});
+
+// ─── Welcome Checklist Progress ─────────────────────────────────
+describe("auth.updateWelcomeProgress", () => {
+  it("should update welcome progress for authenticated user", async () => {
+    const db = await import("./db");
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.auth.updateWelcomeProgress({ stepKey: "directory" });
+    expect(result).toEqual({ progress: { directory: true }, allDone: false });
+    expect(db.updateWelcomeProgress).toHaveBeenCalledWith(1, "directory");
+  });
+
+  it("should reject unauthenticated users", async () => {
+    const caller = appRouter.createCaller({
+      user: null,
+      req: { protocol: "https", headers: {} } as TrpcContext["req"],
+      res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+    });
+    await expect(caller.auth.updateWelcomeProgress({ stepKey: "directory" })).rejects.toThrow();
+  });
+});
+
+describe("auth.dismissWelcome", () => {
+  it("should dismiss welcome for authenticated user", async () => {
+    const db = await import("./db");
+    const caller = appRouter.createCaller(createAuthContext());
+    const result = await caller.auth.dismissWelcome();
+    expect(result).toEqual({ success: true });
+    expect(db.dismissWelcome).toHaveBeenCalledWith(1);
+  });
+
+  it("should reject unauthenticated users", async () => {
+    const caller = appRouter.createCaller({
+      user: null,
+      req: { protocol: "https", headers: {} } as TrpcContext["req"],
+      res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
+    });
+    await expect(caller.auth.dismissWelcome()).rejects.toThrow();
   });
 });

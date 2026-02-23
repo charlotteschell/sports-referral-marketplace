@@ -24,7 +24,8 @@ import {
   Loader2, BarChart3, Users, Percent, Clock, CheckCircle2,
   XCircle, AlertTriangle, Trash2, Unlink, ExternalLink,
   Palmtree, Activity, ArrowUpRight, ArrowDownRight, Eye, EyeOff,
-  Settings, Bell, BellRing, BellOff, Mail, Save, X as XIcon, User
+  Settings, Bell, BellRing, BellOff, Mail, Save, X as XIcon, User,
+  Check, Circle
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useMemo, useEffect } from "react";
@@ -66,17 +67,32 @@ export default function Dashboard() {
     }
   }, [loading, user, navigate]);
 
-  // Welcome popup for first-time business owners
+  // Welcome checklist for first-time business owners
   const [showWelcome, setShowWelcome] = useState(false);
+  const updateWelcomeProgress = trpc.auth.updateWelcomeProgress.useMutation({
+    onSuccess: () => utils.auth.me.invalidate(),
+  });
   const dismissWelcome = trpc.auth.dismissWelcome.useMutation({
     onSuccess: () => utils.auth.me.invalidate(),
   });
+  const welcomeProgress: Record<string, boolean> = useMemo(() => {
+    try { return user?.welcomeProgress ? JSON.parse(user.welcomeProgress as string) : {}; } catch { return {}; }
+  }, [user?.welcomeProgress]);
+  const allWelcomeStepsDone = welcomeProgress.directory && welcomeProgress.addBusiness && welcomeProgress.offers;
   useEffect(() => {
-    if (!loading && user && user.onboardingComplete && !user.hasSeenWelcome) {
+    if (!loading && user && user.onboardingComplete && !user.hasSeenWelcome && !allWelcomeStepsDone) {
       setShowWelcome(true);
     }
-  }, [loading, user]);
-  const handleDismissWelcome = () => {
+  }, [loading, user, allWelcomeStepsDone]);
+  const handleWelcomeStep = (stepKey: string, navigateTo: string) => {
+    updateWelcomeProgress.mutate({ stepKey });
+    setShowWelcome(false);
+    navigate(navigateTo);
+  };
+  const handleSkipWelcome = () => {
+    setShowWelcome(false);
+  };
+  const handleDismissAllWelcome = () => {
     setShowWelcome(false);
     dismissWelcome.mutate();
   };
@@ -1276,72 +1292,117 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* First-Time Business Owner Welcome Popup */}
-      <Dialog open={showWelcome} onOpenChange={(open) => { if (!open) handleDismissWelcome(); }}>
+      {/* First-Time Business Owner Welcome Checklist */}
+      <Dialog open={showWelcome} onOpenChange={(open) => { if (!open) handleSkipWelcome(); }}>
         <DialogContent className="sm:max-w-lg bg-[oklch(0.25_0.02_50)] border-primary/30 text-white">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
               Welcome to Your Business Dashboard!
             </DialogTitle>
             <DialogDescription className="text-white/70 text-base" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Great to have you here, {user?.contactName || user?.name}! Let's get your business set up on SportConnect.
+              Great to have you here, {user?.contactName || user?.name}! Complete these steps to get set up on SportConnect.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="text-white/80 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>
-              Here's what we recommend to get started:
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="text-xs text-white/50" style={{ textTransform: "none" }}>
+                {Object.values(welcomeProgress).filter(Boolean).length} of 3 completed
+              </div>
+              <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${(Object.values(welcomeProgress).filter(Boolean).length / 3) * 100}%` }} />
+              </div>
+            </div>
             <div className="space-y-3">
               <button
-                onClick={() => { handleDismissWelcome(); navigate('/directory'); }}
-                className="w-full flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all text-left group"
+                onClick={() => handleWelcomeStep('directory', '/directory')}
+                className={`w-full flex items-center gap-4 p-4 rounded-lg border transition-all text-left group ${
+                  welcomeProgress.directory
+                    ? 'bg-primary/10 border-primary/30'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-primary/40'
+                }`}
               >
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <Building2 className="w-5 h-5 text-primary" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  welcomeProgress.directory ? 'bg-primary/30' : 'bg-primary/20'
+                }`}>
+                  {welcomeProgress.directory ? <Check className="w-5 h-5 text-primary" /> : <Building2 className="w-5 h-5 text-primary" />}
                 </div>
                 <div>
-                  <p className="font-semibold text-white group-hover:text-primary transition-colors" style={{ textTransform: "none" }}>Browse the Directory</p>
+                  <p className={`font-semibold transition-colors ${welcomeProgress.directory ? 'text-primary' : 'text-white group-hover:text-primary'}`} style={{ textTransform: "none" }}>
+                    {welcomeProgress.directory ? 'Browsed the Directory' : 'Browse the Directory'}
+                  </p>
                   <p className="text-xs text-white/60" style={{ textTransform: "none", letterSpacing: "normal" }}>Search for your business — if it's already listed, you can claim it.</p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />
+                {welcomeProgress.directory
+                  ? <CheckCircle2 className="w-5 h-5 text-primary ml-auto shrink-0" />
+                  : <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />}
               </button>
               <button
-                onClick={() => { handleDismissWelcome(); navigate('/dashboard/add-business'); }}
-                className="w-full flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all text-left group"
+                onClick={() => handleWelcomeStep('addBusiness', '/dashboard/add-business')}
+                className={`w-full flex items-center gap-4 p-4 rounded-lg border transition-all text-left group ${
+                  welcomeProgress.addBusiness
+                    ? 'bg-primary/10 border-primary/30'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-primary/40'
+                }`}
               >
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <Plus className="w-5 h-5 text-primary" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  welcomeProgress.addBusiness ? 'bg-primary/30' : 'bg-primary/20'
+                }`}>
+                  {welcomeProgress.addBusiness ? <Check className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
                 </div>
                 <div>
-                  <p className="font-semibold text-white group-hover:text-primary transition-colors" style={{ textTransform: "none" }}>Add Your Business</p>
+                  <p className={`font-semibold transition-colors ${welcomeProgress.addBusiness ? 'text-primary' : 'text-white group-hover:text-primary'}`} style={{ textTransform: "none" }}>
+                    {welcomeProgress.addBusiness ? 'Added Your Business' : 'Add Your Business'}
+                  </p>
                   <p className="text-xs text-white/60" style={{ textTransform: "none", letterSpacing: "normal" }}>Not listed yet? Add your business and start receiving referrals.</p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />
+                {welcomeProgress.addBusiness
+                  ? <CheckCircle2 className="w-5 h-5 text-primary ml-auto shrink-0" />
+                  : <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />}
               </button>
               <button
-                onClick={() => { handleDismissWelcome(); navigate('/referral-offers'); }}
-                className="w-full flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all text-left group"
+                onClick={() => handleWelcomeStep('offers', '/referral-offers')}
+                className={`w-full flex items-center gap-4 p-4 rounded-lg border transition-all text-left group ${
+                  welcomeProgress.offers
+                    ? 'bg-primary/10 border-primary/30'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-primary/40'
+                }`}
               >
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <Gift className="w-5 h-5 text-primary" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  welcomeProgress.offers ? 'bg-primary/30' : 'bg-primary/20'
+                }`}>
+                  {welcomeProgress.offers ? <Check className="w-5 h-5 text-primary" /> : <Gift className="w-5 h-5 text-primary" />}
                 </div>
                 <div>
-                  <p className="font-semibold text-white group-hover:text-primary transition-colors" style={{ textTransform: "none" }}>Explore Referral Offers</p>
+                  <p className={`font-semibold transition-colors ${welcomeProgress.offers ? 'text-primary' : 'text-white group-hover:text-primary'}`} style={{ textTransform: "none" }}>
+                    {welcomeProgress.offers ? 'Explored Referral Offers' : 'Explore Referral Offers'}
+                  </p>
                   <p className="text-xs text-white/60" style={{ textTransform: "none", letterSpacing: "normal" }}>See what other businesses are offering for referrals.</p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />
+                {welcomeProgress.offers
+                  ? <CheckCircle2 className="w-5 h-5 text-primary ml-auto shrink-0" />
+                  : <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />}
               </button>
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              className="bg-transparent border-white/30 text-white hover:bg-white/10"
-              style={{ textTransform: "none" }}
-              onClick={handleDismissWelcome}
-            >
-              I'll explore on my own
-            </Button>
+          <DialogFooter className="flex gap-2 sm:gap-2">
+            {allWelcomeStepsDone ? (
+              <Button
+                className="bg-primary hover:bg-primary/90 text-white"
+                style={{ textTransform: "none" }}
+                onClick={handleDismissAllWelcome}
+              >
+                All done — let's go!
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="bg-transparent border-white/30 text-white hover:bg-white/10"
+                style={{ textTransform: "none" }}
+                onClick={handleSkipWelcome}
+              >
+                I'll come back to this later
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

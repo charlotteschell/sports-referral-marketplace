@@ -2785,6 +2785,24 @@ export async function dismissWelcome(userId: number) {
   await db.update(users).set({ hasSeenWelcome: true }).where(eq(users.id, userId));
 }
 
+export async function updateWelcomeProgress(userId: number, stepKey: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Get current progress
+  const [user] = await db.select({ welcomeProgress: users.welcomeProgress }).from(users).where(eq(users.id, userId));
+  let progress: Record<string, boolean> = {};
+  try { progress = user?.welcomeProgress ? JSON.parse(user.welcomeProgress) : {}; } catch { progress = {}; }
+  progress[stepKey] = true;
+  const progressJson = JSON.stringify(progress);
+  // Check if all 3 steps are done
+  const allDone = Object.keys(progress).length >= 3;
+  await db.update(users).set({
+    welcomeProgress: progressJson,
+    ...(allDone ? { hasSeenWelcome: true } : {}),
+  }).where(eq(users.id, userId));
+  return { progress, allDone };
+}
+
 // ─── Admin User Management ──────────────────────────────────
 export async function getAllUsers(search?: string, limit = 100, offset = 0) {
   const db = await getDb();

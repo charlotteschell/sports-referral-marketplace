@@ -42,6 +42,12 @@ export const appRouter = router({
       await db.dismissWelcome(ctx.user.id);
       return { success: true };
     }),
+    updateWelcomeProgress: protectedProcedure
+      .input(z.object({ stepKey: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await db.updateWelcomeProgress(ctx.user.id, input.stepKey);
+        return result;
+      }),
   }),
 
   // ─── Categories & Types ─────────────────────────────────────

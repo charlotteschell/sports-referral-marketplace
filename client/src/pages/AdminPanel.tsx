@@ -360,12 +360,20 @@ function UsersTab() {
                         {u.isDeleted && <Badge className={`ml-2 text-[10px] ${u.deletedBy === 'admin_hidden' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}`} style={{ textTransform: "none" }}>{u.deletedBy === 'admin_hidden' ? 'Hidden' : 'Deleted'}</Badge>}
                       </p>
                       <p className="text-xs text-muted-foreground truncate" style={{ textTransform: "none" }}>{u.email}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <Badge variant="outline" className={`text-[10px] ${
-                          u.accountType === 'business_owner' ? 'border-blue-300 text-blue-700' : 'border-emerald-300 text-emerald-700'
-                        }`} style={{ textTransform: "none" }}>
-                          {u.accountType === 'business_owner' ? 'Business Owner' : 'Athlete'}
-                        </Badge>
+                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                        {u.role === 'admin' ? (
+                          <>
+                            <Badge variant="outline" className="text-[10px] border-purple-300 text-purple-700" style={{ textTransform: "none" }}>Admin</Badge>
+                            <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700" style={{ textTransform: "none" }}>Athlete</Badge>
+                            <Badge variant="outline" className="text-[10px] border-blue-300 text-blue-700" style={{ textTransform: "none" }}>Business Owner</Badge>
+                          </>
+                        ) : (
+                          <Badge variant="outline" className={`text-[10px] ${
+                            u.accountType === 'business_owner' ? 'border-blue-300 text-blue-700' : 'border-emerald-300 text-emerald-700'
+                          }`} style={{ textTransform: "none" }}>
+                            {u.accountType === 'business_owner' ? 'Business Owner' : 'Athlete'}
+                          </Badge>
+                        )}
                         {u.lastSignedIn && (
                           <span className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>
                             Last seen: {new Date(u.lastSignedIn).toLocaleDateString()}

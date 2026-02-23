@@ -2,13 +2,17 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { getLoginUrl } from "@/const";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Mountain, Shield, Building2, Bike, ChevronDown, Settings } from "lucide-react";
+import { Menu, X, Mountain, Shield, Building2, Bike, ChevronDown, Settings, MoreHorizontal, Trophy, GraduationCap, Info, HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useRef } from "react";
 import { NotificationBell } from "@/components/NotificationBell";
 import SportConnectLogo from "@/components/SportConnectLogo";
 
-function AdminNavDropdown() {
+function DropdownMenu({ trigger, items, align = "right" }: {
+  trigger: React.ReactNode;
+  items: { href: string; label: string; icon?: any; }[];
+  align?: "left" | "right";
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const [location] = useLocation();
@@ -21,27 +25,13 @@ function AdminNavDropdown() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const items = [
-    { href: "/admin", label: "Admin Panel", icon: Shield },
-    { href: "/dashboard", label: "Biz Dashboard", icon: Building2 },
-    { href: "/athlete-dashboard", label: "Athlete View", icon: Bike },
-  ];
-
-  const activeItem = items.find(i => location.startsWith(i.href));
-
   return (
     <div ref={ref} className="relative">
-      <Button
-        variant="ghost"
-        className="text-white/80 hover:text-white hover:bg-white/10 text-sm whitespace-nowrap gap-1"
-        style={{ textTransform: "none" }}
-        onClick={() => setOpen(!open)}
-      >
-        {activeItem ? activeItem.label : "Dashboards"}
-        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
-      </Button>
+      <div onClick={() => setOpen(!open)} className="cursor-pointer">
+        {trigger}
+      </div>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-48 bg-[oklch(0.25_0.02_50)] border border-white/15 rounded-lg shadow-xl py-1 z-50">
+        <div className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full mt-1 w-48 bg-[oklch(0.25_0.02_50)] border border-white/15 rounded-lg shadow-xl py-1 z-50`}>
           {items.map((item) => {
             const Icon = item.icon;
             const isActive = location.startsWith(item.href);
@@ -54,7 +44,7 @@ function AdminNavDropdown() {
                   style={{ textTransform: "none" }}
                   onClick={() => setOpen(false)}
                 >
-                  <Icon className="w-4 h-4" />
+                  {Icon && <Icon className="w-4 h-4" />}
                   {item.label}
                 </span>
               </Link>
@@ -83,9 +73,24 @@ export default function Header() {
     }
   }, [needsOnboarding, location, navigate]);
 
-  const navLinks = [
+  // Primary nav links (always visible)
+  const primaryLinks = [
     { href: "/directory", label: "Directory" },
-    { href: "/referral-offers", label: "Referral Offers" },
+    { href: "/referral-offers", label: "Offers" },
+  ];
+
+  // Secondary nav links (grouped under "More" dropdown)
+  const moreLinks = [
+    { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+    { href: "/university", label: "University", icon: GraduationCap },
+    { href: "/about", label: "About", icon: Info },
+    { href: "/support", label: "Support", icon: HelpCircle },
+  ];
+
+  // All links for mobile
+  const allNavLinks = [
+    { href: "/directory", label: "Directory" },
+    { href: "/referral-offers", label: "Offers" },
     { href: "/leaderboard", label: "Leaderboard" },
     { href: "/university", label: "University" },
     { href: "/about", label: "About" },
@@ -96,6 +101,8 @@ export default function Header() {
     if (href === "/") return location === "/";
     return location.startsWith(href);
   };
+
+  const isMoreActive = moreLinks.some(l => isActive(l.href));
 
   const getDashboardLink = () => {
     if (isAdmin) return "/admin";
@@ -109,11 +116,20 @@ export default function Header() {
     return "My Dashboard";
   };
 
-  const getRoleBadge = () => {
+  // Dashboard items for admin dropdown
+  const dashboardItems = [
+    { href: "/admin", label: "Admin Panel", icon: Shield },
+    { href: "/dashboard", label: "Biz Dashboard", icon: Building2 },
+    { href: "/athlete-dashboard", label: "Athlete View", icon: Bike },
+  ];
+
+  const getRoleBadges = () => {
     if (isAdmin) return (
-      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 border-amber-400/50 text-amber-300 bg-amber-400/10 font-medium gap-1 whitespace-nowrap">
-        <Shield className="w-3 h-3" /> Admin
-      </Badge>
+      <div className="flex items-center gap-1">
+        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 border-amber-400/50 text-amber-300 bg-amber-400/10 font-medium gap-1 whitespace-nowrap">
+          <Shield className="w-3 h-3" /> Admin
+        </Badge>
+      </div>
     );
     if (isBusinessOwner) return (
       <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 border-emerald-400/50 text-emerald-300 bg-emerald-400/10 font-medium gap-1 whitespace-nowrap">
@@ -146,7 +162,7 @@ export default function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-0.5">
-            {navLinks.map((link) => (
+            {primaryLinks.map((link) => (
               <Link key={link.href} href={link.href}>
                 <span
                   className={`px-2.5 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer whitespace-nowrap ${
@@ -160,10 +176,29 @@ export default function Header() {
                 </span>
               </Link>
             ))}
+
+            {/* More dropdown for secondary links */}
+            <DropdownMenu
+              align="left"
+              trigger={
+                <span
+                  className={`px-2.5 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer whitespace-nowrap inline-flex items-center gap-1 ${
+                    isMoreActive
+                      ? "text-white bg-white/10"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                  style={{ textTransform: "none", letterSpacing: "normal" }}
+                >
+                  More
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </span>
+              }
+              items={moreLinks}
+            />
           </nav>
 
           {/* Desktop Auth */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-1.5">
             {isAuthenticated ? (
               <>
                 <NotificationBell />
@@ -171,12 +206,24 @@ export default function Header() {
                 {/* Name + Role badge */}
                 <div className="flex items-center gap-1.5">
                   <span className="text-white/60 text-sm hidden lg:inline whitespace-nowrap max-w-[120px] truncate" style={{ textTransform: "none" }}>{displayName}</span>
-                  {getRoleBadge()}
+                  {getRoleBadges()}
                 </div>
 
                 {/* Admin gets dropdown, others get single dashboard link */}
                 {isAdmin ? (
-                  <AdminNavDropdown />
+                  <DropdownMenu
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        className="text-white/80 hover:text-white hover:bg-white/10 text-sm whitespace-nowrap gap-1"
+                        style={{ textTransform: "none" }}
+                      >
+                        {dashboardItems.find(i => location.startsWith(i.href))?.label || "Dashboards"}
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </Button>
+                    }
+                    items={dashboardItems}
+                  />
                 ) : (
                   <Link href={getDashboardLink()}>
                     <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-sm whitespace-nowrap" style={{ textTransform: "none" }}>
@@ -235,7 +282,7 @@ export default function Header() {
         {mobileOpen && (
           <div className="md:hidden pb-4 border-t border-white/10 pt-4">
             <nav className="flex flex-col gap-1">
-              {navLinks.map((link) => (
+              {allNavLinks.map((link) => (
                 <Link key={link.href} href={link.href}>
                   <span
                     className={`block px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${
@@ -255,7 +302,7 @@ export default function Header() {
                   <>
                     <div className="px-3 py-2 flex items-center gap-2">
                       <span className="text-white/60 text-sm" style={{ textTransform: "none" }}>{displayName}</span>
-                      {getRoleBadge()}
+                      {getRoleBadges()}
                     </div>
 
                     {isAdmin ? (
