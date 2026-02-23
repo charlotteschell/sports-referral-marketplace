@@ -38,6 +38,10 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    dismissWelcome: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.dismissWelcome(ctx.user.id);
+      return { success: true };
+    }),
   }),
 
   // ─── Categories & Types ─────────────────────────────────────
@@ -619,11 +623,6 @@ export const appRouter = router({
         return db.getAllOffersAdmin(input?.businessId);
       }),
 
-    // Admin: list all users
-    listUsers: adminProcedure.query(async () => {
-      return db.getAllUsersForAdmin();
-    }),
-
     // Admin: hide a user (soft-hide, can be restored)
     hideUser: adminProcedure
       .input(z.object({ userId: z.number() }))
@@ -812,6 +811,50 @@ export const appRouter = router({
     allClaimAnalytics: adminProcedure.query(async () => {
       return db.getAllClaimAnalytics();
     }),
+
+    // ─── User Management ─────────────────────────────────────
+    listUsers: adminProcedure
+      .input(z.object({
+        search: z.string().optional(),
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      }).optional())
+      .query(async ({ input }) => {
+        return db.getAllUsers(input?.search, input?.limit ?? 50, input?.offset ?? 0);
+      }),
+
+    updateUserRole: adminProcedure
+      .input(z.object({
+        userId: z.number(),
+        role: z.enum(['user', 'admin']),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Prevent self-demotion
+        if (input.userId === ctx.user.id && input.role !== 'admin') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot remove your own admin role' });
+        }
+        await db.updateUserRole(input.userId, input.role);
+        return { success: true };
+      }),
+
+    editUser: adminProcedure
+      .input(z.object({
+        userId: z.number(),
+        contactName: z.string().optional(),
+        email: z.string().email().optional(),
+        role: z.enum(['user', 'admin']).optional(),
+        accountType: z.enum(['consumer', 'business_owner']).optional(),
+        notificationPreference: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { userId, ...data } = input;
+        // Prevent self-demotion
+        if (userId === ctx.user.id && data.role && data.role !== 'admin') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot remove your own admin role' });
+        }
+        await db.adminUpdateUser(userId, data);
+        return { success: true };
+      }),
   }),
 
   // ─── Referral Tracking ──────────────────────────────────────
@@ -978,17 +1021,17 @@ export const appRouter = router({
         try {
           const biz = await db.getBusinessById(input.businessId);
           if (biz?.business.claimedByUserId) {
-            await db.createNotification({
+            await db.createUserNotification({
               userId: biz.business.claimedByUserId,
               type: 'offer_claimed',
               title: 'New Offer Claim!',
               message: `An athlete just claimed your offer "${offer.title}" (Code: ${result?.claimCode || 'N/A'}). Check your dashboard to manage claims.`,
-              relatedId: result?.id || null,
-              relatedType: 'consumer_claim',
             });
             // Also try to notify via email
             try {
-              await db.notifyUser(biz.business.claimedByUserId, {
+              await db.notifyUser({
+                userId: biz.business.claimedByUserId,
+                type: 'offer_claimed',
                 title: `New Offer Claim on ${biz.business.name}`,
                 message: `An athlete claimed your offer "${offer.title}". Claim code: ${result?.claimCode || 'N/A'}. Visit your dashboard to manage claims.`,
               });

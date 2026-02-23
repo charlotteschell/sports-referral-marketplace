@@ -15,6 +15,7 @@ export const users = mysqlTable("users", {
   onboardingComplete: boolean("onboardingComplete").default(false).notNull(),
   contactName: varchar("contactName", { length: 255 }),
   notificationPreference: varchar("notificationPreference", { length: 20 }).default("both").notNull(),
+  hasSeenWelcome: boolean("hasSeenWelcome").default(false).notNull(),
   isDeleted: boolean("isDeleted").default(false).notNull(),
   deletedAt: timestamp("deletedAt"),
   deletedBy: varchar("deletedBy", { length: 50 }),

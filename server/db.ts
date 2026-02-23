@@ -2638,7 +2638,7 @@ export async function getTestProfileSavedBusinesses(testProfileId: number) {
     city: r.business.city,
     state: r.business.state,
     logoUrl: r.business.logoUrl,
-    tagline: r.business.tagline,
+    tagline: r.business.shortDescription,
     createdAt: r.saved.createdAt,
   }));
 }
@@ -2775,4 +2775,54 @@ export async function getAllClaimAnalytics() {
     expired: sql<number>`SUM(CASE WHEN ${consumerClaims.status} = 'expired' THEN 1 ELSE 0 END)`,
   }).from(consumerClaims);
   return rows || { totalClaims: 0, pending: 0, redeemed: 0, expired: 0 };
+}
+
+// ─── Welcome Popup ──────────────────────────────────────────
+export async function dismissWelcome(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ hasSeenWelcome: true }).where(eq(users.id, userId));
+}
+
+// ─── Admin User Management ──────────────────────────────────
+export async function getAllUsers(search?: string, limit = 100, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(users.isDeleted, false)];
+  if (search) {
+    conditions.push(
+      or(
+        like(users.name, `%${search}%`),
+        like(users.email, `%${search}%`),
+        like(users.contactName, `%${search}%`)
+      )!
+    );
+  }
+  return db.select().from(users).where(and(...conditions)).orderBy(desc(users.createdAt)).limit(limit).offset(offset);
+}
+
+export async function updateUserRole(userId: number, role: 'user' | 'admin') {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+}
+
+export async function adminUpdateUser(userId: number, data: {
+  contactName?: string;
+  email?: string;
+  role?: 'user' | 'admin';
+  accountType?: 'consumer' | 'business_owner';
+  notificationPreference?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updateData: Record<string, any> = {};
+  if (data.contactName !== undefined) updateData.contactName = data.contactName;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.role !== undefined) updateData.role = data.role;
+  if (data.accountType !== undefined) updateData.accountType = data.accountType;
+  if (data.notificationPreference !== undefined) updateData.notificationPreference = data.notificationPreference;
+  if (Object.keys(updateData).length > 0) {
+    await db.update(users).set(updateData).where(eq(users.id, userId));
+  }
 }

@@ -156,6 +156,12 @@ vi.mock("./db", () => ({
   adminDeleteUser: vi.fn().mockResolvedValue(undefined),
   adminHideUser: vi.fn().mockResolvedValue(undefined),
   adminRestoreUser: vi.fn().mockResolvedValue(undefined),
+  updateUserRole: vi.fn().mockResolvedValue(undefined),
+  adminUpdateUser: vi.fn().mockResolvedValue(undefined),
+  getAllUsers: vi.fn().mockResolvedValue([
+    { id: 1, name: "Admin User", email: "admin@test.com", contactName: "Admin", role: "admin", accountType: "business_owner", isDeleted: false, deletedBy: null, createdAt: new Date(), lastSignedIn: new Date() },
+    { id: 2, name: "Regular User", email: "user@test.com", contactName: "Regular", role: "user", accountType: "consumer", isDeleted: false, deletedBy: null, createdAt: new Date(), lastSignedIn: new Date() },
+  ]),
   getAllUsersForAdmin: vi.fn().mockResolvedValue([
     { id: 1, name: "Admin User", email: "admin@test.com", contactName: "Admin", role: "admin", accountType: "business_owner", isDeleted: false, deletedBy: null, createdAt: new Date(), lastSignedIn: new Date() },
     { id: 2, name: "Regular User", email: "user@test.com", contactName: "Regular", role: "user", accountType: "consumer", isDeleted: false, deletedBy: null, createdAt: new Date(), lastSignedIn: new Date() },
@@ -1015,5 +1021,113 @@ describe("Admin All Claims Management", () => {
     const ctx = createAuthContext(2, "user");
     const caller = appRouter.createCaller(ctx);
     await expect(caller.admin.allClaimAnalytics()).rejects.toThrow();
+  });
+});
+
+// ─── Admin User Management Tests ──────────────────────────────────────
+
+describe("admin.listUsers", () => {
+  it("admin can list all users", async () => {
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.admin.listUsers();
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("admin can search users with parameters", async () => {
+    const db = await import("./db");
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+    await caller.admin.listUsers({ search: "admin", limit: 10, offset: 0 });
+    expect(db.getAllUsers).toHaveBeenCalledWith("admin", 10, 0);
+  });
+
+  it("non-admin cannot list users", async () => {
+    const ctx = createAuthContext(2, "user");
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.admin.listUsers()).rejects.toThrow();
+  });
+});
+
+describe("admin.updateUserRole", () => {
+  it("admin can promote a user to admin", async () => {
+    const db = await import("./db");
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.admin.updateUserRole({ userId: 2, role: "admin" });
+    expect(result).toEqual({ success: true });
+    expect(db.updateUserRole).toHaveBeenCalledWith(2, "admin");
+  });
+
+  it("admin can demote a user to regular user", async () => {
+    const db = await import("./db");
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.admin.updateUserRole({ userId: 2, role: "user" });
+    expect(result).toEqual({ success: true });
+    expect(db.updateUserRole).toHaveBeenCalledWith(2, "user");
+  });
+
+  it("admin cannot demote themselves", async () => {
+    const ctx = createAdminContext(1);
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.admin.updateUserRole({ userId: 1, role: "user" })).rejects.toThrow(
+      "Cannot remove your own admin role"
+    );
+  });
+
+  it("non-admin cannot update user roles", async () => {
+    const ctx = createAuthContext(2, "user");
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.admin.updateUserRole({ userId: 3, role: "admin" })).rejects.toThrow();
+  });
+});
+
+describe("admin.editUser", () => {
+  it("admin can edit user details", async () => {
+    const db = await import("./db");
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.admin.editUser({
+      userId: 2,
+      contactName: "Updated Name",
+      email: "updated@test.com",
+      role: "user",
+      accountType: "business_owner",
+    });
+    expect(result).toEqual({ success: true });
+    expect(db.adminUpdateUser).toHaveBeenCalledWith(2, {
+      contactName: "Updated Name",
+      email: "updated@test.com",
+      role: "user",
+      accountType: "business_owner",
+    });
+  });
+
+  it("admin cannot demote themselves via editUser", async () => {
+    const ctx = createAdminContext(1);
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.admin.editUser({ userId: 1, role: "user" })).rejects.toThrow(
+      "Cannot remove your own admin role"
+    );
+  });
+
+  it("admin can edit user notification preference", async () => {
+    const db = await import("./db");
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+    await caller.admin.editUser({
+      userId: 2,
+      notificationPreference: "email",
+    });
+    expect(db.adminUpdateUser).toHaveBeenCalledWith(2, {
+      notificationPreference: "email",
+    });
+  });
+
+  it("non-admin cannot edit users", async () => {
+    const ctx = createAuthContext(2, "user");
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.admin.editUser({ userId: 3, contactName: "Hacked" })).rejects.toThrow();
   });
 });

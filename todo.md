@@ -861,3 +861,14 @@
 - [x] Admin can get all claim analytics
 - [x] Non-admin cannot get all claim analytics
 - [x] All 203 tests passing
+
+## First-Time Welcome Popups
+- [x] Track first-time login for business owners (hasSeenWelcome flag)
+- [x] Business owner welcome popup: confirm name, then guide to Directory/Claim/Add Business
+- [x] Track first-time login for athletes (hasSeenWelcome flag)
+- [x] Athlete welcome popup: confirm name, then guide to update profile or browse/claim offers
+
+## Admin User Management
+- [x] Allow admin to promote another user to admin role
+- [x] Allow admin to edit user details (name, role, account type, etc.)
+- [x] Admin user management UI in Admin Panel

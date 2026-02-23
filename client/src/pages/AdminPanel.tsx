@@ -16,6 +16,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter,
+  DialogHeader, DialogTitle
+} from "@/components/ui/dialog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getLoginUrl } from "@/const";
@@ -27,7 +31,7 @@ import {
   Building2, MapPin, Mail, Phone, Globe, Instagram, User, FileText,
   ArrowLeft, Loader2, AlertTriangle, Inbox, Eye, EyeOff, Gift,
   Search, RefreshCw, LifeBuoy, Bug, Lightbulb, HelpCircle, Rocket,
-  Tags, Plus, Trash2, UserX, UserCheck, Users, Bike, Mountain, Snowflake,
+  Tags, Plus, Trash2, UserX, UserCheck, Users, Bike, Mountain, Snowflake, Pencil, ShieldCheck, ShieldOff,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -233,9 +237,14 @@ function UsersTab() {
   const hideUserMutation = trpc.admin.hideUser.useMutation({ onSuccess: () => { allUsers.refetch(); toast.success('User hidden'); } });
   const restoreUserMutation = trpc.admin.restoreUser.useMutation({ onSuccess: () => { allUsers.refetch(); toast.success('User restored'); } });
   const deleteUserMutation = trpc.admin.deleteUser.useMutation({ onSuccess: () => { allUsers.refetch(); toast.success('User deleted'); } });
+  const updateRoleMutation = (trpc.admin as any).updateUserRole.useMutation({ onSuccess: () => { allUsers.refetch(); toast.success('User role updated'); } });
+  const editUserMutation = (trpc.admin as any).editUser.useMutation({ onSuccess: () => { allUsers.refetch(); setEditingUser(null); toast.success('User updated'); } });
   const [userSearch, setUserSearch] = useState('');
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
   const [retainData, setRetainData] = useState(true);
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState<{ contactName: string; email: string; role: string; accountType: string; notificationPreference: string }>({
+    contactName: '', email: '', role: 'user', accountType: 'consumer', notificationPreference: 'both',
+  });
 
   const filteredUsers = useMemo(() => {
     if (!allUsers.data) return [];
@@ -248,41 +257,181 @@ function UsersTab() {
     );
   }, [allUsers.data, userSearch]);
 
+  const openEditDialog = (u: any) => {
+    setEditingUser(u);
+    setEditForm({
+      contactName: u.contactName || u.name || '',
+      email: u.email || '',
+      role: u.role || 'user',
+      accountType: u.accountType || 'consumer',
+      notificationPreference: u.notificationPreference || 'both',
+    });
+  };
+
+  const handleEditSave = () => {
+    if (!editingUser) return;
+    editUserMutation.mutate({
+      userId: editingUser.id,
+      contactName: editForm.contactName || undefined,
+      email: editForm.email || undefined,
+      role: editForm.role as 'user' | 'admin',
+      accountType: editForm.accountType as 'consumer' | 'business_owner',
+      notificationPreference: editForm.notificationPreference || undefined,
+    });
+  };
+
+  const adminCount = useMemo(() => {
+    return (allUsers.data || []).filter((u: any) => u.role === 'admin' && !u.isDeleted).length;
+  }, [allUsers.data]);
+
+  const userStats = useMemo(() => {
+    const data = allUsers.data || [];
+    return {
+      total: data.length,
+      admins: data.filter((u: any) => u.role === 'admin' && !u.isDeleted).length,
+      bizOwners: data.filter((u: any) => u.accountType === 'business_owner' && !u.isDeleted).length,
+      athletes: data.filter((u: any) => u.accountType === 'consumer' && !u.isDeleted).length,
+      hidden: data.filter((u: any) => u.isDeleted && u.deletedBy === 'admin_hidden').length,
+      deleted: data.filter((u: any) => u.isDeleted && u.deletedBy !== 'admin_hidden').length,
+    };
+  }, [allUsers.data]);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold flex items-center gap-2"><User className="w-5 h-5 text-blue-500" /> User Management</h2>
+        <h2 className="text-lg font-bold flex items-center gap-2"><Users className="w-5 h-5 text-blue-500" /> User Management</h2>
         <Button size="sm" variant="ghost" onClick={() => allUsers.refetch()} style={{ textTransform: "none" }}><RefreshCw className="w-4 h-4 mr-1" /> Refresh</Button>
       </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <div className="bg-card border rounded-lg p-2 text-center">
+          <div className="text-lg font-bold">{userStats.total}</div>
+          <div className="text-[10px] text-muted-foreground">Total</div>
+        </div>
+        <div className="bg-card border rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-purple-500">{userStats.admins}</div>
+          <div className="text-[10px] text-muted-foreground">Admins</div>
+        </div>
+        <div className="bg-card border rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-blue-500">{userStats.bizOwners}</div>
+          <div className="text-[10px] text-muted-foreground">Biz Owners</div>
+        </div>
+        <div className="bg-card border rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-emerald-500">{userStats.athletes}</div>
+          <div className="text-[10px] text-muted-foreground">Athletes</div>
+        </div>
+        <div className="bg-card border rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-amber-500">{userStats.hidden}</div>
+          <div className="text-[10px] text-muted-foreground">Hidden</div>
+        </div>
+        <div className="bg-card border rounded-lg p-2 text-center">
+          <div className="text-lg font-bold text-red-500">{userStats.deleted}</div>
+          <div className="text-[10px] text-muted-foreground">Deleted</div>
+        </div>
+      </div>
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input placeholder="Search users by name, email, or contact name..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="pl-9" style={{ textTransform: "none" }} />
       </div>
+
       {allUsers.isLoading ? (
         <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="animate-pulse p-4 border rounded-lg"><div className="h-4 bg-muted rounded w-3/4 mb-2" /><div className="h-3 bg-muted rounded w-1/2" /></div>)}</div>
       ) : !filteredUsers.length ? (
         <div className="text-center py-8"><User className="w-10 h-10 text-muted-foreground mx-auto mb-3" /><p className="text-muted-foreground" style={{ textTransform: "none" }}>No users found.</p></div>
       ) : (
         <div className="space-y-2">
+          <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Showing {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''}</p>
           {filteredUsers.map((u: any) => (
             <Card key={u.id} className={`${u.isDeleted ? 'opacity-60 border-red-200' : ''}`}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
+                      u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-primary/10 text-primary'
+                    }`}>
                       {(u.contactName || u.name || '?').charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="font-medium text-sm" style={{ textTransform: "none" }}>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate" style={{ textTransform: "none" }}>
                         {u.contactName || u.name || 'Unknown'}
+                        {u.role === 'admin' && <Badge className="ml-2 bg-purple-100 text-purple-800 text-[10px]" style={{ textTransform: "none" }}><ShieldCheck className="w-3 h-3 mr-0.5" />Admin</Badge>}
                         {u.isDeleted && <Badge className="ml-2 bg-red-100 text-red-800 text-[10px]" style={{ textTransform: "none" }}>{u.deletedBy === 'admin_hidden' ? 'Hidden' : 'Deleted'}</Badge>}
                       </p>
-                      <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>{u.email}</p>
+                      <p className="text-xs text-muted-foreground truncate" style={{ textTransform: "none" }}>{u.email}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Badge variant="outline" className={`text-[10px] ${
+                          u.accountType === 'business_owner' ? 'border-blue-300 text-blue-700' : 'border-emerald-300 text-emerald-700'
+                        }`} style={{ textTransform: "none" }}>
+                          {u.accountType === 'business_owner' ? 'Business Owner' : 'Athlete'}
+                        </Badge>
+                        {u.lastSignedIn && (
+                          <span className="text-[10px] text-muted-foreground" style={{ textTransform: "none" }}>
+                            Last seen: {new Date(u.lastSignedIn).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="outline" className="text-[10px]" style={{ textTransform: "none" }}>{u.role}</Badge>
-                    <Badge variant="outline" className="text-[10px]" style={{ textTransform: "none" }}>{u.accountType || 'none'}</Badge>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {/* Edit button */}
+                    {!u.isDeleted && (
+                      <Button size="sm" variant="outline" className="h-7 text-xs bg-transparent" style={{ textTransform: "none" }}
+                        onClick={() => openEditDialog(u)}>
+                        <Pencil className="w-3 h-3 mr-1" /> Edit
+                      </Button>
+                    )}
+                    {/* Promote / Demote admin */}
+                    {!u.isDeleted && u.role !== 'admin' && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="outline" className="h-7 text-xs bg-transparent text-purple-600 border-purple-300" style={{ textTransform: "none" }}>
+                            <ShieldCheck className="w-3 h-3 mr-1" /> Promote
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle style={{ textTransform: "none" }}>Promote to Admin</AlertDialogTitle>
+                            <AlertDialogDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
+                              Are you sure you want to promote <strong>{u.contactName || u.name}</strong> ({u.email}) to admin? They will have full access to the Admin Panel, user management, and all platform controls.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel style={{ textTransform: "none" }}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction className="bg-purple-600 hover:bg-purple-700" style={{ textTransform: "none" }}
+                              onClick={() => updateRoleMutation.mutate({ userId: u.id, role: 'admin' })}>
+                              <ShieldCheck className="w-4 h-4 mr-1" /> Promote to Admin
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                    {!u.isDeleted && u.role === 'admin' && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="outline" className="h-7 text-xs bg-transparent text-amber-600 border-amber-300" style={{ textTransform: "none" }}>
+                            <ShieldOff className="w-3 h-3 mr-1" /> Demote
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle style={{ textTransform: "none" }}>Remove Admin Role</AlertDialogTitle>
+                            <AlertDialogDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
+                              Are you sure you want to remove admin privileges from <strong>{u.contactName || u.name}</strong>? They will lose access to the Admin Panel and all admin controls.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel style={{ textTransform: "none" }}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction className="bg-amber-600 hover:bg-amber-700" style={{ textTransform: "none" }}
+                              onClick={() => updateRoleMutation.mutate({ userId: u.id, role: 'user' })}>
+                              <ShieldOff className="w-4 h-4 mr-1" /> Remove Admin
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                    {/* Hide / Restore */}
                     {u.isDeleted && u.deletedBy === 'admin_hidden' ? (
                       <Button size="sm" variant="outline" className="h-7 text-xs bg-transparent" style={{ textTransform: "none" }}
                         onClick={() => restoreUserMutation.mutate({ userId: u.id })} disabled={restoreUserMutation.isPending}>
@@ -294,11 +443,11 @@ function UsersTab() {
                         <UserX className="w-3 h-3 mr-1" /> Hide
                       </Button>
                     ) : null}
+                    {/* Delete */}
                     {!u.isDeleted || u.deletedBy === 'admin_hidden' ? (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline" className="h-7 text-xs bg-transparent text-red-600 border-red-300" style={{ textTransform: "none" }}
-                            onClick={() => setDeleteTarget({ id: u.id, name: u.contactName || u.name })}>
+                          <Button size="sm" variant="outline" className="h-7 text-xs bg-transparent text-red-600 border-red-300" style={{ textTransform: "none" }}>
                             <Trash2 className="w-3 h-3 mr-1" /> Delete
                           </Button>
                         </AlertDialogTrigger>
@@ -316,7 +465,7 @@ function UsersTab() {
                           <AlertDialogFooter>
                             <AlertDialogCancel style={{ textTransform: "none" }}>Cancel</AlertDialogCancel>
                             <AlertDialogAction className="bg-red-600 hover:bg-red-700" style={{ textTransform: "none" }}
-                              onClick={() => { deleteUserMutation.mutate({ userId: u.id, retainActivityData: retainData }); setDeleteTarget(null); }}>
+                              onClick={() => deleteUserMutation.mutate({ userId: u.id, retainActivityData: retainData })}>
                               Delete Permanently
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -332,6 +481,69 @@ function UsersTab() {
           ))}
         </div>
       )}
+
+      {/* Edit User Dialog */}
+      <Dialog open={!!editingUser} onOpenChange={(open) => { if (!open) setEditingUser(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle style={{ textTransform: "none" }}>Edit User</DialogTitle>
+            <DialogDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
+              Update details for {editingUser?.contactName || editingUser?.name || 'this user'}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label style={{ textTransform: "none" }}>Display Name</Label>
+              <Input value={editForm.contactName} onChange={e => setEditForm(f => ({ ...f, contactName: e.target.value }))} style={{ textTransform: "none" }} />
+            </div>
+            <div className="space-y-1.5">
+              <Label style={{ textTransform: "none" }}>Email</Label>
+              <Input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} style={{ textTransform: "none" }} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label style={{ textTransform: "none" }}>Role</Label>
+                <Select value={editForm.role} onValueChange={v => setEditForm(f => ({ ...f, role: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label style={{ textTransform: "none" }}>Account Type</Label>
+                <Select value={editForm.accountType} onValueChange={v => setEditForm(f => ({ ...f, accountType: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="consumer">Athlete</SelectItem>
+                    <SelectItem value="business_owner">Business Owner</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label style={{ textTransform: "none" }}>Notification Preference</Label>
+              <Select value={editForm.notificationPreference} onValueChange={v => setEditForm(f => ({ ...f, notificationPreference: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="both">In-app + Email</SelectItem>
+                  <SelectItem value="in_app">In-app Only</SelectItem>
+                  <SelectItem value="email">Email Only</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingUser(null)} style={{ textTransform: "none" }} className="bg-transparent">Cancel</Button>
+            <Button onClick={handleEditSave} disabled={editUserMutation.isPending} style={{ textTransform: "none" }}>
+              {editUserMutation.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-1" />}
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

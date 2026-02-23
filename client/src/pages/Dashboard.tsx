@@ -66,6 +66,21 @@ export default function Dashboard() {
     }
   }, [loading, user, navigate]);
 
+  // Welcome popup for first-time business owners
+  const [showWelcome, setShowWelcome] = useState(false);
+  const dismissWelcome = trpc.auth.dismissWelcome.useMutation({
+    onSuccess: () => utils.auth.me.invalidate(),
+  });
+  useEffect(() => {
+    if (!loading && user && user.onboardingComplete && !user.hasSeenWelcome) {
+      setShowWelcome(true);
+    }
+  }, [loading, user]);
+  const handleDismissWelcome = () => {
+    setShowWelcome(false);
+    dismissWelcome.mutate();
+  };
+
   // Settings panel state
   type NotifPref = "in_app_only" | "email_only" | "both" | "none";
   const [showSettings, setShowSettings] = useState(false);
@@ -1263,6 +1278,76 @@ export default function Dashboard() {
               ) : (
                 <><Save className="w-4 h-4 mr-2" /> Save Changes</>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* First-Time Business Owner Welcome Popup */}
+      <Dialog open={showWelcome} onOpenChange={(open) => { if (!open) handleDismissWelcome(); }}>
+        <DialogContent className="sm:max-w-lg bg-[oklch(0.25_0.02_50)] border-primary/30 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+              Welcome to Your Business Dashboard!
+            </DialogTitle>
+            <DialogDescription className="text-white/70 text-base" style={{ textTransform: "none", letterSpacing: "normal" }}>
+              Great to have you here, {user?.contactName || user?.name}! Let's get your business set up on SportConnect.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-white/80 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>
+              Here's what we recommend to get started:
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => { handleDismissWelcome(); navigate('/directory'); }}
+                className="w-full flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all text-left group"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <Building2 className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white group-hover:text-primary transition-colors" style={{ textTransform: "none" }}>Browse the Directory</p>
+                  <p className="text-xs text-white/60" style={{ textTransform: "none", letterSpacing: "normal" }}>Search for your business — if it's already listed, you can claim it.</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />
+              </button>
+              <button
+                onClick={() => { handleDismissWelcome(); navigate('/dashboard/add-business'); }}
+                className="w-full flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all text-left group"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <Plus className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white group-hover:text-primary transition-colors" style={{ textTransform: "none" }}>Add Your Business</p>
+                  <p className="text-xs text-white/60" style={{ textTransform: "none", letterSpacing: "normal" }}>Not listed yet? Add your business and start receiving referrals.</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />
+              </button>
+              <button
+                onClick={() => { handleDismissWelcome(); navigate('/referral-offers'); }}
+                className="w-full flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all text-left group"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <Gift className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white group-hover:text-primary transition-colors" style={{ textTransform: "none" }}>Explore Referral Offers</p>
+                  <p className="text-xs text-white/60" style={{ textTransform: "none", letterSpacing: "normal" }}>See what other businesses are offering for referrals.</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />
+              </button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="bg-transparent border-white/30 text-white hover:bg-white/10"
+              style={{ textTransform: "none" }}
+              onClick={handleDismissWelcome}
+            >
+              I'll explore on my own
             </Button>
           </DialogFooter>
         </DialogContent>

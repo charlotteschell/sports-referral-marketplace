@@ -25,6 +25,10 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter,
+  DialogHeader, DialogTitle
+} from "@/components/ui/dialog";
 
 type TabId = "offers" | "saved" | "notifications" | "profile";
 
@@ -68,6 +72,21 @@ export default function AthleteDashboard() {
   }) ?? { mutate: () => {}, isPending: false };
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
+
+  // Welcome popup for first-time athletes
+  const [showWelcome, setShowWelcome] = useState(false);
+  const dismissWelcome = (trpc as any).auth.dismissWelcome.useMutation({
+    onSuccess: () => (utils as any).auth.me.invalidate(),
+  });
+  useEffect(() => {
+    if (!loading && user && user.onboardingComplete && !user.hasSeenWelcome) {
+      setShowWelcome(true);
+    }
+  }, [loading, user]);
+  const handleDismissWelcome = () => {
+    setShowWelcome(false);
+    dismissWelcome.mutate();
+  };
 
   // Route guard: business owners should use /dashboard, not athlete dashboard
   useEffect(() => {
@@ -880,6 +899,76 @@ export default function AthleteDashboard() {
           </div>
         </section>
       </main>
+
+      {/* First-Time Athlete Welcome Popup */}
+      <Dialog open={showWelcome} onOpenChange={(open) => { if (!open) handleDismissWelcome(); }}>
+        <DialogContent className="sm:max-w-lg bg-[oklch(0.25_0.02_50)] border-primary/30 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+              Welcome to Your Athlete Hub!
+            </DialogTitle>
+            <DialogDescription className="text-white/70 text-base" style={{ textTransform: "none", letterSpacing: "normal" }}>
+              Hey {user?.contactName || user?.name}! You're all set to discover the best local sports businesses and exclusive deals.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-white/80 text-sm" style={{ textTransform: "none", letterSpacing: "normal" }}>
+              Here's how to get the most out of SportConnect:
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => { handleDismissWelcome(); setActiveTab('profile'); }}
+                className="w-full flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all text-left group"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white group-hover:text-primary transition-colors" style={{ textTransform: "none" }}>Update Your Profile</p>
+                  <p className="text-xs text-white/60" style={{ textTransform: "none", letterSpacing: "normal" }}>Add your sports, location, and goals for better recommendations.</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />
+              </button>
+              <button
+                onClick={() => { handleDismissWelcome(); navigate('/directory'); }}
+                className="w-full flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all text-left group"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white group-hover:text-primary transition-colors" style={{ textTransform: "none" }}>Browse the Directory</p>
+                  <p className="text-xs text-white/60" style={{ textTransform: "none", letterSpacing: "normal" }}>Discover coaches, shops, physios, and clubs near you.</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />
+              </button>
+              <button
+                onClick={() => { handleDismissWelcome(); navigate('/referral-offers'); }}
+                className="w-full flex items-center gap-4 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all text-left group"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <Gift className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white group-hover:text-primary transition-colors" style={{ textTransform: "none" }}>Claim Exclusive Offers</p>
+                  <p className="text-xs text-white/60" style={{ textTransform: "none", letterSpacing: "normal" }}>Get deals from businesses recommended by the community.</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-primary ml-auto shrink-0 transition-colors" />
+              </button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="bg-transparent border-white/30 text-white hover:bg-white/10"
+              style={{ textTransform: "none" }}
+              onClick={handleDismissWelcome}
+            >
+              I'll explore on my own
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
