@@ -1,4 +1,4 @@
-import { eq, and, like, or, sql, desc, asc, inArray, isNotNull, ne } from "drizzle-orm";
+import { eq, and, like, or, sql, desc, asc, inArray, isNotNull, isNull, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users,
@@ -745,6 +745,29 @@ export async function createBusinessSubmission(data: InsertBusinessSubmission) {
   if (!db) throw new Error("Database not available");
   const result = await db.insert(businessSubmissions).values(data);
   return result[0].insertId;
+}
+
+/**
+ * Link pending submissions (where submittedByUserId is null) to a user by matching contactEmail.
+ * Returns the number of submissions linked.
+ */
+export async function linkPendingSubmissionsToUser(userId: number, email: string): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  try {
+    const result = await db.update(businessSubmissions)
+      .set({ submittedByUserId: userId })
+      .where(
+        and(
+          eq(businessSubmissions.contactEmail, email),
+          isNull(businessSubmissions.submittedByUserId)
+        )
+      );
+    return result[0].affectedRows ?? 0;
+  } catch (error) {
+    console.warn('[Database] Failed to link pending submissions:', error);
+    return 0;
+  }
 }
 
 export async function getBusinessSubmissions(status?: string) {

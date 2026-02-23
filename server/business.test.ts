@@ -119,6 +119,7 @@ vi.mock("./db", () => ({
     recentActivity: [],
   }),
   createBusinessSubmission: vi.fn().mockResolvedValue(1),
+  linkPendingSubmissionsToUser: vi.fn().mockResolvedValue(0),
   getBusinessSubmissions: vi.fn().mockImplementation(async (status?: string) => {
     const subs = [
       {

@@ -915,3 +915,10 @@
 ## Nav Fixes (Feb 23 batch 5)
 - [x] Fix "List Your Business" link to go to the business submission form
 - [x] Standardize capitalization across all nav bar items
+
+## Post-Submission Account Creation & Auto-Link (Feb 23)
+- [x] After unauthenticated submission, prompt user to create account in success popup
+- [x] Store submitter email in submission record for later account linking
+- [x] On account creation, auto-link pending submissions matching the user's email
+- [x] Auto-claim the submitted business for the new user after linking
+- [x] Redirect user to sign up after submission with return path to dashboard

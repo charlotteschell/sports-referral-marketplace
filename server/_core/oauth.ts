@@ -65,6 +65,22 @@ export function registerOAuthRoutes(app: Express) {
         redirectTo = "/onboarding";
       }
 
+      // Auto-link any pending business submissions matching this user's email
+      if (dbUser && dbUser.email) {
+        try {
+          const linked = await db.linkPendingSubmissionsToUser(dbUser.id, dbUser.email);
+          if (linked > 0) {
+            console.log(`[OAuth] Auto-linked ${linked} pending submission(s) to user ${dbUser.id} (${dbUser.email})`);
+            // Also set account type to business_owner if they had pending submissions
+            if (dbUser.accountType !== 'business_owner') {
+              await db.updateUserAccountType(dbUser.id, 'business_owner');
+            }
+          }
+        } catch (e) {
+          console.warn('[OAuth] Failed to auto-link pending submissions:', e);
+        }
+      }
+
       res.redirect(302, redirectTo);
     } catch (error) {
       console.error("[OAuth] Callback failed", error);

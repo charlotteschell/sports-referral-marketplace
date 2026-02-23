@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,12 +13,13 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Mountain, CheckCircle, ArrowLeft, Send, Building2, MapPin, User, Globe, MessageSquare, Tag, X } from "lucide-react";
+import { Mountain, CheckCircle, ArrowLeft, Send, Building2, MapPin, User, Globe, MessageSquare, Tag, X, UserPlus, Eye, Pencil } from "lucide-react";
 
 // Business types that should show the brands field
 const RETAILER_TYPE_NAMES = ["Bike Retailer", "Bike Shop", "Running Store", "Ski Shop", "Supplement Retailer"];
 
 export default function SubmitBusiness() {
+  const { isAuthenticated } = useAuth();
   const [submitted, setSubmitted] = useState(false);
 
   // Form state
@@ -169,9 +172,46 @@ export default function SubmitBusiness() {
                   You're In the Queue!
                 </h2>
                 <p className="text-muted-foreground leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
-                  <strong>{businessName}</strong> has been submitted. Our (volunteer) team will review it shortly. We're not going to pretend we have a 24-hour SLA, but we do check these regularly. Browse the directory while you wait!
+                  <strong>{businessName}</strong> has been submitted. Our (volunteer) team will review it shortly. We're not going to pretend we have a 24-hour SLA, but we do check these regularly.
                 </p>
               </div>
+
+              {/* Account creation prompt for unauthenticated users */}
+              {!isAuthenticated && (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 text-left space-y-3">
+                  <h3 className="text-base font-heading font-bold text-foreground flex items-center gap-2">
+                    <UserPlus className="w-5 h-5 text-primary" />
+                    Create an Account to Manage Your Submission
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                    With an account, you can:
+                  </p>
+                  <ul className="text-sm text-muted-foreground space-y-1.5" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                    <li className="flex items-start gap-2">
+                      <Eye className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                      <span>Monitor the review status of your submission</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Building2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                      <span>Claim your business once it's approved</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Pencil className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                      <span>Edit your listing and manage referral offers</span>
+                    </li>
+                  </ul>
+                  <a href={getLoginUrl("/onboarding?type=business")} className="block">
+                    <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 mt-1">
+                      <UserPlus className="w-4 h-4" />
+                      Create Your Account
+                    </Button>
+                  </a>
+                  <p className="text-[11px] text-muted-foreground/60 text-center" style={{ textTransform: "none", letterSpacing: "normal" }}>
+                    Use the same email ({contactEmail}) so we can automatically link this submission to your account.
+                  </p>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                 <Link href="/directory">
                   <Button variant="outline" className="gap-2">
