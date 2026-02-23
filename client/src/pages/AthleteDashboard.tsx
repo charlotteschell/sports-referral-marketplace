@@ -66,19 +66,61 @@ export default function AthleteDashboard() {
     }
   }, [loading, user, navigate]);
 
-  // Data queries
-  const { data: claims, isLoading: claimsLoading } = trpc.consumerClaim.myClaims.useQuery(
+  // Data queries - context-switch between real user and test profile
+  const hasTestProfile = isAdmin && !!activeTestProfileId;
+
+  // Real user data (always fetched for fallback)
+  const { data: realClaims, isLoading: realClaimsLoading } = trpc.consumerClaim.myClaims.useQuery(
     undefined,
-    { enabled: !!user }
+    { enabled: !!user && !hasTestProfile }
   );
-  const { data: savedBusinesses, isLoading: savedLoading } = trpc.savedBusiness.list.useQuery(
+  const { data: realSavedBusinesses, isLoading: realSavedLoading } = trpc.savedBusiness.list.useQuery(
     undefined,
-    { enabled: !!user }
+    { enabled: !!user && !hasTestProfile }
   );
   const { data: athleteProfile, isLoading: profileLoading } = trpc.athleteProfile.get.useQuery(
     undefined,
-    { enabled: !!user }
+    { enabled: !!user && !hasTestProfile }
   );
+
+  // Test profile data (fetched when test profile is active)
+  const testProfileInput = useMemo(() => activeTestProfileId ? { testProfileId: activeTestProfileId } : { testProfileId: 0 }, [activeTestProfileId]);
+  const { data: testProfileClaims, isLoading: testClaimsLoading } = (trpc as any).admin?.testProfileClaims?.useQuery?.(
+    testProfileInput,
+    { enabled: hasTestProfile }
+  ) ?? { data: undefined, isLoading: false };
+  const { data: testProfileSaved, isLoading: testSavedLoading } = (trpc as any).admin?.testProfileSavedBusinesses?.useQuery?.(
+    testProfileInput,
+    { enabled: hasTestProfile }
+  ) ?? { data: undefined, isLoading: false };
+
+  // Merged data - use test profile data when active, otherwise real data
+  const claims = hasTestProfile ? testProfileClaims : realClaims;
+  const claimsLoading = hasTestProfile ? testClaimsLoading : realClaimsLoading;
+  const savedBusinesses = hasTestProfile ? testProfileSaved : realSavedBusinesses;
+  const savedLoading = hasTestProfile ? testSavedLoading : realSavedLoading;
+
+  // When test profile is active, create a synthetic athleteProfile from the test profile data
+  const effectiveProfile = useMemo(() => {
+    if (hasTestProfile && activeTestProfile) {
+      return {
+        id: activeTestProfile.id,
+        displayName: activeTestProfile.displayName || activeTestProfile.profileName,
+        sportIds: activeTestProfile.sportIds,
+        experienceLevels: activeTestProfile.experienceLevels,
+        city: activeTestProfile.city,
+        state: activeTestProfile.state,
+        country: activeTestProfile.country,
+        interests: activeTestProfile.interests,
+        goals: activeTestProfile.goals,
+        referralSource: '',
+        newsletterOptIn: true,
+        notificationPreference: 'both',
+      };
+    }
+    return athleteProfile;
+  }, [hasTestProfile, activeTestProfile, athleteProfile]);
+
   const { data: unreadCount } = trpc.notification.unreadCount.useQuery(
     undefined,
     { enabled: !!user, refetchInterval: 30000 }
@@ -91,13 +133,30 @@ export default function AthleteDashboard() {
   // Analytics derived from claims data
   const { data: sportCategories } = trpc.categories.sportCategories.useQuery();
 
-  // Mutations
-  const unsaveMutation = trpc.savedBusiness.unsave.useMutation({
+  // Mutations - context-switch between real user and test profile
+  const realUnsaveMutation = trpc.savedBusiness.unsave.useMutation({
     onSuccess: () => {
       utils.savedBusiness.list.invalidate();
       toast.success("Business removed from saved list.");
     },
   });
+  const testUnsaveMutation = (trpc as any).admin?.testProfileUnsaveBusiness?.useMutation?.({
+    onSuccess: () => {
+      (utils as any).admin?.testProfileSavedBusinesses?.invalidate?.();
+      toast.success("Business removed from test profile's saved list.");
+    },
+  }) ?? { mutate: () => {}, isPending: false };
+
+  const unsaveMutation = {
+    mutate: (args: any) => {
+      if (hasTestProfile) {
+        testUnsaveMutation.mutate({ testProfileId: activeTestProfileId!, businessId: args.businessId });
+      } else {
+        realUnsaveMutation.mutate(args);
+      }
+    },
+    isPending: hasTestProfile ? testUnsaveMutation.isPending : realUnsaveMutation.isPending,
+  };
 
   const verifyClaim = trpc.consumerClaim.verify.useMutation({
     onSuccess: () => {
@@ -122,29 +181,30 @@ export default function AthleteDashboard() {
     notificationPreference: "both" as string,
   });
 
-  // Populate edit form when entering edit mode
+  // Populate edit form when entering edit mode - uses effectiveProfile (real or test profile)
   useEffect(() => {
-    if (isEditingProfile && athleteProfile) {
-      const sportIds = athleteProfile.sportIds ? JSON.parse(athleteProfile.sportIds) : [];
-      const expLevels = athleteProfile.experienceLevels ? JSON.parse(athleteProfile.experienceLevels) : {};
-      const interests = athleteProfile.interests ? JSON.parse(athleteProfile.interests) : [];
+    if (isEditingProfile && effectiveProfile) {
+      const sportIds = effectiveProfile.sportIds ? JSON.parse(effectiveProfile.sportIds) : [];
+      const expLevels = effectiveProfile.experienceLevels ? JSON.parse(effectiveProfile.experienceLevels) : {};
+      const interests = effectiveProfile.interests ? JSON.parse(effectiveProfile.interests) : [];
       setEditForm({
-        displayName: athleteProfile.displayName || user?.contactName || user?.name || "",
+        displayName: effectiveProfile.displayName || user?.contactName || user?.name || "",
         selectedSports: sportIds,
         experienceLevels: expLevels,
-        city: athleteProfile.city || "",
-        state: athleteProfile.state || "",
-        country: athleteProfile.country || "",
+        city: effectiveProfile.city || "",
+        state: effectiveProfile.state || "",
+        country: effectiveProfile.country || "",
         interests,
-        goals: athleteProfile.goals || "",
-        referralSource: athleteProfile.referralSource || "",
-        newsletterOptIn: athleteProfile.newsletterOptIn ?? true,
-        notificationPreference: (athleteProfile as any).notificationPreference || "both",
+        goals: effectiveProfile.goals || "",
+        referralSource: (effectiveProfile as any).referralSource || "",
+        newsletterOptIn: (effectiveProfile as any).newsletterOptIn ?? true,
+        notificationPreference: (effectiveProfile as any).notificationPreference || "both",
       });
     }
-  }, [isEditingProfile, athleteProfile, user]);
+  }, [isEditingProfile, effectiveProfile, user]);
 
-  const saveProfileMutation = trpc.athleteProfile.save.useMutation({
+  // Real profile save mutation
+  const realSaveProfileMutation = trpc.athleteProfile.save.useMutation({
     onSuccess: () => {
       utils.athleteProfile.get.invalidate();
       utils.auth.me.invalidate();
@@ -156,8 +216,47 @@ export default function AthleteDashboard() {
     },
   });
 
+  // Test profile save mutation
+  const testSaveProfileMutation = (trpc as any).admin?.updateTestProfile?.useMutation?.({
+    onSuccess: () => {
+      (utils as any).admin?.listTestProfiles?.invalidate?.();
+      toast.success("Test profile updated!");
+      setIsEditingProfile(false);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update test profile.");
+    },
+  }) ?? { mutate: () => {}, isPending: false };
+
+  const saveProfileMutation = {
+    mutate: (args: any) => {
+      if (hasTestProfile) {
+        testSaveProfileMutation.mutate(args);
+      } else {
+        realSaveProfileMutation.mutate(args);
+      }
+    },
+    isPending: hasTestProfile ? testSaveProfileMutation.isPending : realSaveProfileMutation.isPending,
+  };
+
   const handleSaveProfile = () => {
-    saveProfileMutation.mutate({
+    if (hasTestProfile && activeTestProfileId) {
+      // Save to test profile via admin.updateTestProfile
+      testSaveProfileMutation.mutate({
+        id: activeTestProfileId,
+        profileName: editForm.displayName || activeTestProfile?.profileName || 'Test Profile',
+        displayName: editForm.displayName || undefined,
+        sportIds: editForm.selectedSports.length > 0 ? editForm.selectedSports : undefined,
+        experienceLevels: Object.keys(editForm.experienceLevels).length > 0 ? editForm.experienceLevels : undefined,
+        city: editForm.city || undefined,
+        state: editForm.state || undefined,
+        country: editForm.country || undefined,
+        interests: editForm.interests.length > 0 ? editForm.interests : undefined,
+        goals: editForm.goals || undefined,
+      });
+      return;
+    }
+    realSaveProfileMutation.mutate({
       displayName: editForm.displayName || undefined,
       sportIds: editForm.selectedSports.length > 0 ? JSON.stringify(editForm.selectedSports) : undefined,
       experienceLevels: Object.keys(editForm.experienceLevels).length > 0 ? JSON.stringify(editForm.experienceLevels) : undefined,
@@ -215,14 +314,14 @@ export default function AthleteDashboard() {
     return sport?.name || `Sport #${id}`;
   };
 
-  const parsedSportIds: number[] = athleteProfile?.sportIds
-    ? JSON.parse(athleteProfile.sportIds)
+  const parsedSportIds: number[] = effectiveProfile?.sportIds
+    ? JSON.parse(effectiveProfile.sportIds)
     : [];
-  const parsedExperience: Record<string, string> = athleteProfile?.experienceLevels
-    ? JSON.parse(athleteProfile.experienceLevels)
+  const parsedExperience: Record<string, string> = effectiveProfile?.experienceLevels
+    ? JSON.parse(effectiveProfile.experienceLevels)
     : {};
-  const parsedInterests: string[] = athleteProfile?.interests
-    ? JSON.parse(athleteProfile.interests)
+  const parsedInterests: string[] = effectiveProfile?.interests
+    ? JSON.parse(effectiveProfile.interests)
     : [];
 
   return (
@@ -414,6 +513,30 @@ export default function AthleteDashboard() {
             </div>
           </div>
         </section>
+
+        {/* Test Profile Context Banner */}
+        {hasTestProfile && activeTestProfile && (
+          <div className="bg-violet-600/10 border-b border-violet-500/30">
+            <div className="container py-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm">
+                  <Shield className="w-4 h-4 text-violet-500" />
+                  <span className="text-violet-700 dark:text-violet-300" style={{ textTransform: 'none' }}>
+                    <strong>Test Mode:</strong> Viewing as <strong>{activeTestProfile.displayName || activeTestProfile.profileName}</strong>
+                    {activeTestProfile.city && <span className="text-violet-500"> · {[activeTestProfile.city, activeTestProfile.state].filter(Boolean).join(', ')}</span>}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setActiveTestProfileId(null)}
+                  className="text-xs text-violet-500 hover:text-violet-700 dark:hover:text-violet-300 flex items-center gap-1"
+                  style={{ textTransform: 'none' }}
+                >
+                  <X className="w-3 h-3" /> Exit Test Mode
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <section className="border-b border-border bg-card">
@@ -733,8 +856,8 @@ export default function AthleteDashboard() {
             {activeTab === "profile" && (
               <ProfileTab
                 user={user}
-                athleteProfile={athleteProfile}
-                profileLoading={profileLoading}
+                athleteProfile={effectiveProfile}
+                profileLoading={hasTestProfile ? false : profileLoading}
                 sportCategories={sportCategories}
                 parsedSportIds={parsedSportIds}
                 parsedExperience={parsedExperience}

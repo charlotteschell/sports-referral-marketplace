@@ -1132,6 +1132,11 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
+          {/* Athlete Claims Management */}
+          {myBusinesses && myBusinesses.length > 0 && (
+            <AthleteClaimsSection businesses={myBusinesses} />
+          )}
+
           {/* Quick Actions Footer */}
           <Card className="bg-[oklch(0.22_0.02_50)] text-white border-0">
             <CardContent className="p-6 md:p-8">
@@ -1265,5 +1270,175 @@ export default function Dashboard() {
 
       <Footer />
     </div>
+  );
+}
+
+// ─── Athlete Claims Management Section ─────────────────────────────
+function AthleteClaimsSection({ businesses }: { businesses: any[] }) {
+  const utils = trpc.useUtils();
+  const [selectedBizId, setSelectedBizId] = useState<number | null>(
+    businesses.length > 0 ? businesses[0].id : null
+  );
+
+  const { data: claims, isLoading: claimsLoading } = (trpc.consumerClaim as any).forBusiness.useQuery(
+    { businessId: selectedBizId! },
+    { enabled: !!selectedBizId }
+  );
+
+  const { data: claimAnalytics } = (trpc.consumerClaim as any).businessAnalytics.useQuery(
+    { businessId: selectedBizId! },
+    { enabled: !!selectedBizId }
+  );
+
+  const honorMut = (trpc.consumerClaim as any).businessHonor.useMutation({
+    onSuccess: () => {
+      toast.success("Claim marked as redeemed!");
+      utils.consumerClaim.forBusiness.invalidate();
+      (utils.consumerClaim as any).businessAnalytics.invalidate();
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const rejectMut = (trpc.consumerClaim as any).businessReject.useMutation({
+    onSuccess: () => {
+      toast.success("Claim marked as expired/not redeemed.");
+      utils.consumerClaim.forBusiness.invalidate();
+      (utils.consumerClaim as any).businessAnalytics.invalidate();
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const claimStatusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+    claimed: { label: "Pending", color: "bg-amber-100 text-amber-800 border-amber-200", icon: <Clock className="w-3 h-3" /> },
+    redeemed: { label: "Redeemed", color: "bg-green-100 text-green-800 border-green-200", icon: <CheckCircle2 className="w-3 h-3" /> },
+    expired: { label: "Expired", color: "bg-gray-100 text-gray-600 border-gray-200", icon: <XCircle className="w-3 h-3" /> },
+    disputed: { label: "Disputed", color: "bg-red-100 text-red-800 border-red-200", icon: <AlertTriangle className="w-3 h-3" /> },
+  };
+
+  return (
+    <Card className="mb-8">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Gift className="w-5 h-5 text-primary" />
+          Athlete Offer Claims
+        </CardTitle>
+        <CardDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
+          Track and manage athlete claims on your consumer offers. Mark claims as redeemed when athletes visit.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {/* Business selector if multiple */}
+        {businesses.length > 1 && (
+          <div className="mb-4">
+            <Select
+              value={String(selectedBizId || "")}
+              onValueChange={(v) => setSelectedBizId(Number(v))}
+            >
+              <SelectTrigger className="w-full md:w-64">
+                <SelectValue placeholder="Select business" />
+              </SelectTrigger>
+              <SelectContent>
+                {businesses.map((b: any) => (
+                  <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Claim Analytics Summary */}
+        {claimAnalytics && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div className="p-3 rounded-lg bg-primary/5 text-center">
+              <p className="text-2xl font-bold text-primary">{claimAnalytics.totalClaims}</p>
+              <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Total Claims</p>
+            </div>
+            <div className="p-3 rounded-lg bg-amber-50 text-center">
+              <p className="text-2xl font-bold text-amber-600">{claimAnalytics.pending}</p>
+              <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Pending Redemption</p>
+            </div>
+            <div className="p-3 rounded-lg bg-green-50 text-center">
+              <p className="text-2xl font-bold text-green-600">{claimAnalytics.redeemed}</p>
+              <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Redeemed</p>
+            </div>
+            <div className="p-3 rounded-lg bg-gray-50 text-center">
+              <p className="text-2xl font-bold text-gray-500">{claimAnalytics.expired}</p>
+              <p className="text-xs text-muted-foreground" style={{ textTransform: "none" }}>Expired</p>
+            </div>
+          </div>
+        )}
+
+        {/* Claims List */}
+        {claimsLoading ? (
+          <div className="space-y-3">
+            {[1, 2].map(i => <div key={i} className="animate-pulse p-3 border rounded-lg"><div className="h-4 bg-muted rounded w-3/4 mb-2" /><div className="h-3 bg-muted rounded w-1/2" /></div>)}
+          </div>
+        ) : !claims || claims.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Gift className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p style={{ textTransform: "none" }}>No athlete claims yet. When athletes claim your offers, they'll appear here.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {(claims as any[]).map((c: any) => {
+              const status = claimStatusConfig[c.claim?.status || 'claimed'] || claimStatusConfig.claimed;
+              return (
+                <div key={c.claim?.id} className="p-4 border rounded-lg hover:bg-muted/30 transition-colors">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold" style={{ textTransform: "none" }}>
+                          {c.offer?.title || 'Offer'}
+                        </span>
+                        <Badge variant="outline" className={`text-xs ${status.color}`}>
+                          {status.icon}
+                          <span className="ml-1">{status.label}</span>
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground space-y-0.5" style={{ textTransform: "none" }}>
+                        <p>Claimed by: <span className="font-medium text-foreground">{c.user?.name || 'Athlete'}</span></p>
+                        <p>Claim Code: <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{c.claim?.claimCode || 'N/A'}</code></p>
+                        <p>Date: {c.claim?.createdAt ? new Date(c.claim.createdAt).toLocaleDateString() : 'N/A'}</p>
+                      </div>
+                    </div>
+                    {c.claim?.status === 'claimed' && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                          style={{ textTransform: "none" }}
+                          disabled={honorMut.isPending}
+                          onClick={() => honorMut.mutate({ claimId: c.claim.id, businessId: selectedBizId! })}
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                          {honorMut.isPending ? 'Processing...' : 'Mark Redeemed'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-transparent text-muted-foreground"
+                          style={{ textTransform: "none" }}
+                          disabled={rejectMut.isPending}
+                          onClick={() => rejectMut.mutate({ claimId: c.claim.id, businessId: selectedBizId!, reason: 'Not redeemed in person' })}
+                        >
+                          <XCircle className="w-3.5 h-3.5 mr-1" />
+                          Not Redeemed
+                        </Button>
+                      </div>
+                    )}
+                    {c.claim?.status === 'redeemed' && (
+                      <div className="text-sm text-green-600 font-medium flex items-center gap-1">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span style={{ textTransform: "none" }}>Redeemed{c.claim.honoredAt ? ` on ${new Date(c.claim.honoredAt).toLocaleDateString()}` : ''}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

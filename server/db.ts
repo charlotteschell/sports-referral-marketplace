@@ -2540,3 +2540,193 @@ export async function getRecommendedBusinessesForProfile(
 
   return results;
 }
+
+// ─── Business Owner Claim Management ───────────────────────────────
+
+/**
+ * Business owner marks a claim as honored/redeemed
+ */
+export async function businessHonorClaim(claimId: number, businessId: number, notes?: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(consumerClaims)
+    .set({
+      isHonored: true,
+      honoredAt: new Date(),
+      honoredNotes: notes || null,
+      status: 'redeemed',
+    })
+    .where(and(eq(consumerClaims.id, claimId), eq(consumerClaims.businessId, businessId)));
+}
+
+/**
+ * Business owner marks a claim as not honored / expired
+ */
+export async function businessRejectClaim(claimId: number, businessId: number, reason?: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(consumerClaims)
+    .set({
+      status: 'expired',
+      honoredNotes: reason || 'Marked as not redeemed by business',
+    })
+    .where(and(eq(consumerClaims.id, claimId), eq(consumerClaims.businessId, businessId)));
+}
+
+/**
+ * Get claim analytics for a specific business
+ */
+export async function getBusinessClaimAnalytics(businessId: number) {
+  const db = await getDb();
+  if (!db) return { totalClaims: 0, redeemed: 0, pending: 0, expired: 0 };
+  const rows = await db.select({ status: consumerClaims.status })
+    .from(consumerClaims)
+    .where(eq(consumerClaims.businessId, businessId));
+  return {
+    totalClaims: rows.length,
+    redeemed: rows.filter(r => r.status === 'redeemed').length,
+    pending: rows.filter(r => r.status === 'claimed').length,
+    expired: rows.filter(r => r.status === 'expired').length,
+  };
+}
+
+// ─── Test Profile Context Switching ───────────────────────────────
+
+/**
+ * Save a business for a test profile
+ */
+export async function testProfileSaveBusiness(testProfileId: number, businessId: number) {
+  const db = await getDb();
+  if (!db) return;
+  const { testProfileSavedBusinesses } = await import("../drizzle/schema");
+  await db.insert(testProfileSavedBusinesses).values({ testProfileId, businessId }).onDuplicateKeyUpdate({ set: { testProfileId } });
+}
+
+/**
+ * Unsave a business for a test profile
+ */
+export async function testProfileUnsaveBusiness(testProfileId: number, businessId: number) {
+  const db = await getDb();
+  if (!db) return;
+  const { testProfileSavedBusinesses } = await import("../drizzle/schema");
+  await db.delete(testProfileSavedBusinesses).where(and(
+    eq(testProfileSavedBusinesses.testProfileId, testProfileId),
+    eq(testProfileSavedBusinesses.businessId, businessId),
+  ));
+}
+
+/**
+ * Get saved businesses for a test profile
+ */
+export async function getTestProfileSavedBusinesses(testProfileId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { testProfileSavedBusinesses } = await import("../drizzle/schema");
+  const rows = await db.select({
+    saved: testProfileSavedBusinesses,
+    business: businesses,
+  })
+    .from(testProfileSavedBusinesses)
+    .innerJoin(businesses, eq(testProfileSavedBusinesses.businessId, businesses.id))
+    .where(eq(testProfileSavedBusinesses.testProfileId, testProfileId))
+    .orderBy(desc(testProfileSavedBusinesses.createdAt));
+  return rows.map(r => ({
+    id: r.saved.id,
+    businessId: r.business.id,
+    name: r.business.name,
+    slug: r.business.slug,
+    city: r.business.city,
+    state: r.business.state,
+    logoUrl: r.business.logoUrl,
+    tagline: r.business.tagline,
+    createdAt: r.saved.createdAt,
+  }));
+}
+
+/**
+ * Get saved business IDs for a test profile
+ */
+export async function getTestProfileSavedBusinessIds(testProfileId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { testProfileSavedBusinesses } = await import("../drizzle/schema");
+  const rows = await db.select({ businessId: testProfileSavedBusinesses.businessId })
+    .from(testProfileSavedBusinesses)
+    .where(eq(testProfileSavedBusinesses.testProfileId, testProfileId));
+  return rows.map(r => r.businessId);
+}
+
+/**
+ * Check if a business is saved for a test profile
+ */
+export async function isTestProfileBusinessSaved(testProfileId: number, businessId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  const { testProfileSavedBusinesses } = await import("../drizzle/schema");
+  const rows = await db.select({ id: testProfileSavedBusinesses.id })
+    .from(testProfileSavedBusinesses)
+    .where(and(
+      eq(testProfileSavedBusinesses.testProfileId, testProfileId),
+      eq(testProfileSavedBusinesses.businessId, businessId),
+    ))
+    .limit(1);
+  return rows.length > 0;
+}
+
+/**
+ * Create a claim for a test profile
+ */
+export async function createTestProfileClaim(data: { testProfileId: number; referralOfferId: number; businessId: number }) {
+  const db = await getDb();
+  if (!db) return null;
+  const { testProfileClaims } = await import("../drizzle/schema");
+  const claimCode = `SC-T${String(Math.random()).slice(2, 7).toUpperCase()}`;
+  const [result] = await db.insert(testProfileClaims).values({
+    testProfileId: data.testProfileId,
+    referralOfferId: data.referralOfferId,
+    businessId: data.businessId,
+    claimCode,
+  }).$returningId();
+  return { id: result.id, claimCode };
+}
+
+/**
+ * Get claims for a test profile
+ */
+export async function getTestProfileClaims(testProfileId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { testProfileClaims } = await import("../drizzle/schema");
+  return db.select({
+    claim: testProfileClaims,
+    offer: referralOffers,
+    business: {
+      id: businesses.id,
+      name: businesses.name,
+      slug: businesses.slug,
+    },
+  })
+    .from(testProfileClaims)
+    .innerJoin(referralOffers, eq(testProfileClaims.referralOfferId, referralOffers.id))
+    .innerJoin(businesses, eq(testProfileClaims.businessId, businesses.id))
+    .where(eq(testProfileClaims.testProfileId, testProfileId))
+    .orderBy(desc(testProfileClaims.createdAt));
+}
+
+/**
+ * Check if test profile already claimed an offer
+ */
+export async function hasTestProfileClaimedOffer(testProfileId: number, referralOfferId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  const { testProfileClaims } = await import("../drizzle/schema");
+  const rows = await db.select({ id: testProfileClaims.id })
+    .from(testProfileClaims)
+    .where(and(
+      eq(testProfileClaims.testProfileId, testProfileId),
+      eq(testProfileClaims.referralOfferId, referralOfferId),
+      inArray(testProfileClaims.status, ['claimed', 'redeemed']),
+    ))
+    .limit(1);
+  return rows.length > 0;
+}

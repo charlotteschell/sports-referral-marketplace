@@ -171,6 +171,24 @@ vi.mock("./db", () => ({
   }),
   deleteAdminTestProfile: vi.fn().mockResolvedValue(true),
   updateAdminTestProfile: vi.fn().mockResolvedValue(true),
+  // Test profile context switching
+  testProfileSaveBusiness: vi.fn().mockResolvedValue(undefined),
+  testProfileUnsaveBusiness: vi.fn().mockResolvedValue(undefined),
+  getTestProfileSavedBusinesses: vi.fn().mockResolvedValue([]),
+  getTestProfileSavedBusinessIds: vi.fn().mockResolvedValue([]),
+  isTestProfileBusinessSaved: vi.fn().mockResolvedValue(false),
+  createTestProfileClaim: vi.fn().mockResolvedValue({ id: 1, claimCode: 'SC-T12345' }),
+  getTestProfileClaims: vi.fn().mockResolvedValue([]),
+  hasTestProfileClaimedOffer: vi.fn().mockResolvedValue(false),
+  // Business owner claim management
+  getClaimsByBusinessForOwner: vi.fn().mockResolvedValue([]),
+  getClaimAnalyticsForBusiness: vi.fn().mockResolvedValue({ totalClaims: 5, pending: 2, redeemed: 2, expired: 1 }),
+  honorConsumerClaim: vi.fn().mockResolvedValue(true),
+  rejectConsumerClaim: vi.fn().mockResolvedValue(true),
+  businessHonorClaim: vi.fn().mockResolvedValue(true),
+  businessRejectClaim: vi.fn().mockResolvedValue(true),
+  getBusinessClaimAnalytics: vi.fn().mockResolvedValue({ totalClaims: 10, pending: 3, redeemed: 5, expired: 2 }),
+  getRecommendedBusinessesForProfile: vi.fn().mockResolvedValue([]),
 }));
 
 // Mock the storage module
@@ -779,5 +797,177 @@ describe("contact info hiding for non-owners", () => {
     const result = await caller.business.getBySlug({ slug: "public-biz" });
     expect(result?.business.email).toBeNull();
     expect(result?.business.phone).toBeNull();
+  });
+});
+
+
+// ─── Business Owner Claim Management Tests ───
+describe("consumerClaim.forBusiness", () => {
+  it("business owner can list claims for their business", async () => {
+    const { getBusinessById, getConsumerClaimsByBusiness } = await import("./db");
+    (getBusinessById as any).mockResolvedValueOnce({
+      business: { id: 1, name: "Test Biz", slug: "test-biz", isClaimed: true, claimedByUserId: 1, isActive: true, approvalStatus: "approved" },
+      sportCategory: { id: 1, name: "Cycling" },
+      businessType: { id: 1, name: "Coach" },
+    });
+    (getConsumerClaimsByBusiness as any).mockResolvedValueOnce([
+      { id: 1, claimCode: "SC-ABC123", status: "claimed", userId: 2, offerId: 1, createdAt: new Date() },
+    ]);
+
+    const ctx = createAuthContext(1, "user");
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.consumerClaim.forBusiness({ businessId: 1 });
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("non-owner cannot list claims for another business", async () => {
+    const { getBusinessById } = await import("./db");
+    (getBusinessById as any).mockResolvedValueOnce({
+      business: { id: 1, name: "Test Biz", slug: "test-biz", isClaimed: true, claimedByUserId: 2, isActive: true, approvalStatus: "approved" },
+      sportCategory: { id: 1, name: "Cycling" },
+      businessType: { id: 1, name: "Coach" },
+    });
+
+    const ctx = createAuthContext(1, "user");
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.consumerClaim.forBusiness({ businessId: 1 })).rejects.toThrow();
+  });
+});
+
+describe("consumerClaim.businessHonor", () => {
+  it("business owner can honor a claim", async () => {
+    const { getBusinessById, businessHonorClaim } = await import("./db");
+    (getBusinessById as any).mockResolvedValueOnce({
+      business: { id: 1, name: "Test Biz", slug: "test-biz", isClaimed: true, claimedByUserId: 1, isActive: true, approvalStatus: "approved" },
+      sportCategory: { id: 1, name: "Cycling" },
+      businessType: { id: 1, name: "Coach" },
+    });
+    (businessHonorClaim as any).mockResolvedValueOnce(true);
+
+    const ctx = createAuthContext(1, "user");
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.consumerClaim.businessHonor({ claimId: 1, businessId: 1 });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("consumerClaim.businessReject", () => {
+  it("business owner can reject a claim", async () => {
+    const { getBusinessById, businessRejectClaim } = await import("./db");
+    (getBusinessById as any).mockResolvedValueOnce({
+      business: { id: 1, name: "Test Biz", slug: "test-biz", isClaimed: true, claimedByUserId: 1, isActive: true, approvalStatus: "approved" },
+      sportCategory: { id: 1, name: "Cycling" },
+      businessType: { id: 1, name: "Coach" },
+    });
+    (businessRejectClaim as any).mockResolvedValueOnce(true);
+
+    const ctx = createAuthContext(1, "user");
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.consumerClaim.businessReject({ claimId: 1, businessId: 1 });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("consumerClaim.businessAnalytics", () => {
+  it("business owner can view claim analytics", async () => {
+    const { getBusinessById, getBusinessClaimAnalytics } = await import("./db");
+    (getBusinessById as any).mockResolvedValueOnce({
+      business: { id: 1, name: "Test Biz", slug: "test-biz", isClaimed: true, claimedByUserId: 1, isActive: true, approvalStatus: "approved" },
+      sportCategory: { id: 1, name: "Cycling" },
+      businessType: { id: 1, name: "Coach" },
+    });
+    (getBusinessClaimAnalytics as any).mockResolvedValueOnce({
+      totalClaims: 10, pending: 3, redeemed: 5, expired: 2,
+    });
+
+    const ctx = createAuthContext(1, "user");
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.consumerClaim.businessAnalytics({ businessId: 1 });
+    expect(result.totalClaims).toBe(10);
+    expect(result.pending).toBe(3);
+    expect(result.redeemed).toBe(5);
+  });
+});
+
+// ─── Admin Test Profile Context Switching Tests ───
+describe("admin.testProfileSavedBusinesses", () => {
+  it("admin can list saved businesses for a test profile", async () => {
+    const { getTestProfileSavedBusinesses } = await import("./db");
+    (getTestProfileSavedBusinesses as any).mockResolvedValueOnce([
+      { id: 1, name: "Saved Biz", slug: "saved-biz" },
+    ]);
+
+    const ctx = createAuthContext(1, "admin");
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.admin.testProfileSavedBusinesses({ testProfileId: 1 });
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("non-admin cannot access test profile saved businesses", async () => {
+    const ctx = createAuthContext(2, "user");
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.admin.testProfileSavedBusinesses({ testProfileId: 1 })).rejects.toThrow();
+  });
+});
+
+describe("admin.testProfileSaveBusiness", () => {
+  it("admin can save a business for a test profile", async () => {
+    const { testProfileSaveBusiness } = await import("./db");
+    (testProfileSaveBusiness as any).mockResolvedValueOnce(undefined);
+
+    const ctx = createAuthContext(1, "admin");
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.admin.testProfileSaveBusiness({ testProfileId: 1, businessId: 1 });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("admin.testProfileUnsaveBusiness", () => {
+  it("admin can unsave a business from a test profile", async () => {
+    const { testProfileUnsaveBusiness } = await import("./db");
+    (testProfileUnsaveBusiness as any).mockResolvedValueOnce(undefined);
+
+    const ctx = createAuthContext(1, "admin");
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.admin.testProfileUnsaveBusiness({ testProfileId: 1, businessId: 1 });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("admin.testProfileClaims", () => {
+  it("admin can list claims for a test profile", async () => {
+    const { getTestProfileClaims } = await import("./db");
+    (getTestProfileClaims as any).mockResolvedValueOnce([
+      { id: 1, claimCode: "SC-T12345", status: "claimed" },
+    ]);
+
+    const ctx = createAuthContext(1, "admin");
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.admin.testProfileClaims({ testProfileId: 1 });
+    expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+describe("admin.testProfileClaimOffer", () => {
+  it("admin can claim an offer for a test profile", async () => {
+    const { hasTestProfileClaimedOffer, createTestProfileClaim, getReferralOfferById } = await import("./db");
+    (hasTestProfileClaimedOffer as any).mockResolvedValueOnce(false);
+    (getReferralOfferById as any).mockResolvedValueOnce({ id: 1, businessId: 1, title: "10% Off", offerType: "consumer", isActive: true });
+    (createTestProfileClaim as any).mockResolvedValueOnce({ id: 1, claimCode: "SC-T12345" });
+
+    const ctx = createAuthContext(1, "admin");
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.admin.testProfileClaimOffer({ testProfileId: 1, referralOfferId: 1, businessId: 1 });
+    expect(result.claimCode).toBe("SC-T12345");
+  });
+
+  it("admin cannot claim same offer twice for a test profile", async () => {
+    const { hasTestProfileClaimedOffer, getReferralOfferById } = await import("./db");
+    (hasTestProfileClaimedOffer as any).mockResolvedValueOnce(true);
+    (getReferralOfferById as any).mockResolvedValueOnce({ id: 1, businessId: 1, title: "10% Off", offerType: "consumer", isActive: true });
+
+    const ctx = createAuthContext(1, "admin");
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.admin.testProfileClaimOffer({ testProfileId: 1, referralOfferId: 1, businessId: 1 })).rejects.toThrow();
   });
 });

@@ -747,6 +747,59 @@ export const appRouter = router({
         if (!updated) throw new TRPCError({ code: 'NOT_FOUND', message: 'Test profile not found' });
         return { success: true };
       }),
+
+    // ─── Test Profile Context Switching ───────────────────────
+    testProfileSavedBusinesses: adminProcedure
+      .input(z.object({ testProfileId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getTestProfileSavedBusinesses(input.testProfileId);
+      }),
+
+    testProfileSavedIds: adminProcedure
+      .input(z.object({ testProfileId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getTestProfileSavedBusinessIds(input.testProfileId);
+      }),
+
+    testProfileSaveBusiness: adminProcedure
+      .input(z.object({ testProfileId: z.number(), businessId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.testProfileSaveBusiness(input.testProfileId, input.businessId);
+        return { success: true };
+      }),
+
+    testProfileUnsaveBusiness: adminProcedure
+      .input(z.object({ testProfileId: z.number(), businessId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.testProfileUnsaveBusiness(input.testProfileId, input.businessId);
+        return { success: true };
+      }),
+
+    testProfileIsBusinessSaved: adminProcedure
+      .input(z.object({ testProfileId: z.number(), businessId: z.number() }))
+      .query(async ({ input }) => {
+        return db.isTestProfileBusinessSaved(input.testProfileId, input.businessId);
+      }),
+
+    testProfileClaims: adminProcedure
+      .input(z.object({ testProfileId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getTestProfileClaims(input.testProfileId);
+      }),
+
+    testProfileClaimOffer: adminProcedure
+      .input(z.object({ testProfileId: z.number(), referralOfferId: z.number(), businessId: z.number() }))
+      .mutation(async ({ input }) => {
+        const offer = await db.getReferralOfferById(input.referralOfferId);
+        if (!offer || !offer.isActive || offer.offerType !== 'consumer') {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Consumer offer not found or not active' });
+        }
+        const alreadyClaimed = await db.hasTestProfileClaimedOffer(input.testProfileId, input.referralOfferId);
+        if (alreadyClaimed) {
+          throw new TRPCError({ code: 'CONFLICT', message: 'Test profile already claimed this offer' });
+        }
+        return db.createTestProfileClaim(input);
+      }),
   }),
 
   // ─── Referral Tracking ──────────────────────────────────────
@@ -909,6 +962,29 @@ export const appRouter = router({
         });
         // Increment platform stats
         await db.incrementPlatformStat('total_consumer_claims');
+        // Notify business owner about the claim
+        try {
+          const biz = await db.getBusinessById(input.businessId);
+          if (biz?.business.claimedByUserId) {
+            await db.createNotification({
+              userId: biz.business.claimedByUserId,
+              type: 'offer_claimed',
+              title: 'New Offer Claim!',
+              message: `An athlete just claimed your offer "${offer.title}" (Code: ${result?.claimCode || 'N/A'}). Check your dashboard to manage claims.`,
+              relatedId: result?.id || null,
+              relatedType: 'consumer_claim',
+            });
+            // Also try to notify via email
+            try {
+              await db.notifyUser(biz.business.claimedByUserId, {
+                title: `New Offer Claim on ${biz.business.name}`,
+                message: `An athlete claimed your offer "${offer.title}". Claim code: ${result?.claimCode || 'N/A'}. Visit your dashboard to manage claims.`,
+              });
+            } catch (e) { /* email notification is best-effort */ }
+          }
+        } catch (e) {
+          console.error('[Notification] Failed to notify business owner about claim:', e);
+        }
         return result;
       }),
 
@@ -949,6 +1025,49 @@ export const appRouter = router({
     myAnalytics: protectedProcedure.query(async ({ ctx }) => {
       return db.getConsumerAnalytics(ctx.user.id);
     }),
+
+    // Business owner: mark claim as honored/redeemed
+    businessHonor: protectedProcedure
+      .input(z.object({
+        claimId: z.number(),
+        businessId: z.number(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        if (!biz || (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin')) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized to manage this business' });
+        }
+        await db.businessHonorClaim(input.claimId, input.businessId, input.notes);
+        return { success: true };
+      }),
+
+    // Business owner: mark claim as not redeemed / expired
+    businessReject: protectedProcedure
+      .input(z.object({
+        claimId: z.number(),
+        businessId: z.number(),
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        if (!biz || (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin')) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized to manage this business' });
+        }
+        await db.businessRejectClaim(input.claimId, input.businessId, input.reason);
+        return { success: true };
+      }),
+
+    // Business owner: get claim analytics for their business
+    businessAnalytics: protectedProcedure
+      .input(z.object({ businessId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const biz = await db.getBusinessById(input.businessId);
+        if (!biz || (biz.business.claimedByUserId !== ctx.user.id && ctx.user.role !== 'admin')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        return db.getBusinessClaimAnalytics(input.businessId);
+      }),
   }),
 
   // ─── Platform Stats ───────────────────────────────────────────

@@ -466,3 +466,36 @@ export const supportTicketAttachments = mysqlTable("support_ticket_attachments",
 
 export type SupportTicketAttachment = typeof supportTicketAttachments.$inferSelect;
 export type InsertSupportTicketAttachment = typeof supportTicketAttachments.$inferInsert;
+
+/**
+ * Test profile saved businesses: separate saved list per admin test profile
+ */
+export const testProfileSavedBusinesses = mysqlTable("test_profile_saved_businesses", {
+  id: int("id").autoincrement().primaryKey(),
+  testProfileId: int("testProfileId").notNull(),
+  businessId: int("businessId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type TestProfileSavedBusiness = typeof testProfileSavedBusinesses.$inferSelect;
+
+/**
+ * Test profile claims: separate claimed offers per admin test profile
+ */
+export const testProfileClaims = mysqlTable("test_profile_claims", {
+  id: int("id").autoincrement().primaryKey(),
+  testProfileId: int("testProfileId").notNull(),
+  referralOfferId: int("referralOfferId").notNull(),
+  businessId: int("businessId").notNull(),
+  claimCode: varchar("claimCode", { length: 20 }),
+  status: mysqlEnum("status", ["claimed", "redeemed", "expired", "disputed"]).default("claimed").notNull(),
+  isHonored: boolean("isHonored").default(false).notNull(),
+  honoredAt: timestamp("honoredAt"),
+  honoredNotes: text("honoredNotes"),
+  amountSaved: varchar("amountSaved", { length: 20 }),
+  isDisputed: boolean("isDisputed").default(false).notNull(),
+  disputeReason: text("disputeReason"),
+  disputedAt: timestamp("disputedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type TestProfileClaim = typeof testProfileClaims.$inferSelect;

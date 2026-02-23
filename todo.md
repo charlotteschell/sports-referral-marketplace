@@ -820,3 +820,32 @@
 - [x] BUG-001 claim business flow fix tests (2 tests)
 - [x] Contact info hiding tests (4 tests)
 - [x] All 187 tests passing
+
+## Business Owner Claim Notifications & Management
+- [x] Notify business owner (in-app + email) when an athlete claims their consumer offer
+- [x] Add "Athlete Claims" section/tab in Biz Dashboard showing all claims with status (claimed/redeemed/expired)
+- [x] Allow business owner to mark claims as honored/redeemed or not honored
+- [x] Show unredeemed claim codes so business owner can track which are pending in real life
+- [x] Add claim analytics (total claims, redeemed, pending, conversion rate)
+
+## Admin Test Profile Full Context Switching
+- [x] When admin selects a test profile, switch all athlete dashboard data to that profile's context
+- [x] Test profile should have its own editable profile (name, sports, location, goals)
+- [x] Test profile should have its own saved businesses list
+- [x] Test profile should have its own claimed offers list
+- [x] Add prominent visual indicator (banner) when viewing as test profile
+- [x] Profile editing should save to test profile data when test profile is activenot the admin's real profile
+
+## Tests for Business Owner Claims & Context Switching
+- [x] Business owner can list claims for their business (forBusiness)
+- [x] Non-owner cannot list claims for another business
+- [x] Business owner can honor a claim (businessHonor)
+- [x] Business owner can reject a claim (businessReject)
+- [x] Business owner can view claim analytics (businessAnalytics)
+- [x] Admin can list saved businesses for a test profile
+- [x] Non-admin cannot access test profile saved businesses
+- [x] Admin can save/unsave businesses for a test profile
+- [x] Admin can list claims for a test profile
+- [x] Admin can claim an offer for a test profile
+- [x] Admin cannot claim same offer twice for a test profile
+- [x] All 199 tests passing
