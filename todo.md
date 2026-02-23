@@ -907,3 +907,6 @@
 - [x] Ensure athlete logged-in nav links work correctly
 - [x] Ensure business owner logged-in nav links work correctly
 - [x] Ensure admin nav links work correctly
+
+## Nav Copy Update (Feb 23)
+- [x] Change "How It Works" to "Tutorials & Guides" in nav bar
