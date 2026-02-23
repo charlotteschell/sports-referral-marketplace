@@ -929,3 +929,10 @@
 - [x] Add "My Submissions" section to business dashboard showing all submitted businesses and their statuses
 - [x] Logged-in submissions should appear immediately in dashboard with pending status
 - [x] Approved submissions should show status change and allow editing from dashboard
+
+## Post-Submission Signup Redirect Fix (Feb 23)
+- [x] New users who submitted a business before creating account must skip onboarding and land on dashboard
+- [x] Header no longer forces redirect to /onboarding from /dashboard (only redirects from home page)
+- [x] Onboarding page checks for linked submissions and auto-completes onboarding
+- [x] Business owner onboarding flow uses per-call onSuccess callbacks (no global redirect to /submit-business)
+- [x] Tests written and passing (224 total)

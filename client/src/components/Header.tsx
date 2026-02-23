@@ -126,8 +126,10 @@ export default function Header() {
   const displayName = user?.contactName || user?.name || "User";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
 
+  // Only redirect to onboarding from the home page — don't force it from other pages
+  // (OAuth callback and other flows handle their own routing)
   useEffect(() => {
-    if (needsOnboarding && location !== "/onboarding" && !location.startsWith("/onboarding")) {
+    if (needsOnboarding && location === "/") {
       navigate("/onboarding");
     }
   }, [needsOnboarding, location, navigate]);

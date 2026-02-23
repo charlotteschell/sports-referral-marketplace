@@ -62,6 +62,11 @@ export default function Onboarding() {
   );
   const utils = trpc.useUtils();
 
+  // Check if user already has linked submissions (submitted before creating account)
+  const { data: mySubmissions } = trpc.submission.mySubmissions.useQuery(undefined, {
+    enabled: !!user,
+  });
+
   // If user already completed onboarding, redirect to their dashboard
   useEffect(() => {
     if (user && user.onboardingComplete) {
@@ -70,6 +75,8 @@ export default function Onboarding() {
       else navigate('/athlete-dashboard');
     }
   }, [user, navigate]);
+
+  // (auto-redirect for users with linked submissions is handled after setAccountType hook below)
 
   // Sport categories from API
   const { data: sportCategories } = trpc.categories.sportCategories.useQuery();
@@ -90,14 +97,6 @@ export default function Onboarding() {
 
   // All hooks must be declared before any useEffect that uses them
   const setAccountType = trpc.accountType.set.useMutation({
-    onSuccess: (_data, variables) => {
-      utils.auth.me.invalidate();
-      if (variables.accountType === "business_owner") {
-        toast.success("You're in! Let's get your business listed.");
-        navigate("/submit-business");
-      }
-      // For consumer, we handle navigation after saving athlete profile
-    },
     onError: (err) => {
       toast.error(err.message || "Something went wrong. Please try again.");
     },
@@ -123,14 +122,43 @@ export default function Onboarding() {
     }
   }, [user]);
 
+  // If user has linked submissions but hasn't completed onboarding,
+  // auto-complete onboarding and redirect to dashboard (skip the form)
+  const [autoRedirected, setAutoRedirected] = useState(false);
+  useEffect(() => {
+    if (user && !user.onboardingComplete && mySubmissions && mySubmissions.length > 0 && !autoRedirected) {
+      setAutoRedirected(true);
+      // User already submitted a business before creating account — skip onboarding
+      setAccountType.mutate({ accountType: 'business_owner' }, {
+        onSuccess: () => {
+          utils.auth.me.invalidate();
+          toast.success("Welcome! Your submitted business is already linked to your account.");
+          navigate('/dashboard');
+        },
+      });
+    }
+  }, [user, mySubmissions, autoRedirected]);
+
   // Auto-proceed for business type from URL (when clicking "List Your Business")
+  // But skip if user already has submissions (they should go to dashboard instead)
   const [autoProceeded, setAutoProceeded] = useState(false);
   useEffect(() => {
     if (typeFromUrl === 'business' && user && !autoProceeded && !user.onboardingComplete) {
-      setAutoProceeded(true);
-      setAccountType.mutate({ accountType: "business_owner" });
+      // If user has submissions, the autoRedirected effect above will handle it
+      if (mySubmissions && mySubmissions.length > 0) return;
+      // Only auto-proceed if we've confirmed there are no submissions
+      if (mySubmissions !== undefined) {
+        setAutoProceeded(true);
+        setAccountType.mutate({ accountType: "business_owner" }, {
+          onSuccess: () => {
+            utils.auth.me.invalidate();
+            toast.success("You're in! Let's get your business listed.");
+            navigate("/submit-business");
+          },
+        });
+      }
     }
-  }, [typeFromUrl, user, autoProceeded]);
+  }, [typeFromUrl, user, autoProceeded, mySubmissions]);
 
   const handleChoose = () => {
     if (!selected) {
@@ -138,7 +166,13 @@ export default function Onboarding() {
       return;
     }
     if (selected === "business_owner") {
-      setAccountType.mutate({ accountType: "business_owner" });
+      setAccountType.mutate({ accountType: "business_owner" }, {
+        onSuccess: () => {
+          utils.auth.me.invalidate();
+          toast.success("You're in! Let's get your business listed.");
+          navigate("/submit-business");
+        },
+      });
     } else {
       setStep('athlete-form');
     }
