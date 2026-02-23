@@ -28,6 +28,11 @@ import {
 
 type TabId = "offers" | "saved" | "notifications" | "profile";
 
+function safeJsonParse<T>(val: string | null | undefined, fallback: T): T {
+  if (!val || val.trim() === '') return fallback;
+  try { return JSON.parse(val); } catch { return fallback; }
+}
+
 export default function AthleteDashboard() {
   const { user, loading } = useAuth({ redirectOnUnauthenticated: true });
   const [, navigate] = useLocation();
@@ -184,9 +189,9 @@ export default function AthleteDashboard() {
   // Populate edit form when entering edit mode - uses effectiveProfile (real or test profile)
   useEffect(() => {
     if (isEditingProfile && effectiveProfile) {
-      const sportIds = effectiveProfile.sportIds ? JSON.parse(effectiveProfile.sportIds) : [];
-      const expLevels = effectiveProfile.experienceLevels ? JSON.parse(effectiveProfile.experienceLevels) : {};
-      const interests = effectiveProfile.interests ? JSON.parse(effectiveProfile.interests) : [];
+      const sportIds = safeJsonParse<number[]>(effectiveProfile.sportIds, []);
+      const expLevels = safeJsonParse<Record<number, string>>(effectiveProfile.experienceLevels, {});
+      const interests = safeJsonParse<string[]>(effectiveProfile.interests, []);
       setEditForm({
         displayName: effectiveProfile.displayName || user?.contactName || user?.name || "",
         selectedSports: sportIds,
@@ -314,15 +319,9 @@ export default function AthleteDashboard() {
     return sport?.name || `Sport #${id}`;
   };
 
-  const parsedSportIds: number[] = effectiveProfile?.sportIds
-    ? JSON.parse(effectiveProfile.sportIds)
-    : [];
-  const parsedExperience: Record<string, string> = effectiveProfile?.experienceLevels
-    ? JSON.parse(effectiveProfile.experienceLevels)
-    : {};
-  const parsedInterests: string[] = effectiveProfile?.interests
-    ? JSON.parse(effectiveProfile.interests)
-    : [];
+  const parsedSportIds: number[] = safeJsonParse<number[]>(effectiveProfile?.sportIds, []);
+  const parsedExperience: Record<string, string> = safeJsonParse<Record<string, string>>(effectiveProfile?.experienceLevels, {});
+  const parsedInterests: string[] = safeJsonParse<string[]>(effectiveProfile?.interests, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

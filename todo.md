@@ -849,3 +849,15 @@
 - [x] Admin can claim an offer for a test profile
 - [x] Admin cannot claim same offer twice for a test profile
 - [x] All 199 tests passing
+
+## Bug Fixes - Athlete Dashboard Errors
+- [x] Fix SQL query error in getRecommendedBusinessesForProfile (raw SQL query failing - wrong table name)
+- [x] Fix JSON parse error / SyntaxError in AthleteDashboard component (added safeJsonParse helper)
+- [x] Fix Athlete Claims section not visible in Biz Dashboard under admin view (admin now sees all claims with toggle)
+
+## Tests for Admin All Claims Management
+- [x] Admin can list all consumer claims across all businesses
+- [x] Non-admin cannot list all consumer claims
+- [x] Admin can get all claim analytics
+- [x] Non-admin cannot get all claim analytics
+- [x] All 203 tests passing

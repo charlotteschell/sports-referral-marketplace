@@ -800,6 +800,18 @@ export const appRouter = router({
         }
         return db.createTestProfileClaim(input);
       }),
+
+    // Admin: view all consumer claims across all businesses
+    allConsumerClaims: adminProcedure
+      .input(z.object({ limit: z.number().min(1).max(500).optional() }).optional())
+      .query(async ({ input }) => {
+        return db.getAllConsumerClaims(input?.limit ?? 100);
+      }),
+
+    // Admin: get aggregate claim analytics across all businesses
+    allClaimAnalytics: adminProcedure.query(async () => {
+      return db.getAllClaimAnalytics();
+    }),
   }),
 
   // ─── Referral Tracking ──────────────────────────────────────

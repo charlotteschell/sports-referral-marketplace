@@ -189,6 +189,8 @@ vi.mock("./db", () => ({
   businessRejectClaim: vi.fn().mockResolvedValue(true),
   getBusinessClaimAnalytics: vi.fn().mockResolvedValue({ totalClaims: 10, pending: 3, redeemed: 5, expired: 2 }),
   getRecommendedBusinessesForProfile: vi.fn().mockResolvedValue([]),
+  getAllConsumerClaims: vi.fn().mockResolvedValue([]),
+  getAllClaimAnalytics: vi.fn().mockResolvedValue({ totalClaims: 20, pending: 8, redeemed: 10, expired: 2 }),
 }));
 
 // Mock the storage module
@@ -969,5 +971,49 @@ describe("admin.testProfileClaimOffer", () => {
     const ctx = createAuthContext(1, "admin");
     const caller = appRouter.createCaller(ctx);
     await expect(caller.admin.testProfileClaimOffer({ testProfileId: 1, referralOfferId: 1, businessId: 1 })).rejects.toThrow();
+  });
+});
+
+describe("Admin All Claims Management", () => {
+  const createAuthContext = (userId: number, role: string = "user"): TrpcContext => ({
+    user: { id: userId, openId: `openid-${userId}`, name: "Test User", role } as any,
+  });
+
+  it("admin can list all consumer claims across all businesses", async () => {
+    const { getAllConsumerClaims } = await import("./db");
+    (getAllConsumerClaims as any).mockResolvedValueOnce([
+      { claim: { id: 1, status: "claimed" }, offer: { title: "10% Off" }, user: { name: "Athlete1" }, business: { name: "Biz1" } },
+      { claim: { id: 2, status: "redeemed" }, offer: { title: "Free Session" }, user: { name: "Athlete2" }, business: { name: "Biz2" } },
+    ]);
+
+    const ctx = createAuthContext(1, "admin");
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.admin.allConsumerClaims();
+    expect(result).toHaveLength(2);
+    expect(result[0].business.name).toBe("Biz1");
+  });
+
+  it("non-admin cannot list all consumer claims", async () => {
+    const ctx = createAuthContext(2, "user");
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.admin.allConsumerClaims()).rejects.toThrow();
+  });
+
+  it("admin can get all claim analytics", async () => {
+    const { getAllClaimAnalytics } = await import("./db");
+    (getAllClaimAnalytics as any).mockResolvedValueOnce({ totalClaims: 20, pending: 8, redeemed: 10, expired: 2 });
+
+    const ctx = createAuthContext(1, "admin");
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.admin.allClaimAnalytics();
+    expect(result.totalClaims).toBe(20);
+    expect(result.pending).toBe(8);
+    expect(result.redeemed).toBe(10);
+  });
+
+  it("non-admin cannot get all claim analytics", async () => {
+    const ctx = createAuthContext(2, "user");
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.admin.allClaimAnalytics()).rejects.toThrow();
   });
 });

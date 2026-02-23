@@ -1133,8 +1133,8 @@ export default function Dashboard() {
           </Card>
 
           {/* Athlete Claims Management */}
-          {myBusinesses && myBusinesses.length > 0 && (
-            <AthleteClaimsSection businesses={myBusinesses} />
+          {(user?.role === 'admin' || (myBusinesses && myBusinesses.length > 0)) && (
+            <AthleteClaimsSection businesses={myBusinesses || []} isAdmin={user?.role === 'admin'} />
           )}
 
           {/* Quick Actions Footer */}
@@ -1274,25 +1274,46 @@ export default function Dashboard() {
 }
 
 // ─── Athlete Claims Management Section ─────────────────────────────
-function AthleteClaimsSection({ businesses }: { businesses: any[] }) {
+function AthleteClaimsSection({ businesses, isAdmin }: { businesses: any[]; isAdmin?: boolean }) {
   const utils = trpc.useUtils();
+  const hasBiz = businesses.length > 0;
+  const [viewMode, setViewMode] = useState<'all' | 'per_business'>(isAdmin ? 'all' : 'per_business');
   const [selectedBizId, setSelectedBizId] = useState<number | null>(
-    businesses.length > 0 ? businesses[0].id : null
+    hasBiz ? (businesses[0].business?.id ?? businesses[0].id) : null
   );
 
-  const { data: claims, isLoading: claimsLoading } = (trpc.consumerClaim as any).forBusiness.useQuery(
-    { businessId: selectedBizId! },
-    { enabled: !!selectedBizId }
+  // Admin: all claims across all businesses
+  const { data: allClaims, isLoading: allClaimsLoading } = (trpc.admin as any).allConsumerClaims.useQuery(
+    undefined,
+    { enabled: !!isAdmin && viewMode === 'all' }
+  );
+  const { data: allAnalytics } = (trpc.admin as any).allClaimAnalytics.useQuery(
+    undefined,
+    { enabled: !!isAdmin && viewMode === 'all' }
   );
 
-  const { data: claimAnalytics } = (trpc.consumerClaim as any).businessAnalytics.useQuery(
+  // Per-business claims
+  const { data: bizClaims, isLoading: bizClaimsLoading } = (trpc.consumerClaim as any).forBusiness.useQuery(
     { businessId: selectedBizId! },
-    { enabled: !!selectedBizId }
+    { enabled: viewMode === 'per_business' && !!selectedBizId }
   );
+  const { data: bizAnalytics } = (trpc.consumerClaim as any).businessAnalytics.useQuery(
+    { businessId: selectedBizId! },
+    { enabled: viewMode === 'per_business' && !!selectedBizId }
+  );
+
+  // Merged data based on view mode
+  const claims = viewMode === 'all' ? allClaims : bizClaims;
+  const claimsLoading = viewMode === 'all' ? allClaimsLoading : bizClaimsLoading;
+  const claimAnalytics = viewMode === 'all' ? allAnalytics : bizAnalytics;
 
   const honorMut = (trpc.consumerClaim as any).businessHonor.useMutation({
     onSuccess: () => {
       toast.success("Claim marked as redeemed!");
+      if (viewMode === 'all') {
+        (utils.admin as any).allConsumerClaims.invalidate();
+        (utils.admin as any).allClaimAnalytics.invalidate();
+      }
       utils.consumerClaim.forBusiness.invalidate();
       (utils.consumerClaim as any).businessAnalytics.invalidate();
     },
@@ -1302,6 +1323,10 @@ function AthleteClaimsSection({ businesses }: { businesses: any[] }) {
   const rejectMut = (trpc.consumerClaim as any).businessReject.useMutation({
     onSuccess: () => {
       toast.success("Claim marked as expired/not redeemed.");
+      if (viewMode === 'all') {
+        (utils.admin as any).allConsumerClaims.invalidate();
+        (utils.admin as any).allClaimAnalytics.invalidate();
+      }
       utils.consumerClaim.forBusiness.invalidate();
       (utils.consumerClaim as any).businessAnalytics.invalidate();
     },
@@ -1318,17 +1343,43 @@ function AthleteClaimsSection({ businesses }: { businesses: any[] }) {
   return (
     <Card className="mb-8">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Gift className="w-5 h-5 text-primary" />
-          Athlete Offer Claims
-        </CardTitle>
-        <CardDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
-          Track and manage athlete claims on your consumer offers. Mark claims as redeemed when athletes visit.
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Gift className="w-5 h-5 text-primary" />
+              Athlete Offer Claims
+            </CardTitle>
+            <CardDescription style={{ textTransform: "none", letterSpacing: "normal" }}>
+              {isAdmin ? 'View and manage all athlete claims across all businesses.' : 'Track and manage athlete claims on your consumer offers. Mark claims as redeemed when athletes visit.'}
+            </CardDescription>
+          </div>
+          {isAdmin && hasBiz && (
+            <div className="flex gap-1 bg-muted rounded-lg p-0.5">
+              <Button
+                size="sm"
+                variant={viewMode === 'all' ? 'default' : 'ghost'}
+                className="text-xs h-7 px-3"
+                style={{ textTransform: "none" }}
+                onClick={() => setViewMode('all')}
+              >
+                All Claims
+              </Button>
+              <Button
+                size="sm"
+                variant={viewMode === 'per_business' ? 'default' : 'ghost'}
+                className="text-xs h-7 px-3"
+                style={{ textTransform: "none" }}
+                onClick={() => setViewMode('per_business')}
+              >
+                Per Business
+              </Button>
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
-        {/* Business selector if multiple */}
-        {businesses.length > 1 && (
+        {/* Business selector for per-business view */}
+        {viewMode === 'per_business' && hasBiz && businesses.length > 1 && (
           <div className="mb-4">
             <Select
               value={String(selectedBizId || "")}
@@ -1338,11 +1389,17 @@ function AthleteClaimsSection({ businesses }: { businesses: any[] }) {
                 <SelectValue placeholder="Select business" />
               </SelectTrigger>
               <SelectContent>
-                {businesses.map((b: any) => (
-                  <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
-                ))}
+                {businesses.map((b: any) => {
+                  const biz = b.business || b;
+                  return <SelectItem key={biz.id} value={String(biz.id)}>{biz.name}</SelectItem>;
+                })}
               </SelectContent>
             </Select>
+          </div>
+        )}
+        {viewMode === 'per_business' && !hasBiz && (
+          <div className="text-center py-4 text-muted-foreground mb-4">
+            <p style={{ textTransform: "none" }}>No claimed businesses yet. Switch to "All Claims" to see claims across all businesses.</p>
           </div>
         )}
 
@@ -1396,6 +1453,9 @@ function AthleteClaimsSection({ businesses }: { businesses: any[] }) {
                         </Badge>
                       </div>
                       <div className="text-sm text-muted-foreground space-y-0.5" style={{ textTransform: "none" }}>
+                        {viewMode === 'all' && c.business && (
+                          <p>Business: <span className="font-medium text-foreground">{c.business.name}</span></p>
+                        )}
                         <p>Claimed by: <span className="font-medium text-foreground">{c.user?.name || 'Athlete'}</span></p>
                         <p>Claim Code: <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{c.claim?.claimCode || 'N/A'}</code></p>
                         <p>Date: {c.claim?.createdAt ? new Date(c.claim.createdAt).toLocaleDateString() : 'N/A'}</p>
@@ -1408,7 +1468,7 @@ function AthleteClaimsSection({ businesses }: { businesses: any[] }) {
                           className="bg-green-600 hover:bg-green-700 text-white"
                           style={{ textTransform: "none" }}
                           disabled={honorMut.isPending}
-                          onClick={() => honorMut.mutate({ claimId: c.claim.id, businessId: selectedBizId! })}
+                          onClick={() => honorMut.mutate({ claimId: c.claim.id, businessId: c.claim?.businessId || c.business?.id || selectedBizId! })}
                         >
                           <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
                           {honorMut.isPending ? 'Processing...' : 'Mark Redeemed'}
@@ -1419,7 +1479,7 @@ function AthleteClaimsSection({ businesses }: { businesses: any[] }) {
                           className="bg-transparent text-muted-foreground"
                           style={{ textTransform: "none" }}
                           disabled={rejectMut.isPending}
-                          onClick={() => rejectMut.mutate({ claimId: c.claim.id, businessId: selectedBizId!, reason: 'Not redeemed in person' })}
+                          onClick={() => rejectMut.mutate({ claimId: c.claim.id, businessId: c.claim?.businessId || c.business?.id || selectedBizId!, reason: 'Not redeemed in person' })}
                         >
                           <XCircle className="w-3.5 h-3.5 mr-1" />
                           Not Redeemed

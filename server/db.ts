@@ -2126,7 +2126,7 @@ export async function getRecommendedBusinesses(userId: number, limit = 12) {
         bt.name as businessTypeName, bt.id as businessTypeId,
         (
           CASE WHEN EXISTS (
-            SELECT 1 FROM business_sport_categories bsc 
+            SELECT 1 FROM businessSportCategories bsc 
             WHERE bsc.businessId = b.id AND bsc.sportCategoryId IN (${sportIdsStr})
           ) THEN 30 ELSE 0 END
           +
@@ -2141,7 +2141,7 @@ export async function getRecommendedBusinesses(userId: number, limit = 12) {
         CASE 
           WHEN LOWER(b.city) = LOWER('${cityEscaped}') AND '${cityEscaped}' != '' THEN 'near_you'
           WHEN EXISTS (
-            SELECT 1 FROM business_sport_categories bsc 
+            SELECT 1 FROM businessSportCategories bsc 
             WHERE bsc.businessId = b.id AND bsc.sportCategoryId IN (${sportIdsStr})
           ) THEN 'your_sport'
           WHEN b.businessTypeId IN (${typeIdsStr}) THEN 'your_interest'
@@ -2485,7 +2485,7 @@ export async function getRecommendedBusinessesForProfile(
         bt.name as businessTypeName, bt.id as businessTypeId,
         (
           CASE WHEN EXISTS (
-            SELECT 1 FROM business_sport_categories bsc 
+            SELECT 1 FROM businessSportCategories bsc 
             WHERE bsc.businessId = b.id AND bsc.sportCategoryId IN (${sportIdsStr})
           ) THEN 30 ELSE 0 END
           +
@@ -2500,7 +2500,7 @@ export async function getRecommendedBusinessesForProfile(
         CASE 
           WHEN LOWER(b.city) = LOWER('${cityEscaped}') AND '${cityEscaped}' != '' THEN 'near_you'
           WHEN EXISTS (
-            SELECT 1 FROM business_sport_categories bsc 
+            SELECT 1 FROM businessSportCategories bsc 
             WHERE bsc.businessId = b.id AND bsc.sportCategoryId IN (${sportIdsStr})
           ) THEN 'your_sport'
           WHEN b.businessTypeId IN (${typeIdsStr}) THEN 'your_interest'
@@ -2729,4 +2729,50 @@ export async function hasTestProfileClaimedOffer(testProfileId: number, referral
     ))
     .limit(1);
   return rows.length > 0;
+}
+
+
+// ─── Admin: All Consumer Claims ───────────────────────────────
+
+/**
+ * Get all consumer claims across all businesses (admin only)
+ */
+export async function getAllConsumerClaims(limit = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    claim: consumerClaims,
+    offer: referralOffers,
+    user: {
+      id: users.id,
+      name: users.name,
+      email: users.email,
+    },
+    business: {
+      id: businesses.id,
+      name: businesses.name,
+      slug: businesses.slug,
+    },
+  })
+    .from(consumerClaims)
+    .innerJoin(referralOffers, eq(consumerClaims.referralOfferId, referralOffers.id))
+    .innerJoin(users, eq(consumerClaims.userId, users.id))
+    .innerJoin(businesses, eq(consumerClaims.businessId, businesses.id))
+    .orderBy(desc(consumerClaims.createdAt))
+    .limit(limit);
+}
+
+/**
+ * Get aggregate claim analytics across all businesses (admin only)
+ */
+export async function getAllClaimAnalytics() {
+  const db = await getDb();
+  if (!db) return { totalClaims: 0, pending: 0, redeemed: 0, expired: 0 };
+  const [rows] = await db.select({
+    totalClaims: sql<number>`COUNT(*)`,
+    pending: sql<number>`SUM(CASE WHEN ${consumerClaims.status} = 'claimed' THEN 1 ELSE 0 END)`,
+    redeemed: sql<number>`SUM(CASE WHEN ${consumerClaims.status} = 'redeemed' THEN 1 ELSE 0 END)`,
+    expired: sql<number>`SUM(CASE WHEN ${consumerClaims.status} = 'expired' THEN 1 ELSE 0 END)`,
+  }).from(consumerClaims);
+  return rows || { totalClaims: 0, pending: 0, redeemed: 0, expired: 0 };
 }
