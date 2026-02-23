@@ -175,7 +175,7 @@ export default function Header() {
      LOGGED-OUT NAV ITEMS
      ═══════════════════════════════════════════════════ */
   const forBusinessItems: DropdownItem[] = [
-    { href: "/directory", label: "List Your Business", desc: "Add your business to the network", icon: ClipboardList, iconBg: "bg-primary/15 text-primary" },
+    { href: "/submit-business", label: "List Your Business", desc: "Add your business to the network", icon: ClipboardList, iconBg: "bg-primary/15 text-primary" },
     { href: "/directory", label: "Claim Your Business", desc: "Already listed? Take ownership", icon: Key, iconBg: "bg-primary/15 text-primary" },
     { href: "/referral-offers", label: "Referral Offers", desc: "Browse B2B referral incentives", icon: Handshake, iconBg: "bg-primary/15 text-primary" },
   ];
@@ -186,7 +186,7 @@ export default function Header() {
   ];
 
   const helpItems: DropdownItem[] = [
-    { href: "/university", label: "University", desc: "Tutorials & Guides", icon: GraduationCap, iconBg: "bg-sky-500/15 text-sky-400" },
+    { href: "/university", label: "University", desc: "Tutorials & guides", icon: GraduationCap, iconBg: "bg-sky-500/15 text-sky-400" },
     { href: "/support", label: "Support", desc: "Get help & contact us", icon: HelpCircle, iconBg: "bg-sky-500/15 text-sky-400" },
   ];
 

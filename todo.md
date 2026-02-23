@@ -911,3 +911,7 @@
 ## Nav Copy Update (Feb 23)
 - [x] Change "How It Works" to "Tutorials & Guides" in nav bar
 - [x] Change nav item: label → "University", description → "Tutorials & Guides"
+
+## Nav Fixes (Feb 23 batch 5)
+- [x] Fix "List Your Business" link to go to the business submission form
+- [x] Standardize capitalization across all nav bar items
