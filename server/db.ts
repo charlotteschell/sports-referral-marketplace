@@ -834,6 +834,66 @@ export async function getBusinessSubmissionById(id: number) {
   return result.length > 0 ? result[0] : null;
 }
 
+export async function resubmitBusinessSubmission(
+  id: number,
+  userId: number,
+  data: {
+    businessName: string;
+    businessDescription?: string | null;
+    sportCategoryId: number;
+    businessTypeId: number;
+    sportCategoryIds?: string | null;
+    businessTypeIds?: string | null;
+    city?: string | null;
+    state?: string | null;
+    country?: string | null;
+    region?: string | null;
+    hub?: string | null;
+    contactName: string;
+    contactEmail: string;
+    contactPhone?: string | null;
+    website?: string | null;
+    instagram?: string | null;
+    facebook?: string | null;
+    additionalNotes?: string | null;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const current = await db.select().from(businessSubmissions).where(eq(businessSubmissions.id, id)).limit(1);
+  if (!current.length) throw new Error("Submission not found");
+  const sub = current[0];
+
+  if (sub.submittedByUserId !== userId) throw new Error("Not authorized");
+  if (sub.status !== 'rejected') throw new Error("Only rejected submissions can be resubmitted");
+
+  // Archive previous review notes
+  let previousNotes: Array<{ notes: string; reviewedAt: string; resubmissionNumber: number }> = [];
+  try {
+    if (sub.previousReviewNotes) previousNotes = JSON.parse(sub.previousReviewNotes);
+  } catch { /* ignore */ }
+  if (sub.reviewNotes) {
+    previousNotes.push({
+      notes: sub.reviewNotes,
+      reviewedAt: sub.reviewedAt?.toISOString() || new Date().toISOString(),
+      resubmissionNumber: sub.resubmissionCount,
+    });
+  }
+
+  await db.update(businessSubmissions).set({
+    ...data,
+    status: 'pending',
+    reviewNotes: null,
+    reviewedAt: null,
+    resubmittedAt: new Date(),
+    resubmissionCount: sub.resubmissionCount + 1,
+    previousReviewNotes: JSON.stringify(previousNotes),
+  }).where(eq(businessSubmissions.id, id));
+
+  return { success: true, resubmissionCount: sub.resubmissionCount + 1 };
+}
+
 // ─── Unclaim & Delete Business ─────────────────────────────────
 
 export async function unclaimBusiness(businessId: number) {

@@ -276,6 +276,9 @@ export const businessSubmissions = mysqlTable("businessSubmissions", {
   status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
   reviewNotes: text("reviewNotes"),
   reviewedAt: timestamp("reviewedAt"),
+  resubmittedAt: timestamp("resubmittedAt"),
+  resubmissionCount: int("resubmissionCount").default(0).notNull(),
+  previousReviewNotes: text("previousReviewNotes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

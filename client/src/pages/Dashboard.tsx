@@ -1108,11 +1108,26 @@ export default function Dashboard() {
                         <Clock className="w-3 h-3" />
                         Submitted {new Date(item.submission.createdAt).toLocaleDateString()}
                       </div>
-                      {item.submission.status === 'rejected' && item.submission.reviewNotes && (
-                        <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                          <p className="text-sm text-red-700 dark:text-red-300" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
-                            <strong>Review Notes:</strong> {item.submission.reviewNotes}
-                          </p>
+                      {item.submission.status === 'rejected' && (
+                        <div className="mt-3 space-y-3">
+                          {item.submission.reviewNotes && (
+                            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                              <p className="text-sm text-red-700 dark:text-red-300" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                                <strong>Review Notes:</strong> {item.submission.reviewNotes}
+                              </p>
+                            </div>
+                          )}
+                          {item.submission.resubmissionCount > 0 && (
+                            <p className="text-xs text-muted-foreground" style={{ textTransform: 'none' }}>
+                              Previously resubmitted {item.submission.resubmissionCount} time{item.submission.resubmissionCount > 1 ? 's' : ''}
+                            </p>
+                          )}
+                          <Link href={`/dashboard/edit-submission/${item.submission.id}`}>
+                            <Button size="sm" variant="outline" className="gap-2 border-amber-500 text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30" style={{ textTransform: 'none' }}>
+                              <Pencil className="w-3.5 h-3.5" />
+                              Edit & Resubmit
+                            </Button>
+                          </Link>
                         </div>
                       )}
                       {item.submission.status === 'pending' && (

@@ -936,3 +936,17 @@
 - [x] Onboarding page checks for linked submissions and auto-completes onboarding
 - [x] Business owner onboarding flow uses per-call onSuccess callbacks (no global redirect to /submit-business)
 - [x] Tests written and passing (224 total)
+
+## Rejected Submission Resubmission Workflow (Feb 23)
+- [x] Schema: Add resubmittedAt, resubmissionCount, previousReviewNotes fields to businessSubmissions
+- [x] DB helper: resubmitBusinessSubmission with authorization, status check, and review history archival
+- [x] tRPC: submission.getById (protected, owner or admin access)
+- [x] tRPC: submission.resubmit (protected, owner only, rejected status only)
+- [x] Notification: Notify business owner on approval/rejection via in-app notification
+- [x] Notification: Notify admin on resubmission via notifyOwner
+- [x] Frontend: EditSubmission page with pre-populated form, rejection reason display, review history
+- [x] Frontend: "Edit & Resubmit" button on rejected submissions in Dashboard
+- [x] Admin: Resubmission badge and count indicator on pending resubmissions
+- [x] Admin: Previous review history display in expanded submission card
+- [x] Admin: Resubmitted timestamp shown in submission metadata
+- [x] Tests: 11 new tests covering resubmission workflow (239 total passing)

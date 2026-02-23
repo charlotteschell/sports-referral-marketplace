@@ -580,6 +580,7 @@ function SubmissionCard({ submission, sportCategory, businessType, onReview, isR
   const [showRejectForm, setShowRejectForm] = useState(false);
   const s = submission;
   const isPending = s.status === "pending";
+  const isResubmission = (s.resubmissionCount || 0) > 0;
 
   return (
     <Card className="border border-border/60 bg-card shadow-sm overflow-hidden">
@@ -598,6 +599,11 @@ function SubmissionCard({ submission, sportCategory, businessType, onReview, isR
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
+          {isResubmission && isPending && (
+            <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs gap-1" style={{ textTransform: 'none' }}>
+              <RefreshCw className="w-3 h-3" /> Resubmission #{s.resubmissionCount}
+            </Badge>
+          )}
           <StatusBadge status={s.status} />
           <span className="text-xs text-muted-foreground hidden sm:inline">{new Date(s.createdAt).toLocaleDateString()}</span>
           {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -630,9 +636,34 @@ function SubmissionCard({ submission, sportCategory, businessType, onReview, isR
           {s.businessDescription && <div><h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Business Description</h4><p className="text-sm text-muted-foreground leading-relaxed">{s.businessDescription}</p></div>}
           {s.additionalNotes && <div><h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Additional Notes</h4><p className="text-sm text-muted-foreground leading-relaxed italic">{s.additionalNotes}</p></div>}
           {s.reviewNotes && <div className="bg-muted/50 rounded-lg p-3"><h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Review Notes</h4><p className="text-sm text-muted-foreground">{s.reviewNotes}</p></div>}
+          {/* Previous review history for resubmissions */}
+          {isResubmission && s.previousReviewNotes && (() => {
+            try {
+              const history = JSON.parse(s.previousReviewNotes);
+              if (Array.isArray(history) && history.length > 0) {
+                return (
+                  <div className="bg-amber-50/50 dark:bg-amber-950/20 rounded-lg p-3 border border-amber-200/50 dark:border-amber-800/30">
+                    <h4 className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> Previous Review History
+                    </h4>
+                    <div className="space-y-2">
+                      {history.map((entry: any, i: number) => (
+                        <div key={i} className="text-sm border-l-2 border-amber-300/50 pl-2">
+                          <span className="text-xs text-muted-foreground">Review #{i + 1} — {new Date(entry.reviewedAt).toLocaleDateString()}</span>
+                          <p className="text-muted-foreground">{entry.notes}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+            } catch { /* ignore */ }
+            return null;
+          })()}
           <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t border-border/30">
             <span>Submitted: {new Date(s.createdAt).toLocaleString()}</span>
             {s.submittedByUserId && <span>User ID: {s.submittedByUserId}</span>}
+            {isResubmission && s.resubmittedAt && <span className="text-amber-600 dark:text-amber-400">Resubmitted: {new Date(s.resubmittedAt).toLocaleString()}</span>}
           </div>
           {isPending && (
             <div className="pt-2 border-t border-border/30">

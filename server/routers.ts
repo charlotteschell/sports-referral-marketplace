@@ -574,7 +574,92 @@ export const appRouter = router({
             }
           }
         }
+        // Notify the submitter about the decision
+        if (submission.submission.submittedByUserId) {
+          try {
+            await db.createUserNotification({
+              userId: submission.submission.submittedByUserId,
+              type: input.status === 'approved' ? 'submission_approved' : 'submission_rejected',
+              title: input.status === 'approved'
+                ? `Submission Approved: ${submission.submission.businessName}`
+                : `Submission Needs Changes: ${submission.submission.businessName}`,
+              message: input.status === 'approved'
+                ? `Your business "${submission.submission.businessName}" has been approved and is now live in the directory!`
+                : `Your submission for "${submission.submission.businessName}" needs changes.${input.reviewNotes ? ` Feedback: ${input.reviewNotes}` : ''} Edit and resubmit from your dashboard.`,
+            });
+          } catch (e) {
+            console.warn('[Notification] Failed to notify submitter:', e);
+          }
+        }
         return { success: true };
+      }),
+
+    // Get a single submission by ID (for edit form)
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const result = await db.getBusinessSubmissionById(input.id);
+        if (!result) throw new TRPCError({ code: 'NOT_FOUND', message: 'Submission not found' });
+        if (result.submission.submittedByUserId !== ctx.user.id && ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized to view this submission' });
+        }
+        return result;
+      }),
+
+    // Resubmit a rejected submission with edits
+    resubmit: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        businessName: z.string().min(1).max(255),
+        businessDescription: z.string().optional(),
+        sportCategoryId: z.number(),
+        businessTypeId: z.number(),
+        sportCategoryIds: z.array(z.number()).optional(),
+        businessTypeIds: z.array(z.number()).optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        country: z.string().optional(),
+        region: z.string().optional(),
+        hub: z.string().optional(),
+        contactName: z.string().min(1).max(255),
+        contactEmail: z.string().min(1).max(320),
+        contactPhone: z.string().optional(),
+        website: z.string().min(1, 'Website is required'),
+        instagram: z.string().optional(),
+        facebook: z.string().optional(),
+        additionalNotes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        input.website = normalizeWebsiteUrl(input.website);
+        const result = await db.resubmitBusinessSubmission(input.id, ctx.user.id, {
+          businessName: input.businessName,
+          businessDescription: input.businessDescription || null,
+          sportCategoryId: input.sportCategoryId,
+          businessTypeId: input.businessTypeId,
+          sportCategoryIds: input.sportCategoryIds ? JSON.stringify(input.sportCategoryIds) : null,
+          businessTypeIds: input.businessTypeIds ? JSON.stringify(input.businessTypeIds) : null,
+          city: input.city || null,
+          state: input.state || null,
+          country: input.country || null,
+          region: input.region || null,
+          hub: input.hub || null,
+          contactName: input.contactName,
+          contactEmail: input.contactEmail,
+          contactPhone: input.contactPhone || null,
+          website: input.website,
+          instagram: input.instagram || null,
+          facebook: input.facebook || null,
+          additionalNotes: input.additionalNotes || null,
+        });
+        try {
+          await notifyOwner({
+            title: `Resubmission: ${input.businessName}`,
+            content: `A previously rejected submission has been edited and resubmitted (attempt #${result.resubmissionCount}).\n\nBusiness: ${input.businessName}\nContact: ${input.contactName} (${input.contactEmail})\n\nPlease review in the Admin Panel.`,
+          });
+        } catch (e) {
+          console.warn('[Notification] Failed to notify owner about resubmission:', e);
+        }
+        return result;
       }),
   }),
 

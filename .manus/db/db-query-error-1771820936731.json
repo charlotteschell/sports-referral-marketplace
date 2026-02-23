@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE `businessSubmissions` ADD `resubmittedAt` timestamp;\nALTER TABLE `businessSubmissions` ADD `resubmissionCount` int DEFAULT 0 NOT NULL;\nALTER TABLE `businessSubmissions` ADD `previousReviewNotes` text;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute ALTER TABLE `businessSubmissions` ADD `resubmittedAt` timestamp;\nALTER TABLE `businessSubmissions` ADD `resubmissionCount` int DEFAULT 0 NOT NULL;\nALTER TABLE `businessSubmissions` ADD `previousReviewNotes` text;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1060 (42S21) at line 1: Duplicate column name 'resubmittedAt'"
+  ]
+}

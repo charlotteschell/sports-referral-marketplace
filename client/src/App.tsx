@@ -25,6 +25,7 @@ import BetaBanner from "./components/BetaBanner";
 import University from "./pages/University";
 import UniversityArticle from "./pages/UniversityArticle";
 import AccountSettings from "./pages/AccountSettings";
+import EditSubmission from "./pages/EditSubmission";
 import { ContactNamePrompt } from "./components/ContactNamePrompt";
 
 function Router() {
@@ -41,6 +42,7 @@ function Router() {
       <Route path="/dashboard/send-referral" component={SendReferral} />
       <Route path="/dashboard/referrals" component={Referrals} />
       <Route path="/submit-business" component={SubmitBusiness} />
+      <Route path="/dashboard/edit-submission/:id" component={EditSubmission} />
       <Route path="/about" component={About} />
       <Route path="/support" component={SupportTicket} />
       <Route path="/leaderboard" component={Leaderboard} />
