@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, profileName, sportIds, typeof(sportIds), experienceLevels, interests FROM admin_test_profiles LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, profileName, sportIds, typeof(sportIds), experienceLevels, interests FROM admin_test_profiles LIMIT 5",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1305 (42000) at line 1: FUNCTION msZys4esiwaxadBmUrrxVF.typeof does not exist"
+  ]
+}

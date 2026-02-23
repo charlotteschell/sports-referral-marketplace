@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, profileName, sportIds, experienceLevels, interests FROM admin_test_profiles LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, profileName, sportIds, experienceLevels, interests FROM admin_test_profiles LIMIT 5",
+  "rows": [
+    {
+      "id": "1",
+      "profileName": "Denver Cyclist",
+      "sportIds": "NULL",
+      "experienceLevels": "NULL",
+      "interests": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tprofileName\tsportIds\texperienceLevels\tinterests\n1\tDenver Cyclist\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

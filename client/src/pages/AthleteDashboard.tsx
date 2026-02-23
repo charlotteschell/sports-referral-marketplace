@@ -28,8 +28,13 @@ import {
 
 type TabId = "offers" | "saved" | "notifications" | "profile";
 
-function safeJsonParse<T>(val: string | null | undefined, fallback: T): T {
-  if (!val || val.trim() === '') return fallback;
+function safeJsonParse<T>(val: any, fallback: T): T {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val !== 'string') {
+    // Already parsed (e.g., JSON column returned as object/array)
+    return val as T;
+  }
+  if (val.trim() === '') return fallback;
   try { return JSON.parse(val); } catch { return fallback; }
 }
 
