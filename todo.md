@@ -910,3 +910,4 @@
 
 ## Nav Copy Update (Feb 23)
 - [x] Change "How It Works" to "Tutorials & Guides" in nav bar
+- [x] Change nav item: label → "University", description → "Tutorials & Guides"

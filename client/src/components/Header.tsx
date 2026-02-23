@@ -186,7 +186,7 @@ export default function Header() {
   ];
 
   const helpItems: DropdownItem[] = [
-    { href: "/university", label: "Tutorials & Guides", desc: "University & guides", icon: GraduationCap, iconBg: "bg-sky-500/15 text-sky-400" },
+    { href: "/university", label: "University", desc: "Tutorials & Guides", icon: GraduationCap, iconBg: "bg-sky-500/15 text-sky-400" },
     { href: "/support", label: "Support", desc: "Get help & contact us", icon: HelpCircle, iconBg: "bg-sky-500/15 text-sky-400" },
   ];
 
@@ -414,7 +414,7 @@ export default function Header() {
                   </Link>
                   <Link href="/university">
                     <span className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-white/70 hover:text-white hover:bg-white/5 cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
-                      <GraduationCap className="w-4 h-4" /> Tutorials & Guides
+                      <GraduationCap className="w-4 h-4" /> University
                     </span>
                   </Link>
                   <Link href="/support">
@@ -508,7 +508,7 @@ export default function Header() {
                   </Link>
                   <Link href="/university">
                     <span className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-white/70 hover:text-white cursor-pointer" style={{ textTransform: "none" }} onClick={() => setMobileOpen(false)}>
-                      <GraduationCap className="w-4 h-4" /> Tutorials & Guides
+                      <GraduationCap className="w-4 h-4" /> University
                     </span>
                   </Link>
                   <Link href="/support">
