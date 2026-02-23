@@ -922,3 +922,10 @@
 - [x] On account creation, auto-link pending submissions matching the user's email
 - [x] Auto-claim the submitted business for the new user after linking
 - [x] Redirect user to sign up after submission with return path to dashboard
+
+## Post-Submission Signup Flow Fix (Feb 23)
+- [x] Skip onboarding for users who already have linked submissions (auto-complete onboarding)
+- [x] Auto-set account type to business_owner and mark "Add a Business" welcome checklist item
+- [x] Add "My Submissions" section to business dashboard showing all submitted businesses and their statuses
+- [x] Logged-in submissions should appear immediately in dashboard with pending status
+- [x] Approved submissions should show status change and allow editing from dashboard

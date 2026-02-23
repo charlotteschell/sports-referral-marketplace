@@ -1,0 +1,31 @@
+{
+  "query": "SELECT id, businessName, contactEmail, submittedByUserId, status FROM businessSubmissions ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Tj6vDDLS3zPqro.root --database msZys4esiwaxadBmUrrxVF --execute SELECT id, businessName, contactEmail, submittedByUserId, status FROM businessSubmissions ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "30002",
+      "businessName": "Testing Biz 4",
+      "contactEmail": "charlotte+biz4@rarelabs.ai",
+      "submittedByUserId": "273314",
+      "status": "pending"
+    },
+    {
+      "id": "30001",
+      "businessName": "Testing Biz 3",
+      "contactEmail": "charlotte+biz3@rarelabs.ai",
+      "submittedByUserId": "NULL",
+      "status": "pending"
+    },
+    {
+      "id": "1",
+      "businessName": "RARE Trail Running Club",
+      "contactEmail": "charlotte+test1@rarelabs.ai",
+      "submittedByUserId": "142",
+      "status": "approved"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tbusinessName\tcontactEmail\tsubmittedByUserId\tstatus\n30002\tTesting Biz 4\tcharlotte+biz4@rarelabs.ai\t273314\tpending\n30001\tTesting Biz 3\tcharlotte+biz3@rarelabs.ai\tNULL\tpending\n1\tRARE Trail Running Club\tcharlotte+test1@rarelabs.ai\t142\tapproved\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

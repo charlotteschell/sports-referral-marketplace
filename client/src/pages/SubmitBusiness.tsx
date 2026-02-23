@@ -97,10 +97,13 @@ export default function SubmitBusiness() {
     setBrandsCarried(brandsList.filter(b => b !== brand).join(", "));
   };
 
+  const utils = trpc.useUtils();
   const submitMutation = trpc.submission.submit.useMutation({
     onSuccess: () => {
       setSubmitted(true);
       toast.success("Your business has been submitted for review!");
+      // Invalidate mySubmissions so it shows immediately in dashboard
+      try { (utils.submission as any).mySubmissions.invalidate(); } catch {}
     },
     onError: (err) => {
       toast.error(err.message || "Failed to submit. Please try again.");
@@ -200,7 +203,7 @@ export default function SubmitBusiness() {
                       <span>Edit your listing and manage referral offers</span>
                     </li>
                   </ul>
-                  <a href={getLoginUrl("/onboarding?type=business")} className="block">
+                  <a href={getLoginUrl("/dashboard")} className="block">
                     <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 mt-1">
                       <UserPlus className="w-4 h-4" />
                       Create Your Account

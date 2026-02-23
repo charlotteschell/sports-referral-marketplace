@@ -25,7 +25,7 @@ import {
   XCircle, AlertTriangle, Trash2, Unlink, ExternalLink,
   Palmtree, Activity, ArrowUpRight, ArrowDownRight, Eye, EyeOff,
   Settings, Bell, BellRing, BellOff, Mail, Save, X as XIcon, User,
-  Check, Circle
+  Check, Circle, FileText
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useMemo, useEffect } from "react";
@@ -132,6 +132,7 @@ export default function Dashboard() {
     }
   }, [showSettings, userProfile]);
 
+  const { data: mySubmissions } = (trpc.submission as any).mySubmissions.useQuery();
   const { data: myBusinesses, isLoading: bizLoading } = trpc.business.myBusinesses.useQuery(
     undefined,
     { enabled: !!user }
@@ -1053,6 +1054,87 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+
+          {/* My Submissions */}
+          {mySubmissions && mySubmissions.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" />
+                  My Submissions
+                </h2>
+                <Badge variant="outline" className="bg-transparent" style={{ textTransform: 'none' }}>
+                  {mySubmissions.length} submitted
+                </Badge>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                {mySubmissions.map((item: any) => (
+                  <Card key={item.submission.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                          {sportIcons[item.sportCategory?.slug || ''] || <Star className="w-5 h-5" />}
+                        </div>
+                        <Badge
+                          className={`${
+                            item.submission.status === 'approved'
+                              ? 'bg-green-100 text-green-800 border-green-200'
+                              : item.submission.status === 'rejected'
+                              ? 'bg-red-100 text-red-800 border-red-200'
+                              : 'bg-amber-100 text-amber-800 border-amber-200'
+                          }`}
+                          style={{ textTransform: 'none' }}
+                        >
+                          {item.submission.status === 'approved' ? (
+                            <><CheckCircle2 className="w-3 h-3 mr-1" /> Approved</>
+                          ) : item.submission.status === 'rejected' ? (
+                            <><XCircle className="w-3 h-3 mr-1" /> Rejected</>
+                          ) : (
+                            <><Clock className="w-3 h-3 mr-1" /> Pending Review</>
+                          )}
+                        </Badge>
+                      </div>
+                      <h3 className="font-bold text-foreground mb-1">{item.submission.businessName}</h3>
+                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                        {item.submission.businessDescription || 'No description provided'}
+                      </p>
+                      {item.submission.city && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mb-3" style={{ textTransform: 'none' }}>
+                          <MapPin className="w-3 h-3" />
+                          {item.submission.city}{item.submission.country ? `, ${item.submission.country}` : ''}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground" style={{ textTransform: 'none' }}>
+                        <Clock className="w-3 h-3" />
+                        Submitted {new Date(item.submission.createdAt).toLocaleDateString()}
+                      </div>
+                      {item.submission.status === 'rejected' && item.submission.reviewNotes && (
+                        <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                          <p className="text-sm text-red-700 dark:text-red-300" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                            <strong>Review Notes:</strong> {item.submission.reviewNotes}
+                          </p>
+                        </div>
+                      )}
+                      {item.submission.status === 'pending' && (
+                        <div className="mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                          <p className="text-sm text-amber-700 dark:text-amber-300" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                            Your submission is being reviewed. Once approved, it will appear in your "My Businesses" section above.
+                          </p>
+                        </div>
+                      )}
+                      {item.submission.status === 'approved' && (
+                        <div className="mt-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                          <p className="text-sm text-green-700 dark:text-green-300" style={{ textTransform: 'none', letterSpacing: 'normal' }}>
+                            <CheckCircle2 className="w-3 h-3 inline mr-1" /> Approved and live in the directory. Check "My Businesses" above to manage it.
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* B2B Referral Partnerships */}
           <Card className="mb-8">

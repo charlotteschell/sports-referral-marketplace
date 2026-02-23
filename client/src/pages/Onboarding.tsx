@@ -64,12 +64,12 @@ export default function Onboarding() {
 
   // If user already completed onboarding, redirect to their dashboard
   useEffect(() => {
-    if (user && user.onboardingComplete && !typeFromUrl) {
+    if (user && user.onboardingComplete) {
       if (user.role === 'admin') navigate('/admin');
       else if (user.accountType === 'business_owner') navigate('/dashboard');
       else navigate('/athlete-dashboard');
     }
-  }, [user, typeFromUrl, navigate]);
+  }, [user, navigate]);
 
   // Sport categories from API
   const { data: sportCategories } = trpc.categories.sportCategories.useQuery();

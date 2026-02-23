@@ -507,6 +507,10 @@ export const appRouter = router({
         return { id };
       }),
 
+    mySubmissions: protectedProcedure.query(async ({ ctx }) => {
+      return db.getSubmissionsByUser(ctx.user.id);
+    }),
+
     list: adminProcedure
       .input(z.object({ status: z.string().optional() }).optional())
       .query(async ({ input }) => {

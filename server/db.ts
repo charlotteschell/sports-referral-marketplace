@@ -770,6 +770,21 @@ export async function linkPendingSubmissionsToUser(userId: number, email: string
   }
 }
 
+export async function getSubmissionsByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    submission: businessSubmissions,
+    sportCategory: sportCategories,
+    businessType: businessTypes,
+  })
+    .from(businessSubmissions)
+    .leftJoin(sportCategories, eq(businessSubmissions.sportCategoryId, sportCategories.id))
+    .leftJoin(businessTypes, eq(businessSubmissions.businessTypeId, businessTypes.id))
+    .where(eq(businessSubmissions.submittedByUserId, userId))
+    .orderBy(desc(businessSubmissions.createdAt));
+}
+
 export async function getBusinessSubmissions(status?: string) {
   const db = await getDb();
   if (!db) return [];

@@ -71,10 +71,19 @@ export function registerOAuthRoutes(app: Express) {
           const linked = await db.linkPendingSubmissionsToUser(dbUser.id, dbUser.email);
           if (linked > 0) {
             console.log(`[OAuth] Auto-linked ${linked} pending submission(s) to user ${dbUser.id} (${dbUser.email})`);
-            // Also set account type to business_owner if they had pending submissions
+            // Set account type to business_owner
             if (dbUser.accountType !== 'business_owner') {
               await db.updateUserAccountType(dbUser.id, 'business_owner');
             }
+            // Auto-complete onboarding since they already submitted a business
+            if (!dbUser.onboardingComplete) {
+              await db.markOnboardingComplete(dbUser.id);
+              console.log(`[OAuth] Auto-completed onboarding for user ${dbUser.id} (had linked submissions)`);
+            }
+            // Auto-check the 'addBusiness' welcome step since they already submitted one
+            await db.updateWelcomeProgress(dbUser.id, 'addBusiness');
+            // Redirect to dashboard instead of onboarding
+            redirectTo = '/dashboard';
           }
         } catch (e) {
           console.warn('[OAuth] Failed to auto-link pending submissions:', e);
