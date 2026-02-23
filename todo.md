@@ -899,3 +899,11 @@
 ## Welcome Popup Skip Button (Feb 23 batch 3)
 - [x] Add "Skip for now" button to business owner welcome checklist popup
 - [x] Add "Skip for now" button to athlete welcome checklist popup
+
+## Nav Bar Redesign (Feb 23 batch 4)
+- [x] Pick up nav bar layout/structure from Random Asks task mockup
+- [x] Apply current site design, links, and content to the new nav structure
+- [x] Ensure logged-out nav links work correctly
+- [x] Ensure athlete logged-in nav links work correctly
+- [x] Ensure business owner logged-in nav links work correctly
+- [x] Ensure admin nav links work correctly
