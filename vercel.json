@@ -6,7 +6,7 @@
   "env": {
     "DATABASE_URL": {
       "description": "PostgreSQL connection string for Supabase",
-      "required": true
+      "required": false
     },
     "JWT_SECRET": {
       "description": "Secret key for JWT signing",
