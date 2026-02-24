@@ -1,12 +1,9 @@
-import { VercelRequest, VercelResponse } from "@vercel/node";
 import express from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "../server/_core/oauth";
 import { appRouter } from "../server/routers";
 import { createContext } from "../server/_core/context";
 import { serveStatic } from "../server/_core/vite";
-import fs from "fs";
-import path from "path";
 
 const app = express();
 
