@@ -2,11 +2,5 @@
   "buildCommand": "pnpm run build",
   "devCommand": "pnpm run dev",
   "installCommand": "pnpm install",
-  "framework": "vite",
-  "regions": ["iad1"],
-  "functions": {
-    "api/**": {
-      "maxDuration": 30
-    }
-  }
+  "framework": "vite"
 }
